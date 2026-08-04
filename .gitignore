@@ -1,0 +1,10 @@
+.env
+*.key
+secrets/
+**/knowledge/raw/
+
+# [IDENTITY] - belt and braces; the vault lives outside the repo entirely
+household-vault/
+projects/household/knowledge/
+*.identifiers.md
+
