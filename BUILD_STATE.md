@@ -1,6 +1,6 @@
 # BUILD STATE
 
-**Last updated:** 5 August 2026
+**Last updated:** 6 August 2026
 **Current phase:** Phase 1 — Deploy LibreChat (§5)
 **Current sub-step:** 5.1 — Clone and configure (NOT STARTED)
 
@@ -60,13 +60,14 @@
 - **gitleaks installed user-local (~/.local/bin), not /usr/local/bin** — 5 Aug 2026. Avoids sudo entirely. Consequence: git hooks run a non-login shell, so the pre-commit hook exports ~/.local/bin to PATH explicitly (learned the hard way — first exit-test run failed "gitleaks not found", fixed, re-passed).
 - **Default branch left as `master`** — 5 Aug 2026. Renaming now would need a coordinated local+remote rename; no functional benefit for a single-user private repo. Deliberately not changed.
 - **PAT persisted via credential.helper store** (plaintext at ~/.git-credentials, perms 600) — 5 Aug 2026. Acceptable on single-user, full-disk-encrypted box. Alternative (`cache`, timed in-memory) noted if persistence is ever unwanted.
+- **PAT rotated and re-secured** — 6 Aug 2026. Original exposed token revoked at github.com/settings/tokens; fresh classic token (repo scope) issued and stored via credential.helper store at ~/.git-credentials (perms 600). Entered by Michael directly, not surfaced in chat.
 
 ## Open questions
 - H3: Password manager — Google PM currently; Bitwarden recommended. UNDECIDED — hard dependency for Session 10
 - H4: Sarah's access — Option A (shared machine) recommended over LAN exposure. UNDECIDED
 
 ## Blockers / follow-ups
-- **PAT rotation outstanding (SECURITY).** The PAT that authenticated the first push was exposed in plaintext in chat during troubleshooting. It must be revoked at https://github.com/settings/tokens and replaced with a fresh classic token (repo scope), then ~/.git-credentials updated. Working tree/push are unaffected; this is purely credential hygiene. **Confirm done before relying on the repo further.**
+None outstanding.
 
 ## Phase 0 exit test — result (5 Aug 2026): PASSED
 - [x] `git log` shows an initial commit — 3b4a994
@@ -92,4 +93,3 @@ Then:
 5. §5.5 — run Phase 1 exit test (localhost:3080 loads, admin login, all 5 containers healthy, registration closed, restart preserves account)
 
 Reminder: provider API keys are entered directly into .env inside Ubuntu by Michael — Claude does not handle key values.
-
