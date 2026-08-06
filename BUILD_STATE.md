@@ -25,7 +25,7 @@
 - WSL2: Ubuntu-24.04 installed, VERSION 2, UNIX user = michael, home = /home/michael
 - Docker Desktop 29.6.1, WSL2 backend, Ubuntu-24.04 integration ON
 - git: installed inside Ubuntu, core.autocrlf = false (confirmed). Local git identity now set: user.name=michaelreynolds111-dev, user.email=michael.reynolds111@gmail.com (needed for the first local `git commit` in `~/ai-context` — earlier commits had all gone through the GitHub API tool, not local git)
-- Disk: C: 464 GB / ~190 GB free / FullyEncrypted. D: FullyDecrypted (household data snapshot on C:)
+- Disk: C: 464 GB / ~190 GB free / FullyEncrypted. D: FullyDecrypted (household data snapshot on C:) — **D: cannot be BitLockered (Michael confirmed 7 Aug 2026); exact reason (hardware/NAS vs Windows edition/licensing) not yet captured — see open questions.** This is *why* the full migration off D: onto encrypted C: matters, not just a nice-to-have
 - .wslconfig: memory=8GB, processors=6, swap=2GB — leave as-is through Phase 3
 - GitHub: michaelreynolds111-dev, no SSH keys in Ubuntu -> use HTTPS + PAT
 - ai-context repo: https://github.com/michaelreynolds111-dev/ai-context.git (private, confirmed via API)
@@ -90,10 +90,12 @@
 - **rag_api switched from lite to full image for local embeddings — 7 Aug 2026.** The default `-lite` image only supports remote embeddings providers (OpenAI/Azure/remote HF/Ollama), which would violate the mandatory local-embeddings rule (§6.3) for any [SENSITIVE]/[IDENTITY] collection. Switched to the full `librechat-rag-api-dev` image via docker-compose.override.yml; confirmed `sentence-transformers` running in-container.
 - **Desktop Commander MCP connector adopted for build execution — 7 Aug 2026.** Michael enabled it mid-session; from this point on, file edits and command execution for the LibreChat/WSL2 environment are done directly via Desktop Commander (routed through `wsl -d Ubuntu-24.04` to stay in the native filesystem) rather than Michael manually running every command and pasting output back. Faster, fewer transcription/paste errors (see deviations below re: earlier nano/heredoc issues). Michael still runs anything requiring his own credentials or browser interaction.
 - **Real document used for RAG test rather than a synthetic file — 7 Aug 2026, Michael's explicit choice.** Flagged the tradeoff (real clinical-adjacent content going into an unscoped default collection, ahead of Phase 3/6 agent-level access control) before proceeding; Michael confirmed he was comfortable (file is old, not a live privacy concern to him) and to continue. Noted here so it's visible in the historical record, not because it's an open risk — nothing left the machine.
+- **Confirmed D: cannot be BitLockered — 7 Aug 2026.** Michael confirmed this constraint explicitly this session. Reinforces (doesn't change) the already-planned approach: full migration off D: onto encrypted C:, not just a defensive copy. Exact reason not yet captured — see open questions.
 
 ## Open questions
 - H3: Password manager — Google PM currently; Bitwarden recommended. UNDECIDED — hard dependency for Session 10
 - H4: Sarah's access — Option A (shared machine) recommended over LAN exposure. UNDECIDED
+- **New (7 Aug 2026): why can't D: be BitLockered?** Michael confirmed the constraint but the underlying reason wasn't captured — worth pinning down before Session 10, since it affects whether this is permanent (e.g. D: is a NAS/network mount or non-TPM external drive — migration is the only fix) or potentially resolvable (e.g. a Windows edition/licensing gap that could theoretically change). Doesn't block anything now; the plan already treats full migration off D: as mandatory either way.
 
 ## Blockers / follow-ups
 - None blocking Phase 3. OpenRouter/Anthropic-direct keys are no longer blockers (see decisions) — pick up only if/when vendor redundancy becomes a priority.
