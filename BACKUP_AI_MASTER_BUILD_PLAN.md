@@ -1,8 +1,8 @@
 # BACKUP AI SYSTEM — MASTER BUILD PLAN
 
-**Version:** 1.1
+**Version:** 1.2
 **Created:** 28 July 2026
-**Last revised:** 28 July 2026
+**Last revised:** 7 August 2026
 **Source research:** `AI_Build.pdf` — *Backup AI System Design for a Windows 11 Power User (July 2026)*
 **Status:** SPINE DOCUMENT — this is the authoritative build reference for the project.
 
@@ -12,6 +12,7 @@
 |---|---|---|
 | 1.0 | 28 Jul 2026 | Initial plan, derived from `AI_Build.pdf` |
 | 1.1 | 28 Jul 2026 | **Cluster 6 — Household administration added.** Introduces the family information database as a first-class requirement. Adds the `[IDENTITY]` tag and the three-tier household data model (§10.4); makes local embeddings **mandatory** rather than a fallback (§2, §6.3); adds the `Household Admin` agent with a hard tool exclusion (§7.4); adds credential and identity routing rules (§14.4); adds secret scanning to §4.4; adds three risk rows (§15). Ported forward from the pre-flight session — Cluster 6 was not in the source research. |
+| 1.2 | 7 Aug 2026 | **OpenRouter demoted from Phase 2 requirement to backlog/resilience item.** During Phase 2, confirmed DeepInfra's catalog now hosts Claude Sonnet 5 and other closed-lab models directly (verified 6 Aug 2026), closing the capability gap OpenRouter was originally meant to cover. OpenRouter's remaining value is vendor redundancy — a second, independent inference relationship — not capability. `librechat.yaml` keeps a scaffolded, commented-out OpenRouter block ready to activate; the Anthropic-direct endpoint is likewise no longer required for the Ceiling tier since DeepInfra covers it. Updated: §1.1, §1.2, §2, §3.3, §6.1, §6.2, §6.4, §14.3, §18. |
 
 ---
 
@@ -87,15 +88,17 @@ This rule is not negotiable and does not have a change trigger. If a build step 
               ▼                          ▼
       ┌───────────────┐          ┌──────────────────┐
       │  DEEPINFRA    │          │   OPENROUTER     │
-      │  (PRIMARY)    │          │  (SECONDARY —    │
-      │  HIPAA / ISO  │          │  closed models   │
-      │  zero-retain  │          │  + failover)     │
+      │  (PRIMARY —   │          │  (BACKLOG v1.2 — │
+      │  HIPAA / ISO  │          │  redundancy only,│
+      │  covers full  │          │  scaffolded but  │
+      │  model tier)  │          │  not wired)      │
       └───────────────┘          └──────────────────┘
               │
               ▼  [SENSITIVE] clinical/legal + [IDENTITY] household only
       ┌───────────────┐
-      │ ANTHROPIC API │  (direct — highest-stakes writing)
-      └───────────────┘
+      │ ANTHROPIC API │  (direct — optional, v1.2: DeepInfra's
+      └───────────────┘   anthropic/claude-sonnet-5 already covers
+                           the Ceiling tier compliantly)
 
 
       ╔══════════════════════════════════════════════════╗
@@ -113,8 +116,8 @@ This rule is not negotiable and does not have a change trigger. If a build step 
 | **LibreChat v0.8.7** | Daily driver. Chat + agents + MCP + web search + RAG + skills + memory in one tab | Claude Pro Desktop (the whole app) |
 | **`ai-context/` git repo** | Single source of truth for skills, projects, memory, MCP config | Claude Projects + Skills |
 | **DeepInfra** | Primary BYO inference backend | Anthropic subscription |
-| **OpenRouter** | Secondary key — closed frontier models + failover | — |
-| **Anthropic API direct** | Highest-stakes writing only | — |
+| **OpenRouter** | **(v1.2) Backlog — vendor redundancy only, not currently wired.** DeepInfra hosts Claude Sonnet 5 and covers the full model tier directly | — |
+| **Anthropic API direct** | **(v1.2) Optional.** DeepInfra's `anthropic/claude-sonnet-5` already satisfies the Ceiling tier compliantly; keep as a documented fallback | — |
 | **OpenMemory MCP** | Portable cross-tool long-term memory | Claude memories |
 | **Goose (Block)** | Capability ceiling — unbounded autonomous sysadmin/coding loops | Claude Code |
 | **Cherry Studio** | Warm spare, demoted | (current partial backup) |
@@ -146,7 +149,7 @@ These were settled by the research. Do not relitigate them mid-build.
 |---|---|---|
 | LibreChat is the hub, not Open WebUI / LobeChat / Cherry Studio | Deepest MCP integration of the self-hosted UIs (per Metabase Cloud's July 2026 evaluation); ClickHouse-backed since 4 Nov 2025 so commercially de-risked; 33,900+ stars | Cherry Studio's CherryClaw agent matures into a robust unattended harness → re-test |
 | Goose is the capability ceiling, not Crush | Apache-2.0 (Crush is FSL-1.1-MIT, not OSI-approved); 51.3k stars, 500+ contributors; Linux Foundation Agentic AI Foundation governance since 7 Apr 2026 | Goose governance/licence changes |
-| DeepInfra primary, OpenRouter secondary | Lowest per-token on open models; HIPAA/SOC2/ISO 27001/GDPR + zero-retention; ~190 open models, OpenAI-compatible | DeepInfra prices rise above OpenRouter routed rates for top models |
+| DeepInfra primary; **OpenRouter demoted to backlog (v1.2)** | Lowest per-token on open models; HIPAA/SOC2/ISO 27001/GDPR + zero-retention; DeepInfra's catalog now includes Claude Sonnet 5 and other closed-lab models directly (confirmed 6 Aug 2026), closing the capability gap OpenRouter was meant to cover. Its remaining value is vendor redundancy — an independent inference relationship if DeepInfra has an outage, billing issue, or catalog regression — not capability | DeepInfra has a sustained outage, billing problem, or drops model coverage you rely on → re-wire the already-scaffolded OpenRouter block in `librechat.yaml` |
 | Git-backed markdown is the source of truth, not any app's internal DB | Portability across LibreChat / Goose / Crush / future tools; human-readable; diffable | Never — this is the insurance policy |
 | **Do NOT build on Roo Code** | Shut down 21 Apr 2026, repo archived 15 May 2026; team pivoted to Roomote (~$899/mo per parallel instance) | — |
 | Two tools maximum (LibreChat + Goose) | ADHD single-interface constraint | LibreChat's Agent Chain/Subagents exit beta **and** MCP OAuth issues close → drop Goose |
@@ -178,8 +181,8 @@ Complete **all** of these before Phase 0. Nothing downstream works without them.
 ### 3.3 Accounts and keys
 
 - [ ] DeepInfra account + API key
-- [ ] OpenRouter account + API key **[VERIFY]** current BYOK terms — sources conflict: one reports 5.5% credit fee and "first 1M requests/month free, then 5%", another reports a $25,000/month list-price threshold. Confirm before relying on it.
-- [ ] Anthropic API key (for the highest-stakes writing tier only)
+- [ ] OpenRouter account + API key — **(v1.2) demoted to optional/backlog.** DeepInfra's catalog covers the full model tier including Claude Sonnet 5; only pursue this if/when vendor redundancy against DeepInfra becomes a priority (§2, §18). **[VERIFY]** current BYOK terms if/when revisited — sources conflict: one reports 5.5% credit fee and "first 1M requests/month free, then 5%", another reports a $25,000/month list-price threshold.
+- [ ] Anthropic API key — **(v1.2) optional.** DeepInfra's `anthropic/claude-sonnet-5` already covers the highest-stakes writing tier; get this key later if a direct Anthropic relationship becomes worth having
 - [ ] Private GitHub repo created for `ai-context` (private — it will hold clinical/legal skills)
 - [ ] Tavily or Brave Search API key (for research MCP, Cluster 4)
 - [ ] Microsoft 365 account credentials ready for OAuth
@@ -395,13 +398,13 @@ Visit `http://localhost:3080`. **Register the first account — it becomes admin
 
 ## 6. PHASE 2 — WIRE PROVIDERS
 
-**Goal:** tiered model access through DeepInfra, with OpenRouter and Anthropic as separate endpoints.
+**Goal:** tiered model access through DeepInfra. **(v1.2)** OpenRouter is scaffolded but not wired (backlog item, see §2); Anthropic direct is optional since DeepInfra covers the Ceiling tier.
 
 ### 6.1 Model tiering strategy
 
 | Tier | Use for | Models **[VERIFY exact DeepInfra model IDs]** |
 |---|---|---|
-| **Ceiling** | Highest-stakes clinical/legal writing **[SENSITIVE]** | Claude Sonnet 5 via **Anthropic direct** |
+| **Ceiling** | Highest-stakes clinical/legal writing **[SENSITIVE]** | **(v1.2)** Claude Sonnet 5 via **DeepInfra** (`anthropic/claude-sonnet-5`) — confirmed 6 Aug 2026 to satisfy this tier without a separate Anthropic key, and still compliant per §14.4 since DeepInfra direct is an allowed Tier-2/[SENSITIVE] route. Anthropic direct remains available as an optional alternative |
 | **High** | Complex reasoning, research synthesis, hard debugging | GLM-5.2 (intelligence index 51, Artificial Analysis), DeepSeek V4 Pro |
 | **Work** | Daily drafting, summarisation, agent loops | DeepSeek V4 Flash, MiniMax-M3, Qwen3.5 family |
 | **Code** | Coding and sysadmin agent work | Kimi K2.7-Code, Kimi K2.6 |
@@ -428,17 +431,22 @@ endpoints:
       titleModel: "current_model"
       modelDisplayLabel: "DeepInfra"
 
-    - name: "OpenRouter"
-      apiKey: "${OPENROUTER_KEY}"
-      baseURL: "https://openrouter.ai/api/v1"
-      models:
-        default: []
-        fetch: true
-      titleConvo: true
-      modelDisplayLabel: "OpenRouter"
+    # --- OpenRouter: backlog (v1.2), not currently wired ---
+    # Demoted from a Phase 2 requirement to a resilience item — DeepInfra's
+    # catalog (confirmed 6 Aug 2026) already covers the full model tier,
+    # including Claude Sonnet 5. Activate only if vendor redundancy against
+    # DeepInfra becomes a priority (see §2, §18).
+    # - name: "OpenRouter"
+    #   apiKey: "${OPENROUTER_KEY}"
+    #   baseURL: "https://openrouter.ai/api/v1"
+    #   models:
+    #     default: []
+    #     fetch: true
+    #   titleConvo: true
+    #   modelDisplayLabel: "OpenRouter"
 ```
 
-Anthropic is a **native** endpoint in LibreChat — enable it via `ANTHROPIC_API_KEY` in `.env` rather than as a custom endpoint.
+Anthropic is a **native** endpoint in LibreChat — enable it via `ANTHROPIC_API_KEY` in `.env` rather than as a custom endpoint. **(v1.2) Optional** — DeepInfra's `anthropic/claude-sonnet-5` already covers the Ceiling tier without this.
 
 ### 6.3 RAG embeddings — **local, mandatory** (revised in v1.1)
 
@@ -466,13 +474,13 @@ There is no per-document access control *inside* a collection. Separation betwee
 ### 6.4 Exit test
 
 - [ ] DeepInfra models appear in the model picker and a chat completes
-- [ ] OpenRouter models appear and a chat completes
-- [ ] Anthropic (Claude Sonnet 5) appears and a chat completes
+- [ ] **(v1.2)** OpenRouter — demoted to backlog, **not a Phase 2 exit criterion**. Scaffolded in `librechat.yaml`, reactivate per §2/§18 if needed later
+- [ ] Anthropic (Claude Sonnet 5) appears and a chat completes — **(v1.2)** satisfied via DeepInfra's `anthropic/claude-sonnet-5`; no separate Anthropic key required for Phase 2
 - [ ] Model switching mid-conversation works
-- [ ] Cost sanity check: run the same prompt on all three, confirm billing appears on the expected account
+- [ ] **(v1.2)** Cost sanity check scoped to DeepInfra only, since it is the sole active provider
 - [ ] **(v1.1)** Local embeddings model loads and indexes a test document
 - [ ] **(v1.1)** Indexing produces **no outbound network traffic** — verified by observation, not assumed
-- [ ] **(v1.1)** Three separate RAG collections exist: `general`, `clinical`, `household`
+- [ ] **(v1.1)** Three separate RAG collections exist: `general`, `clinical`, `household` — **(v1.2) deferred to Phase 3/6**, since collection separation requires per-agent knowledge scoping (`file_search`) that doesn't exist until agents are built
 
 ---
 
@@ -869,7 +877,7 @@ Customisations live in `docker-compose.override.yml` and `librechat.yaml`, so pu
 ### 14.3 Cost monitoring
 
 - Weekly check on DeepInfra spend; watch cached-input hit rate
-- Confirm OpenRouter is only being hit for closed models/failover, not silently absorbing daily traffic
+- **(v1.2)** OpenRouter is not currently wired (backlog item, §2) — no spend expected. If reactivated, confirm it's only hit for failover/redundancy, not silently absorbing daily traffic
 - Anthropic direct should be a small, deliberate line item
 
 ### 14.4 **[SENSITIVE] Data routing rules — non-negotiable**
@@ -1121,6 +1129,7 @@ Session 10 exists as a separate session on purpose: classification is unglamorou
 
 - LibreChat's **Agent Chain and Subagents exit beta** *and* MCP OAuth issues fully close → you can likely drop Goose entirely and go single-tool
 - **DeepInfra prices rise** above OpenRouter's routed rates for your top models → re-evaluate the primary/secondary split
+- **(v1.2)** **DeepInfra has a sustained outage, billing issue, or drops model coverage you rely on** → re-wire the already-scaffolded (commented-out) OpenRouter block in `librechat.yaml` for vendor redundancy
 - **Cherry Studio's CherryClaw agent** matures into a robust unattended harness → it becomes a legitimate single-app alternative worth re-testing
 - **MCP spec churn** settles after the 2026-07-28 stateless transport change → re-verify all servers
 - Any component **changes licence or governance** → re-evaluate
