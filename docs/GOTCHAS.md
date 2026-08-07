@@ -117,7 +117,7 @@ installed).
 
 # 3. Docker / containers
 
-## `UID`/`GID` unset — printed on every compose command, and possibly load-bearing
+## `UID`/`GID` unset — cosmetic noise, do NOT "fix" by setting UID=1000
 
 **Symptom:** Every `docker compose` command prints:
 ```
@@ -126,16 +126,18 @@ The "GID" variable is not set. Defaulting to a blank string.
 ```
 
 **Root cause:** The base `docker-compose.yml` uses `user: "${UID}:${GID}"` for
-`mongodb` and `meilisearch`, but `UID`/`GID` aren't exported in the shell/env
-that Compose reads (they're normally set by a login shell; the non-login
-`bash -lc` invocations and/or `.env` don't provide them).
+`mongodb` and `meilisearch`. When unset, Compose resolves `user: ":"` which
+effectively means "use the container image's default user" — for MongoDB that
+is uid **999** (its internal `mongodb` user). This is correct behaviour.
 
-**Why it matters:** With both empty, those services can run as an unexpected
-user against their bind-mounted data dirs. **This is the leading suspect in
-the Aug 7 MongoDB data-loss incident** (see §4) — worth fixing before trusting
-the DB again. Candidate fix: set `UID`/`GID` in `~/LibreChat/.env` (e.g.
-`UID=1000`, `GID=1000` for the `michael` user) so Compose stops defaulting
-them to blank. **Not yet applied — verify the right values first.**
+**IMPORTANT — do NOT set UID=1000 in .env:** Tried on 8 Aug 2026. Setting
+`UID=1000` causes Compose to override MongoDB's user to uid 1000 (`michael`),
+which then cannot read the data files owned by uid 999 → immediate crash-loop
+(exit 14, fatal assertion on `storage.bson`). The warnings are cosmetic. Leave
+UID/GID unset in .env. MongoDB runs fine as uid 999 with `user: ":"`.
+
+**Actual prevention for data loss:** see §4 — the real risk is unclean
+shutdown, not the UID/GID warnings.
 
 ## `--force-recreate <service>` can recreate more than the named service
 
@@ -223,25 +225,36 @@ not a wrong password. The `LibreChat.users` collection had **0 documents**.
   accessroles(17), roles(2). Everything user-generated is gone from the live
   DB.
 
-**Root cause:** Not fully pinned down at time of writing. Leading hypothesis:
-the mongod restart on Aug 7 evening (following a host sleep/wake or Docker
-Desktop restart — see §3 exit-127 note) didn't recover the existing WiredTiger
-data and reinitialized in place instead. The unset `UID`/`GID` (§3) is the
-prime suspect for a permission/ownership mismatch that could cause this. **This
-is an OPEN issue — to be troubleshot in a dedicated session.**
+**Root cause (resolved 8 Aug 2026):** The Aug 7 host sleep/wake event caused
+Docker to restart the mongodb container. mongod detected a non-empty
+`mongod.lock` (unclean shutdown) and attempted to read `storage.bson` to
+recover — but `storage.bson` was unreadable in that state, causing a fatal
+assertion (exit 14) and crash-loop. On the crash-loop restarts, MongoDB
+reinitialized with only seed collections, losing the user-created collections.
+The UID/GID warnings (§3) are **not** the cause — MongoDB was running as uid
+999 throughout, which is correct. The crash-loop is what caused the data loss.
 
-**Status / next steps (not yet done):**
-1. **Back up `data-node/` before anything else touches it** — cheap, safe,
-   preserves the option to attempt WiredTiger salvage/repair later.
-2. Decide: attempt recovery of the old data vs. accept the loss and create a
-   fresh account (the lost data is only early-phase test content — no
-   household/clinical data was in there yet).
-3. Fix `UID`/`GID` (§3) so this can't recur, regardless of recovery choice.
+**Resolution (8 Aug 2026):**
+1. Backed up corrupt `data-node/` via `docker exec` → `cp -a /data/db /data/db-backup` inside container.
+2. Chose fresh init over WiredTiger recovery (lost data = only test content, no household/clinical data).
+3. Moved old `data-node/` to `data-node.old-20260808`, created fresh empty `data-node/`.
+4. Started MongoDB cleanly — `"Startup from clean shutdown?: true"` confirmed in logs.
+5. Re-enabled ALLOW_REGISTRATION temporarily, created new admin account, re-locked registration.
+6. Confirmed all 6 containers healthy + `registrationEnabled: false` via `/api/config`.
+
+**How to prevent recurrence:** The underlying trigger is Docker restarting
+mongodb after an unclean host event. Two mitigations:
+- **Don't force-stop the host or Docker Desktop without first running
+  `docker compose stop` in `~/LibreChat`** — this gives mongod a clean SIGTERM
+  and lets it write a clean shutdown marker.
+- **If the machine does sleep/crash unexpectedly**, check mongodb container
+  status immediately on next boot with `docker compose ps`. If it's
+  crash-looping (exit 14 in logs + "Lock file is not empty"), do NOT let it
+  keep restarting — stop it immediately, back up `data-node/`, then decide
+  recover-vs-fresh before bringing it back up.
 
 **What was NOT lost:** all build progress. The plan, BUILD_STATE, config files,
-skills, and this session's work live in git and on disk — not in LibreChat's
-DB. Phase 1/2 exit tests remain validly passed; only the chat history behind
-them is gone.
+skills live in git. Phase 1/2 exit tests remain validly passed.
 
 ---
 
