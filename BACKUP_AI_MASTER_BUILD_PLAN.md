@@ -1,8 +1,8 @@
 # BACKUP AI SYSTEM — MASTER BUILD PLAN
 
-**Version:** 1.2
+**Version:** 1.3
 **Created:** 28 July 2026
-**Last revised:** 7 August 2026
+**Last revised:** 8 August 2026
 **Source research:** `AI_Build.pdf` — *Backup AI System Design for a Windows 11 Power User (July 2026)*
 **Status:** SPINE DOCUMENT — this is the authoritative build reference for the project.
 
@@ -13,6 +13,7 @@
 | 1.0 | 28 Jul 2026 | Initial plan, derived from `AI_Build.pdf` |
 | 1.1 | 28 Jul 2026 | **Cluster 6 — Household administration added.** Introduces the family information database as a first-class requirement. Adds the `[IDENTITY]` tag and the three-tier household data model (§10.4); makes local embeddings **mandatory** rather than a fallback (§2, §6.3); adds the `Household Admin` agent with a hard tool exclusion (§7.4); adds credential and identity routing rules (§14.4); adds secret scanning to §4.4; adds three risk rows (§15). Ported forward from the pre-flight session — Cluster 6 was not in the source research. |
 | 1.2 | 7 Aug 2026 | **OpenRouter demoted from Phase 2 requirement to backlog/resilience item.** During Phase 2, confirmed DeepInfra's catalog now hosts Claude Sonnet 5 and other closed-lab models directly (verified 6 Aug 2026), closing the capability gap OpenRouter was originally meant to cover. OpenRouter's remaining value is vendor redundancy — a second, independent inference relationship — not capability. `librechat.yaml` keeps a scaffolded, commented-out OpenRouter block ready to activate; the Anthropic-direct endpoint is likewise no longer required for the Ceiling tier since DeepInfra covers it. Updated: §1.1, §1.2, §2, §3.3, §6.1, §6.2, §6.4, §14.3, §18. |
+| 1.3 | 8 Aug 2026 | **`docs/GOTCHAS.md` added as a first-class build doc.** A permanent record of environment-specific facts for this machine (Node-on-Windows quirks, PowerShell↔WSL↔Docker quoting, Docker UID/volume behaviour, MCP auth specifics), distinct from `PLAN_DEVIATIONS` (about the plan) and GitHub Issues (open problems). Registered in the repo tree (§4), the project-knowledge file list (§16.2), and the session-open/close rituals (§16.4, §16.6). Also: local git via the WSL2 clone recorded as the default push method (the GitHub MCP connector proved unreliable across a long session). No change to build steps or architecture. |
 
 ---
 
@@ -252,7 +253,9 @@ git init
 │   ├── mcp-servers.json       # CANONICAL server list — all clients reference this
 │   └── README.md              # per-client wiring notes
 └── docs/
-    └── AI_Build_research.md   # the source research, converted to markdown
+    ├── AI_Build_research.md   # the source research, converted to markdown
+    ├── PLAN_DEVIATIONS_2026-08-05.md  # logged deviations FROM THIS PLAN (with rationale)
+    └── GOTCHAS.md             # permanent environment-specific facts for THIS machine (added v1.3)
 ```
 
 **And, deliberately outside the repo (v1.1):**
@@ -1008,6 +1011,7 @@ the exact next step. I will paste this back into project knowledge.
 | `BACKUP_AI_MASTER_BUILD_PLAN.md` | This document — the spine | Now |
 | `AI_Build.pdf` | Original research (already present) | Already there |
 | `BUILD_STATE.md` | Live progress tracker | Create at start of Phase 0, re-upload after each session |
+| `docs/GOTCHAS.md` **(v1.3)** | Permanent environment-specific facts for THIS machine (Node-on-Windows quirks, shell-layer quoting, Docker UID/volume behaviour, MCP auth specifics). Distinct from `PLAN_DEVIATIONS` (which is about the plan) and from GitHub Issues (which are open/unresolved). Read at session open before touching a previously-fought area; updated at session close alongside `BUILD_STATE.md`. Never contains secret values. | Create when the first real environment gotcha is hit (done: Phase 3) |
 | `librechat.yaml` (working copy) | Current config for reference | Once Phase 2 starts |
 | `mcp-servers.json` | Canonical MCP list | Once Phase 3 starts |
 | `CLUSTER_VALIDATION.md` | Phase 8 test results | Phase 8 |
@@ -1082,6 +1086,12 @@ Produce a complete BUILD_STATE.md replacement (not a diff) containing:
 Then state in one line: what to paste into project knowledge and what to
 commit to the ai-context repo.
 
+**Also (v1.3):** if this session hit any environment-specific surprise that a
+future session would otherwise re-discover from scratch (Node/npm-on-Windows,
+shell-layer quoting, Docker UID/volume behaviour, MCP auth quirks, etc.), add
+or update an entry in `docs/GOTCHAS.md` — Symptom / Root cause / Fix — and
+commit it alongside `BUILD_STATE.md`. Never put secret values in it.
+
 Do not summarise the conversation. Produce the artifact.
 ```
 
@@ -1094,11 +1104,11 @@ Do not summarise the conversation. Produce the artifact.
 
 ### 16.6 Session protocol
 
-**Opening a session:** "Read BUILD_STATE.md. What phase are we on and what's the next step?"
+**Opening a session:** "Read BUILD_STATE.md. What phase are we on and what's the next step?" Then skim `docs/GOTCHAS.md` if the session will touch a previously-fought area.
 
 **During:** one sub-step at a time. Paste real errors, trimmed.
 
-**Closing:** "Session wrap" → the `build-session-close` skill fires → paste the output into `BUILD_STATE.md` → upload to project knowledge → `git commit` in `ai-context`.
+**Closing:** "Session wrap" → the `build-session-close` skill fires → update `BUILD_STATE.md` and (if any new environment gotcha was hit) `docs/GOTCHAS.md` → `git commit`/`push` via local git in `~/ai-context` (default push method — the GitHub MCP connector is unreliable across a long session), report the commit SHA, and `git pull` locally to stay in sync.
 
 ---
 
