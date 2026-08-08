@@ -1108,7 +1108,7 @@ Do not summarise the conversation. Produce the artifact.
 
 **During:** one sub-step at a time. Paste real errors, trimmed.
 
-**Closing:** "Session wrap" → the `build-session-close` skill fires → update `BUILD_STATE.md` and (if any new environment gotcha was hit) `docs/GOTCHAS.md` → `git commit`/`push` via local git in `~/ai-context` (default push method — the GitHub MCP connector is unreliable across a long session), report the commit SHA, and `git pull` locally to stay in sync.
+**Closing:** "Session wrap" → the `build-session-close` skill fires → update `BUILD_STATE.md` and (if any new environment gotcha was hit) `docs/GOTCHAS.md` → `git commit`/`push` via local git in `~/ai-context` (default push method — the GitHub MCP connector is unreliable across a long session), report the commit SHA. No `git pull` needed — all commits come from the same local clone, so it is always current after a push. Only pull if you have edited a file directly on GitHub via the web UI.
 
 ---
 

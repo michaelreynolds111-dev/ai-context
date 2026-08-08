@@ -111,7 +111,7 @@
 - **GitHub Issues** — open/unresolved problems. Resolved lessons move to GOTCHAS.
 
 **Session-open ritual:** read BUILD_STATE.md, skim GOTCHAS.md if touching a previously-fought area.
-**Session-close ritual:** update BUILD_STATE + GOTCHAS, commit+push via local git in ~/ai-context, report SHA, remind Michael to `git pull`.
+**Session-close ritual:** update BUILD_STATE + GOTCHAS, commit+push via local git in ~/ai-context, report SHA. (No `git pull` needed — all commits come from this same clone, so it's always current after a push. Only pull if you've edited files directly on GitHub via the web UI.)
 
 ## Open questions
 - H3: Password manager — Google PM currently; Bitwarden recommended. UNDECIDED — hard dependency for Session 10

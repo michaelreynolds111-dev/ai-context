@@ -431,9 +431,15 @@ commits behind GitHub while `git status` still reports "up to date."
 **Root cause:** `git status` compares against a **cached** remote ref until
 `git fetch` (or `git pull`) actually contacts the remote.
 
-**Fix/workaround:** Always `git pull --ff-only` at the start of a session
-before reading/editing docs locally. The GitHub connector (when available)
-sees true live state; a stale local clone does not.
+**When this matters:** only if a file is edited directly on GitHub via the web
+UI, or if a different machine pushes to the repo. In the normal build workflow
+all commits come from the same WSL2 clone (`~/ai-context/`), so after a `git
+push` the local clone is already current — no pull needed. The "git pull"
+reminder was removed from session-close rituals (8 Aug 2026) for this reason.
+
+**Fix/workaround:** If you have edited a file on GitHub directly, run
+`git pull --ff-only` in `~/ai-context` before the next session. Otherwise
+skip it — it is a no-op and adds confusion.
 
 ---
 
