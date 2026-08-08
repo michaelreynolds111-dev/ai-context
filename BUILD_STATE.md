@@ -1,8 +1,8 @@
 # BUILD STATE
 
-**Last updated:** 8 August 2026 (session 7 — Phase 5 COMPLETE)
-**Current phase:** Phase 6 — Projects / RAG Knowledge Bases (§10)
-**Current sub-step:** §10.1 — first low-stakes project reconstruction before household DB.
+**Last updated:** 8 August 2026 (final — Phases 0–6 complete, Phase 7 next)
+**Current phase:** Phase 7 — Goose (§11)
+**Current sub-step:** §11.1 — Install Goose natively on Windows.
 
 ## Phase status
 | Phase | Status | Exit test | Date |
