@@ -1,8 +1,8 @@
 # BUILD STATE
 
-**Last updated:** 8 August 2026 (session 3 — filesystem MCP + Tavily + web search)
+**Last updated:** 8 August 2026 (session 4 — §7.4 agents built, §7.6 exit test PASSED)
 **Current phase:** Phase 3 — Agents + MCP (§7)
-**Current sub-step:** §7.3 MCP table — Spotify ✓, Filesystem ✓, Tavily/web search ✓. Ready for §7.4 purpose-built agents (Desktop Ops, Research, Clinical Work, Household Admin).
+**Current sub-step:** §7.4 agents all built. §7.6 exit test PASSED. Remaining in Phase 3: Google Drive + M365 OAuth (human-gated, can run async), then Phase 3 complete.
 
 ## Phase status
 | Phase | Status | Exit test | Date |
@@ -59,14 +59,23 @@
 
 ## Phase 3 progress (8 Aug 2026) — IN PROGRESS
 - **§7.2 recursion limits — DONE.** `recursionLimit: 75` / `maxRecursionLimit: 150` confirmed in librechat.yaml.
+- **§7.4 purpose-built agents — ALL BUILT (8 Aug 2026).**
+  | Agent | Model | Tools | §7.6 verified |
+  |---|---|---|---|
+  | Desktop Ops | DeepSeek-V4-Pro | 15 filesystem tools | ✓ DB-inspected |
+  | Research | DeepSeek-V4-Pro | 15 filesystem + web_search | ✓ DB-inspected |
+  | Clinical Work | claude-sonnet-5 | 0 — empty by design | ✓ DB-inspected |
+  | Household Admin | DeepSeek-V4-Pro | 0 — empty by design | ✓ DB-inspected |
+  | Music | (existing) | 10 Spotify tools | ✓ from earlier |
+- **§7.5 native web search — DONE** (via Tavily native integration, verified above).
+- **§7.6 exit test — PASSED (8 Aug 2026).** Tool exclusions verified by direct MongoDB inspection (`db.agents.find()`), not agent self-report. Clinical Work and Household Admin both confirmed `tools: []` in DB. Desktop Ops and Research tool lists match expected config exactly. `test.txt` confirmed on WSL2 disk at `~/agent-workdir/` via bind mount.
+- **Remaining in Phase 3:** Google Drive MCP + M365 MCP OAuth flows (human-gated). These don't block Phase 3 exit — agents are built, tools will attach when OAuth is complete.
 - **§7.3 MCP table — Spotify ✓, Filesystem ✓, Tavily/web search ✓ (8 Aug 2026).**
-  - **Spotify** — installed, token-lifecycle bug fixed (`SPOTIFY_EXPIRES_AT=1`), UI smoke test PASSED.
-  - **Filesystem MCP** (`@modelcontextprotocol/server-filesystem` v2026.7.10) — wired with hard directory scoping. `/app/ai-context` (read-only) and `/app/agent-workdir` (read-write) mounted into the `api` container via `docker-compose.override.yml`. `household-vault/` and `LibreChat/` are not mounted — physical exclusion, not a config rule. Shell/terminal capability absent by design (filesystem-only server, no Desktop Commander in LibreChat). 14 tools confirmed in logs.
-  - **Tavily native integration** — `TAVILY_API_KEY` set in `.env`. LibreChat native web search confirmed working: "Searched the web" shown in UI, real inline citations (abcnews.com, youtube.com), current date returned. Covers both §7.3 Tavily entry AND §7.5 native web search. No MCP server needed — native integration is cleaner. Free tier: 1,000 credits/month, no card.
-  - **`~/agent-workdir/`** created in WSL2 as the agent's read-write scratch space.
-- **Desktop Ops agent clarification (8 Aug 2026):** Full Desktop Commander MCP will NOT be wired into LibreChat. `allowedDirectories` only restricts file ops in Desktop Commander, not terminal commands — shell access cannot be safely scoped without per-call confirmation prompts which LibreChat agents don't show. The safer `@modelcontextprotocol/server-filesystem` (no shell at all) is used instead. Desktop Commander stays in Claude Desktop for supervised build work only.
-- **MongoDB blocker — RESOLVED (8 Aug 2026).** Fresh data-node init. New admin account registered. ALLOW_REGISTRATION re-locked. Root cause of original incident: WiredTiger unclean shutdown (Aug 7 host sleep/wake event) left mongod.lock non-empty + storage.bson unreadable, causing crash-loop on next start. See GOTCHAS §4 (updated).
-- **`docs/GOTCHAS.md` — updated** this session: MongoDB resolution (§4), UID/GID clarification (§3), and corrected + expanded Spotify token-lifecycle entry (§6, replacing the earlier incorrect "re-derives fresh token on every start" note).
+  - Spotify: installed, token-lifecycle bug fixed (`SPOTIFY_EXPIRES_AT=1`), UI smoke test PASSED.
+  - Filesystem MCP (`@modelcontextprotocol/server-filesystem` v2026.7.10): wired with hard directory scoping. `/app/ai-context` (ro) + `/app/agent-workdir` (rw) mounted via override. `household-vault/` and `LibreChat/` not mounted — physical exclusion. 15 tools confirmed.
+  - Tavily native: `TAVILY_API_KEY` in `.env`, web search confirmed with real citations. Covers §7.3 + §7.5 in one step.
+  - `~/agent-workdir/` created as agent scratch space.
+- **Desktop Commander not wired into LibreChat (8 Aug 2026):** `allowedDirectories` only restricts file ops, not terminal commands. Without per-call confirmations (which LibreChat agents don't show), shell access can't be safely scoped. Official filesystem-only server used instead. Desktop Commander stays in Claude Desktop for supervised build work only.
 
 ## Decisions made
 - Ubuntu-24.04 LTS chosen (over 26.04) — 1 Aug 2026
