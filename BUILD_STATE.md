@@ -1,8 +1,8 @@
 # BUILD STATE
 
-**Last updated:** 8 August 2026 (session 2 — Spotify smoke test + token fix)
+**Last updated:** 8 August 2026 (session 3 — filesystem MCP + Tavily + web search)
 **Current phase:** Phase 3 — Agents + MCP (§7)
-**Current sub-step:** §7.3 Spotify MCP — **UI smoke test PASSED** (real search returned through agent). Spotify token-lifecycle bug found + fixed. Ready for next MCP server in the §7.3 table.
+**Current sub-step:** §7.3 MCP table — Spotify ✓, Filesystem ✓, Tavily/web search ✓. Ready for §7.4 purpose-built agents (Desktop Ops, Research, Clinical Work, Household Admin).
 
 ## Phase status
 | Phase | Status | Exit test | Date |
@@ -59,8 +59,12 @@
 
 ## Phase 3 progress (8 Aug 2026) — IN PROGRESS
 - **§7.2 recursion limits — DONE.** `recursionLimit: 75` / `maxRecursionLimit: 150` confirmed in librechat.yaml.
-- **§7.3 first MCP server — Spotify — INSTALLED + OAuth-TESTED + UI SMOKE TEST PASSED.** `@tbrgeek/spotify-mcp-server` via npx in api container. All 10 tools confirmed. A `Music`/`Spotify` agent was built in the LibreChat UI (model: anthropic/claude-sonnet-5 for the test; downgrade to a cheap model for daily use), Spotify tools attached, subagents/handoffs/chain OFF, no skills, no file context. `spotify_search` for Radiohead returned the real discography through the agent — verified by the tool-call block in the UI, not self-report. **§7.3 smoke test = PASS.**
-- **Spotify token-lifecycle bug — FOUND + FIXED (8 Aug 2026).** After install, every real Spotify API call 401'd ("Bad or expired token") despite auth-status reporting authenticated, and neither container restart nor injecting a fresh access token fixed it. Root cause (confirmed by reading `dist/auth/token-manager.js`): in env-var mode the package fakes token expiry to "start + 1 hour" when `SPOTIFY_EXPIRES_AT` is unset, so it never refreshes and sends the stale static token. **Fix: `SPOTIFY_EXPIRES_AT=1` in `.env` + passthrough in `librechat.yaml`** forces refresh-on-boot from the durable refresh token. Verified end-to-end. Full write-up in GOTCHAS §6.
+- **§7.3 MCP table — Spotify ✓, Filesystem ✓, Tavily/web search ✓ (8 Aug 2026).**
+  - **Spotify** — installed, token-lifecycle bug fixed (`SPOTIFY_EXPIRES_AT=1`), UI smoke test PASSED.
+  - **Filesystem MCP** (`@modelcontextprotocol/server-filesystem` v2026.7.10) — wired with hard directory scoping. `/app/ai-context` (read-only) and `/app/agent-workdir` (read-write) mounted into the `api` container via `docker-compose.override.yml`. `household-vault/` and `LibreChat/` are not mounted — physical exclusion, not a config rule. Shell/terminal capability absent by design (filesystem-only server, no Desktop Commander in LibreChat). 14 tools confirmed in logs.
+  - **Tavily native integration** — `TAVILY_API_KEY` set in `.env`. LibreChat native web search confirmed working: "Searched the web" shown in UI, real inline citations (abcnews.com, youtube.com), current date returned. Covers both §7.3 Tavily entry AND §7.5 native web search. No MCP server needed — native integration is cleaner. Free tier: 1,000 credits/month, no card.
+  - **`~/agent-workdir/`** created in WSL2 as the agent's read-write scratch space.
+- **Desktop Ops agent clarification (8 Aug 2026):** Full Desktop Commander MCP will NOT be wired into LibreChat. `allowedDirectories` only restricts file ops in Desktop Commander, not terminal commands — shell access cannot be safely scoped without per-call confirmation prompts which LibreChat agents don't show. The safer `@modelcontextprotocol/server-filesystem` (no shell at all) is used instead. Desktop Commander stays in Claude Desktop for supervised build work only.
 - **MongoDB blocker — RESOLVED (8 Aug 2026).** Fresh data-node init. New admin account registered. ALLOW_REGISTRATION re-locked. Root cause of original incident: WiredTiger unclean shutdown (Aug 7 host sleep/wake event) left mongod.lock non-empty + storage.bson unreadable, causing crash-loop on next start. See GOTCHAS §4 (updated).
 - **`docs/GOTCHAS.md` — updated** this session: MongoDB resolution (§4), UID/GID clarification (§3), and corrected + expanded Spotify token-lifecycle entry (§6, replacing the earlier incorrect "re-derives fresh token on every start" note).
 
@@ -86,6 +90,9 @@
 - **UID/GID in .env NOT the correct fix** — 8 Aug 2026. Setting UID=1000 in .env causes MongoDB to run as uid 1000, which can't read its own uid-999 data files. The UID/GID warnings from docker compose are cosmetic noise; MongoDB runs correctly as uid 999 (its internal default) when the Compose `user:` directive resolves to blank. The real prevention is clean shutdown handling (see GOTCHAS §4 updated).
 - **MCP agent design pattern (established with Spotify, applies to all Cluster-3 MCP agents)** — 8 Aug 2026. Scope each MCP agent NARROW: one service per agent for now (don't pre-merge Drive/M365/Spotify into one general agent — decide consolidation later). Use a reliable tool-calling model (sonnet-5) for the first smoke test to eliminate "did it even call the tool" as a variable, then downgrade to a cheap model for daily use. No skills, no file context, minimal system prompt for simple tool-call agents. Subagents/Handoffs/Chain OFF (beta, don't build on them). This does NOT relax the hard tool-exclusion rules for Household Admin / Clinical Work agents — those still get built with exclusions from the start.
 - **Spotify token-lifecycle: force refresh-on-boot** — 8 Aug 2026. Env-var-mode static access tokens are a trap in `@tbrgeek/spotify-mcp-server` (fakes expiry, never refreshes). `SPOTIFY_EXPIRES_AT=1` forces a real refresh from the durable refresh token on every start. General principle for any static-token MCP server: prefer forcing refresh over pasting a "fresh" access token. See GOTCHAS §6.
+- **Filesystem MCP: use `@modelcontextprotocol/server-filesystem`, not Desktop Commander** — 8 Aug 2026. Desktop Commander's `allowedDirectories` doesn't restrict terminal commands, only file ops. Without per-call confirmation prompts (which LibreChat agents don't show), shell access can't be safely scoped. Official Anthropic filesystem-only server used instead — no shell at all, directory scoping is the actual boundary. Desktop Commander stays in Claude Desktop for supervised build work only.
+- **Filesystem scope: `ai-context/` (ro) + `agent-workdir/` (rw), household-vault/ and LibreChat/ excluded** — 8 Aug 2026. Physical exclusion via not mounting those dirs into the container — not a config rule that could be misconfigured.
+- **Tavily native integration over MCP server** — 8 Aug 2026. LibreChat has built-in Tavily support via `TAVILY_API_KEY` in `.env`, cleaner than wiring a separate MCP server. Covers §7.3 Tavily entry and §7.5 web search in one step.
 
 ## Documentation conventions
 - **`BACKUP_AI_MASTER_BUILD_PLAN.md`** — spine, versioned (v1.2). Change via logged plan revision only.
@@ -124,12 +131,14 @@ See prior BUILD_STATE entries (preserved in git history).
 (Full exit test detail preserved in git history / prior BUILD_STATE versions)
 
 ## NEXT STEP
-**Resume Phase 3 — Agents + MCP (§7).** Spotify (§7.3 first server) fully done: installed, token bug fixed, UI smoke test passed.
+**§7.4 — Build purpose-built agents.** MCP servers all wired. Build in this order:
 
-1. **Next MCP server in the §7.3 table** — pick the next lower-stakes server and wire it the same way. Read BACKUP_AI_MASTER_BUILD_PLAN.md §7 first. Apply the MCP agent design pattern from Decisions (narrow scope, reliable model for smoke test, no skills/file-context, orchestration OFF). Watch for the same static-token trap on any OAuth server (GOTCHAS §6).
-2. **§7.4 purpose-built agents** — Household Admin + Clinical Work, with hard tool exclusions (no browser, shell, web search, code exec, memory) built in from the start — never deferred.
-3. **§7.6 exit test** — inspection-based verification of tool exclusions (not agent-reported).
+1. **`Desktop Ops` agent** — filesystem MCP tools, scoped to `ai-context/` + `agent-workdir/`. Smoke test: list directory, write a file to agent-workdir, read it back.
+2. **`Research` agent** — web_search (Tavily native) + filesystem read. Explicitly NO access to `clinical` or `household` RAG collections.
+3. **`Clinical Work` agent [SENSITIVE]** — M365 MCP (OAuth, deferred until M365 is wired), filesystem read, clinical RAG collection. Hard exclusions: no browser, no shell.
+4. **`Household Admin` agent [IDENTITY]** — household RAG collection only (deferred to Phase 6). Hard exclusions: no browser, web_search, shell, execute_code, memory. Build the exclusion list NOW even though the RAG collection comes later.
+5. **`Music` agent** — Spotify tools (already built, just needs model downgrade from sonnet-5 to a cheap Work-tier model).
 
-Optional cleanup when convenient (low priority): downgrade the Spotify agent's model from sonnet-5 to a cheap model for daily use; remove `~/LibreChat/data-node.old-20260808`.
+M365 and Google Drive OAuth (the remaining §7.3 servers) can be wired in parallel as human-gated steps — they don't block agent creation, just attach later once the OAuth flows are complete.
 
-All commands via Desktop Commander → `wsl -d Ubuntu-24.04` / UNC path. Read GOTCHAS.md §3/§4 before touching MongoDB or Docker, §6 before wiring another OAuth MCP server.
+All commands via Desktop Commander → `wsl -d Ubuntu-24.04` / UNC path.
