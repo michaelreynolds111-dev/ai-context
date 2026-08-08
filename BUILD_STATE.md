@@ -173,16 +173,19 @@ See prior BUILD_STATE entries (preserved in git history).
 
 ## Phase 6 progress (8 Aug 2026) — IN PROGRESS
 - Starting §10.1 — first low-stakes project reconstruction (pattern proof before household DB).
+- **Clarification:** "New Build" refers to a separate existing Claude Project (Stash/music recommendation system), NOT this build project. `conversation_search` cannot read into other Claude Projects — scoped to current project only. Awaiting Project Instructions + knowledge file details from Michael directly.
+- **New tracking doc created (v1.4):** `docs/MIGRATION_INVENTORY.md` — live inventory of scattered Claude Projects and working folders needing migration into the new structure. Seeded from a screenshot of the Projects home screen (14 projects identified, all 🔴 NOT LOCATED pending Michael's input on file locations). Registered in spine doc §4.2/§16.2, revision bumped to v1.4.
+- `~/ai-context/projects/new-build/knowledge/` directory created, empty pending content.
+- Open question raised: should third-party subject data (e.g. a project investigating someone else's financial info) be migrated into this personal system at all? Flagged in MIGRATION_INVENTORY.md, not yet decided.
 
 ## NEXT STEP
-**Phase 6 §10.1 — reconstruct first project (low-stakes, non-sensitive).**
+**Phase 6 §10.1 — get "New Build" (Stash/recommendation system) project content, then reconstruct.**
 
-Per plan: prove the RAG + agent + skill + instructions pattern on a low-stakes project before touching household data. Household DB (§10.4) comes last in this phase.
-
-1. Identify a current Claude Project to port (non-sensitive — pick one together)
-2. Create `~/ai-context/projects/<name>/INSTRUCTIONS.md`
+1. Michael to provide: Project Instructions text + description of knowledge files from the "New Build" Claude Project (Claude cannot access other Projects directly)
+2. Write `~/ai-context/projects/new-build/INSTRUCTIONS.md`
 3. Create the RAG file collection in LibreChat and upload knowledge files
 4. Create or update the relevant agent with the collection attached
 5. Test RAG retrieval returns correct passages with citations
-6. Repeat for remaining non-sensitive projects
-7. §10.4 household DB — Session 10 (Tier-1 quarantine first, then classify, then build)
+6. Update `docs/MIGRATION_INVENTORY.md` status to 🟢 MIGRATED
+7. Move to next project in the inventory (Michael to help locate each one's actual files)
+8. §10.4 household DB — Session 10 (Tier-1 quarantine first, then classify, then build)
