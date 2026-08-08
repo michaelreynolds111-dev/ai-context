@@ -3,65 +3,69 @@
 Live tracking document for locating and migrating scattered project files,
 folders, and Claude Projects into the new LibreChat/ai-context structure.
 
-Companion to Appendix A of `BACKUP_AI_MASTER_BUILD_PLAN.md` (the static
-worksheet template) — this file is the actual working inventory, updated as
-each item is located, classified, and migrated.
+**Decision (8 Aug 2026):** Individual project migrations are deferred until
+after Phase 9 cutover. Migrating projects mid-build fragments momentum and
+some projects could each take a full session. More importantly, doing the
+migration *using* the new system (rather than Claude Desktop) is itself the
+real-world proof that it is replacing Claude Pro -- making it the natural
+Phase 9 / parallel-run period work.
 
-**Goal:** every current Claude Project and scattered working folder ends up
-either fully migrated into `~/ai-context/projects/<name>/` (+ a LibreChat RAG
-collection + agent), or explicitly marked as staying where it is with a reason.
+**Phase 6 scope (current):** prove the RAG + agent + INSTRUCTIONS.md pattern
+works on one low-stakes project. New Build (Stash) satisfies that -- done.
+
+**Post-cutover scope:** migrate remaining projects one at a time using
+LibreChat itself, updating this inventory as each one completes.
+
+---
+
+Companion to Appendix A of BACKUP_AI_MASTER_BUILD_PLAN.md (the static
+worksheet template) -- this file is the actual working inventory.
 
 ## Status legend
-- 🔴 **NOT LOCATED** — exists but current file location on disk is unknown
-- 🟡 **LOCATED** — found on disk, not yet classified or migrated
-- 🟢 **MIGRATED** — files moved/copied into ai-context/ or a RAG collection, agent built
-- ⚪ **STAYING PUT** — deliberately not migrated (reason given)
+- NOT LOCATED -- exists but current file location on disk is unknown
+- LOCATED -- found on disk, not yet classified or migrated
+- MIGRATED -- files in ai-context/, RAG collection built, agent built
+- DEFERRED -- deliberately deferred to post-cutover migration sessions
+- STAYING PUT -- deliberately not migrated (reason given)
 
 ## Claude Projects inventory
 
-| Project name | Status | Current location | Sensitivity | Target | Notes |
-|---|---|---|---|---|---|
-| Building AI System | 🟢 N/A | This build itself | General | N/A — is the system | Not migrated, is the infrastructure |
-| New Build (Stash/recommendation system) | 🔴 NOT LOCATED | Unknown | TBD | `projects/new-build/` (dir created 8 Aug 2026) | First Phase 6 candidate — awaiting Project Instructions + knowledge file details from Michael |
-| Paperwork | 🔴 NOT LOCATED | Unknown | TBD | TBD | Pinned project — likely active/high-use |
-| Achriom | 🔴 NOT LOCATED | Unknown | TBD | TBD | Pinned project — media/library tool per MCP tools available |
-| Ron Admin | 🔴 NOT LOCATED | Unknown | TBD | TBD | |
-| RateYourMusic Connector | 🔴 NOT LOCATED | Unknown | TBD | TBD | "make RYM work how I wish it would" |
-| Tax Return | 🔴 NOT LOCATED | Unknown | Likely [SENSITIVE] — financial | TBD | Classify carefully — may overlap Tier 2/3 household model |
-| Secondhand Search Engine | 🔴 NOT LOCATED | Unknown | TBD | TBD | |
-| Guitar Projects | 🔴 NOT LOCATED | Unknown | TBD | TBD | |
-| Workplace Efficiency Analysis | 🔴 NOT LOCATED | Unknown | TBD | TBD | |
-| Personal Finances | 🔴 NOT LOCATED | Unknown | Likely [SENSITIVE] — financial | TBD | "work out any personal finances questions" |
-| Make a Power App | 🔴 NOT LOCATED | Unknown | TBD | TBD | |
-| Youth Mental Health Case M... | 🔴 NOT LOCATED | Unknown | **[SENSITIVE]** — clinical | `projects/` clinical collection, Clinical Work agent | "big project I'm working on" — high priority once low-stakes pattern proven |
-| Investigate Chris's Bank Acc... | 🔴 NOT LOCATED | Unknown | **[SENSITIVE]** — financial/personal, third party | TBD | Third-party subject data — classify very carefully, may need special handling beyond Tier 1-3 model |
-| Design | 🔴 NOT LOCATED | Unknown | TBD | TBD | |
+| Project name | Status | Sensitivity | Notes |
+|---|---|---|---|
+| Building AI System | MIGRATED N/A | General | Is the infrastructure itself |
+| New Build (Stash/recommendation system) | KNOWLEDGE-ONLY | General | Agent Stash Ops built Phase 6 -- proves the pattern. Live-access upgrade is Phase 7 Goose work. Location: C:\torbox-system\stash-torbox-bridge\ Commit: bf95d2e |
+| Paperwork | DEFERRED | TBD | Migrate post-cutover using LibreChat |
+| Achriom | DEFERRED | TBD | Migrate post-cutover |
+| Ron Admin | DEFERRED | TBD | Migrate post-cutover |
+| RateYourMusic Connector | DEFERRED | TBD | Migrate post-cutover |
+| Tax Return | DEFERRED | SENSITIVE -- financial | Classify before migrating |
+| Secondhand Search Engine | DEFERRED | TBD | Migrate post-cutover |
+| Guitar Projects | DEFERRED | TBD | Migrate post-cutover |
+| Workplace Efficiency Analysis | DEFERRED | TBD | Migrate post-cutover |
+| Personal Finances | DEFERRED | SENSITIVE -- financial | Classify before migrating |
+| Make a Power App | DEFERRED | TBD | Migrate post-cutover |
+| Youth Mental Health Case M... | DEFERRED | SENSITIVE -- clinical | High priority once system proven. Local embeddings + DeepInfra/Anthropic only. |
+| Investigate Chris Bank Acc... | DEFERRED | SENSITIVE -- third-party financial | Decide whether this belongs in a personal system at all before touching it |
+| Design | DEFERRED | TBD | Migrate post-cutover |
 
-*(This list was seeded from a screenshot of the Claude Projects home screen,
-8 Aug 2026. Not exhaustive — more projects likely exist below the fold or in
-Archived. Update as they're found.)*
+## Scattered folder locations
 
-## Scattered folder locations (non-Claude-Project files)
+| What | Location | Status | Notes |
+|---|---|---|---|
+| Household data pipeline | D:\Data (live), C:\HouseholdDataRaw\Data (snapshot) | LOCATED | Tier-1 quarantine first -- Session 10 |
+| Cherry Studio exports/configs | D:\Data\Michael\Cherry Studio\ | LOCATED | Audit at Session 10 |
+| C:\torbox-system non-bridge files | C:\torbox-system\ | LOCATED | Diagnostic scratch scripts -- STAYING PUT, not worth migrating |
 
-| What | Known/suspected location | Status | Target | Notes |
-|---|---|---|---|---|
-| Household data pipeline | `D:\Data` (unencrypted), snapshot at `C:\HouseholdDataRaw\Data` (encrypted) | 🟡 LOCATED | `~/household-vault/` (Session 10, after Tier-1 quarantine) | See plan §10.4.2 — full inventory already done |
-| Cherry Studio exports/configs | `D:\Data\Michael\Cherry Studio\` | 🟡 LOCATED | TBD — audit for reusable content vs. discard | Confirmed to exist (deepinfra_models.md written here 8 Aug 2026) |
+## Post-cutover migration process
 
-## Process for each item
-
-1. **Locate** — find the actual files/folders on disk (may require Michael's input — Claude cannot browse Windows Explorer or search outside mounted/known paths)
-2. **Classify** — General / [SENSITIVE] / [IDENTITY], per the Tier model in plan §10.4.1
-3. **Decide target:**
-   - Low-stakes, reusable → `~/ai-context/projects/<name>/` + RAG collection + agent
-   - [SENSITIVE] → same, but scoped to DeepInfra/Anthropic-only agent, no browser/shell
-   - [IDENTITY] → folds into the Household DB build (§10.4), not a separate project
-   - Abandoned/superseded → mark ⚪ STAYING PUT with reason, do not migrate
-4. **Migrate** — copy (never move originals until migration is verified working) knowledge files into `knowledge/`, write `INSTRUCTIONS.md`, build/update the agent, test retrieval
-5. **Update this table** — status → 🟢 MIGRATED, note the commit that did it
+For each DEFERRED item, after cutover, using LibreChat (not Claude Desktop):
+1. Open the Claude Project -- copy Instructions + list knowledge files
+2. Locate associated files on disk (Michaels input needed per project)
+3. Classify sensitivity
+4. Write INSTRUCTIONS.md, copy knowledge files, create RAG collection in LibreChat, build agent
+5. Test RAG retrieval with citations
+6. Update this table to MIGRATED with commit SHA
 
 ## Open question
-Should third-party subject data (e.g. "Investigate Chris's Bank Accounts") be
-migrated into this personal system at all, versus staying as a one-off
-Claude.ai conversation? Worth deciding deliberately rather than by default —
-raise with Michael before touching that one.
+Should Investigate Chris Bank Accounts be migrated into this personal system
+at all? Raise and decide before touching it.

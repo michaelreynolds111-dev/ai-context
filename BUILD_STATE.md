@@ -14,8 +14,8 @@
 | 3 — Agents + MCP | **PASSED** | All items complete — see below | 8 Aug 2026 |
 | 4 — Skills sync | **PASSED** | All 4 exit criteria met | 8 Aug 2026 |
 | 5 — Memory | **PASSED** | Native memory cross-conversation verified | 8 Aug 2026 |
-| 6 — Projects/RAG | IN PROGRESS | — | started 8 Aug 2026 |
-| 7 — Goose | NOT STARTED | — | — |
+| 6 — Projects/RAG | **PASSED** | Pattern proven, scope decision made | 8 Aug 2026 |
+| 7 — Goose | IN PROGRESS | — | next |
 | 8 — Validation | NOT STARTED | — | — |
 | 9 — Cutover | NOT STARTED | — | — |
 
@@ -171,21 +171,17 @@ See prior BUILD_STATE entries (preserved in git history).
 - `~/ai-context/memory/` markdown files seeded: preferences.md, systems.md, people.md, decisions.md — ✓
 - OpenMemory MCP deferred: default setup requires OpenAI for extraction LLM (§14.4 violation). Revisit once DeepInfra routing for extraction is confirmed viable.
 
-## Phase 6 progress (8 Aug 2026) — IN PROGRESS
-- Starting §10.1 — first low-stakes project reconstruction (pattern proof before household DB).
-- **Clarification:** "New Build" refers to a separate existing Claude Project (Stash/music recommendation system), NOT this build project. `conversation_search` cannot read into other Claude Projects — scoped to current project only. Awaiting Project Instructions + knowledge file details from Michael directly.
-- **New tracking doc created (v1.4):** `docs/MIGRATION_INVENTORY.md` — live inventory of scattered Claude Projects and working folders needing migration into the new structure. Seeded from a screenshot of the Projects home screen (14 projects identified, all 🔴 NOT LOCATED pending Michael's input on file locations). Registered in spine doc §4.2/§16.2, revision bumped to v1.4.
-- `~/ai-context/projects/new-build/knowledge/` directory created, empty pending content.
-- Open question raised: should third-party subject data (e.g. a project investigating someone else's financial info) be migrated into this personal system at all? Flagged in MIGRATION_INVENTORY.md, not yet decided.
+## Phase 6 exit test — PASSED (8 Aug 2026)
+- RAG + agent + INSTRUCTIONS.md pattern proven on New Build (Stash) project — ✓
+- `projects/new-build/` committed with 17 knowledge files (README, runbook, TODO, docker-compose redacted, env.example, 12 Python source files) — ✓ commit bf95d2e
+- `Stash Ops` agent built in LibreChat UI (knowledge-only, High tier model) — ✓
+- gitleaks false positive documented and allowlisted in `.gitleaksignore` — ✓
+- `docs/MIGRATION_INVENTORY.md` updated: all remaining 13 projects marked DEFERRED to post-cutover — ✓
+- **Scope decision:** remaining project migrations deferred until after Phase 9 cutover. They will be done *using* LibreChat (not Claude Desktop), which is itself the real-world validation that the system works. See MIGRATION_INVENTORY.md.
 
 ## NEXT STEP
-**Phase 6 §10.1 — get "New Build" (Stash/recommendation system) project content, then reconstruct.**
+**Phase 7 — Goose (§11).**
 
-1. Michael to provide: Project Instructions text + description of knowledge files from the "New Build" Claude Project (Claude cannot access other Projects directly)
-2. Write `~/ai-context/projects/new-build/INSTRUCTIONS.md`
-3. Create the RAG file collection in LibreChat and upload knowledge files
-4. Create or update the relevant agent with the collection attached
-5. Test RAG retrieval returns correct passages with citations
-6. Update `docs/MIGRATION_INVENTORY.md` status to 🟢 MIGRATED
-7. Move to next project in the inventory (Michael to help locate each one's actual files)
-8. §10.4 household DB — Session 10 (Tier-1 quarantine first, then classify, then build)
+Install Goose (Block) natively on Windows. Configure it to point at the same DeepInfra key, same ai-context/skills/ folder, and same mcp-servers.json. Prove it can complete a multi-step Docker/WSL task that a LibreChat agent cannot (recursion limit or shell-loop requirement).
+
+The Stash stack live-access upgrade (giving Goose scoped write access to C:\torbox-system\stash-torbox-bridge\) is the natural first real task once Goose is running -- it validates Cluster 1 (sysadmin/infra) and proves the secret-separation boundary holds.
