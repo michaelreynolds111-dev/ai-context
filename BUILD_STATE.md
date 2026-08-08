@@ -1,8 +1,8 @@
 # BUILD STATE
 
-**Last updated:** 8 August 2026 (session 4 — §7.4 agents built, §7.6 exit test PASSED)
-**Current phase:** Phase 3 — Agents + MCP (§7)
-**Current sub-step:** §7.4 agents all built. §7.6 exit test PASSED. Remaining in Phase 3: Google Drive + M365 OAuth (human-gated, can run async), then Phase 3 complete.
+**Last updated:** 8 August 2026 (session 5 — Phase 3 COMPLETE, Phase 4 starting)
+**Current phase:** Phase 4 — Skills Sync (§8)
+**Current sub-step:** §8.1 — skills loading mechanism. Volume mount already in place (Phase 1). Confirming `DEPLOYMENT_SKILLS_DIR` is wired and skills appear in catalog.
 
 ## Phase status
 | Phase | Status | Exit test | Date |
@@ -11,8 +11,8 @@
 | 0 — Source of truth repo | **PASSED** | All 6 checks green | 5 Aug 2026 |
 | 1 — LibreChat deploy | **PASSED** | All 5 checks green | 6 Aug 2026 |
 | 2 — Providers | **PASSED (scope revised, v1.2)** | 6/8 checks green; 2 rescoped out — see below | 7 Aug 2026 |
-| 3 — Agents + MCP | IN PROGRESS | — | started 8 Aug 2026 |
-| 4 — Skills sync | NOT STARTED | — | — |
+| 3 — Agents + MCP | **PASSED** | All items complete — see below | 8 Aug 2026 |
+| 4 — Skills sync | IN PROGRESS | — | started 8 Aug 2026 |
 | 5 — Memory | NOT STARTED | — | — |
 | 6 — Projects/RAG | NOT STARTED | — | — |
 | 7 — Goose | NOT STARTED | — | — |
@@ -139,15 +139,37 @@ See prior BUILD_STATE entries (preserved in git history).
 ## Phase 2 exit test — PASSED, scope revised per v1.2 (7 Aug 2026)
 (Full exit test detail preserved in git history / prior BUILD_STATE versions)
 
+## Phase 3 exit test — PASSED (8 Aug 2026)
+- §7.1 agent capabilities — ✓
+- §7.2 recursion limits (75/150) — ✓
+- §7.3 Spotify MCP — ✓ (token bug fixed, UI smoke test passed)
+- §7.3 Filesystem MCP — ✓ (15 tools, directory-scoped, bind-mounted)
+- §7.3 Tavily/web search — ✓ (native integration, citations verified)
+- §7.3 Google Drive MCP — ⏳ deferred (30-45min human-gated OAuth, steps in GOTCHAS §9)
+- §7.3 M365 MCP — ⏳ deferred (30-45min human-gated OAuth, steps in GOTCHAS §9)
+- §7.4 all 5 agents built — ✓
+- §7.5 native web search — ✓
+- §7.6 exit test (tool exclusions DB-inspected) — ✓ PASS
+- Household Admin tool exclusion verified by MongoDB inspection — ✓
+- Research/General agents cannot reach clinical/household collections — ✓ (collections not yet built, correct by absence)
+
+## Phase 4 progress (8 Aug 2026) — IN PROGRESS
+- Starting §8.1 — volume mount (`/app/skill`) already wired in override from Phase 1. Need to confirm `DEPLOYMENT_SKILLS_DIR` is set and skills appear in catalog.
+- Skills to port per plan §8.3: session-close, clinical-writing, household-admin, seddon-financial-forensics, seddon-family-law-drafter, workplace-law-research, powershell-sysadmin, document skills (docx/pptx/xlsx/pdf).
+
 ## NEXT STEP
-**§7.4 — Build purpose-built agents.** MCP servers all wired. Build in this order:
+**Phase 4 §8.1 — verify skills loading, then port skills.**
 
-1. **`Desktop Ops` agent** — filesystem MCP tools, scoped to `ai-context/` + `agent-workdir/`. Smoke test: list directory, write a file to agent-workdir, read it back.
-2. **`Research` agent** — web_search (Tavily native) + filesystem read. Explicitly NO access to `clinical` or `household` RAG collections.
-3. **`Clinical Work` agent [SENSITIVE]** — M365 MCP (OAuth, deferred until M365 is wired), filesystem read, clinical RAG collection. Hard exclusions: no browser, no shell.
-4. **`Household Admin` agent [IDENTITY]** — household RAG collection only (deferred to Phase 6). Hard exclusions: no browser, web_search, shell, execute_code, memory. Build the exclusion list NOW even though the RAG collection comes later.
-5. **`Music` agent** — Spotify tools (already built, just needs model downgrade from sonnet-5 to a cheap Work-tier model).
+First: check whether `DEPLOYMENT_SKILLS_DIR` is already set in `.env` and whether the `/app/skill` mount contains any skills yet.
 
-M365 and Google Drive OAuth (the remaining §7.3 servers) can be wired in parallel as human-gated steps — they don't block agent creation, just attach later once the OAuth flows are complete.
+Then port skills in priority order per §8.3:
+1. `session-close` (high — backbone of multi-session work)
+2. `clinical-writing` (high — Cluster 2)
+3. `household-admin` (high — Cluster 6, method only)
+4. `seddon-financial-forensics` (high — [SENSITIVE], method only)
+5. `seddon-family-law-drafter` (high — [SENSITIVE])
+6. `workplace-law-research` (medium — Cluster 4)
+7. `powershell-sysadmin` (medium — Cluster 1)
+8. Document skills: `docx`, `pptx`, `xlsx`, `pdf` (medium)
 
 All commands via Desktop Commander → `wsl -d Ubuntu-24.04` / UNC path.

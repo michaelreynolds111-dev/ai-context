@@ -466,3 +466,148 @@ future rebuilds.
   `open-webui` container were hit during Phase 1 deploy. The `open-webui`
   container was stopped and removed (it's superseded by the LibreChat decision
   anyway). Port 3000 is used by LibreChat's bundled `admin-panel`.
+
+---
+
+# 9. Deferred OAuth flows (ready to execute, not yet done)
+
+## Google Drive MCP — what to do when you're ready
+
+**Estimated time:** 30-45 minutes. Requires: browser access to Google Cloud
+Console, a Google account, and a terminal.
+
+**What gets configured:** LibreChat uses Google's *remote* Workspace MCP
+servers (not a self-hosted package). Each product (Drive, Gmail, Calendar) is
+a separate OAuth-enabled remote server. For this build, wire **Drive only**
+first — it's what Clinical Work and Research clusters need. Gmail/Calendar
+later if wanted.
+
+**Steps:**
+1. Go to `https://console.cloud.google.com` → create a new project (or reuse
+   one). Note the Project ID.
+2. Enable the Drive API: APIs & Services → Enable APIs → search "Google Drive
+   API" → Enable.
+3. Enable the Workspace MCP service:
+   ```
+   gcloud services enable drivetoolsservice.googleapis.com --project=<PROJECT_ID>
+   ```
+   (install gcloud CLI if not present: `https://cloud.google.com/sdk/docs/install`)
+4. Google Auth Platform → Branding → fill in app name, support email.
+5. Google Auth Platform → Audience → set to "External", add your own Gmail as
+   a test user.
+6. Google Auth Platform → Data Access → Add scopes:
+   `https://www.googleapis.com/auth/drive.readonly` (read-only is enough for
+   Research agent; add `.file` scope if you want write access later)
+7. Google Auth Platform → Clients → Create Client → Web application.
+   - Authorised redirect URI: `http://localhost:3080/api/mcp/gdrive/oauth/callback`
+   - Download the JSON → note `client_id` and `client_secret` (do NOT paste
+     into chat — add directly to `.env`).
+8. Add to `~/LibreChat/.env` (in terminal, not chat):
+   ```
+   GOOGLE_DRIVE_CLIENT_ID=<value>
+   GOOGLE_DRIVE_CLIENT_SECRET=<value>
+   ```
+9. Add to `librechat.yaml` under `mcpServers:`:
+   ```yaml
+   gdrive:
+     type: streamable-http
+     url: https://drive.googleapis.com/mcp/v1/sse
+     oauth:
+       authorization_url: https://accounts.google.com/o/oauth2/auth
+       token_url: https://oauth2.googleapis.com/token
+       client_id: "${GOOGLE_DRIVE_CLIENT_ID}"
+       client_secret: "${GOOGLE_DRIVE_CLIENT_SECRET}"
+       scope: "https://www.googleapis.com/auth/drive.readonly"
+       redirect_uri: "http://localhost:3080/api/mcp/gdrive/oauth/callback"
+     startup: false
+     serverInstructions: true
+   ```
+   (`startup: false` means it won't try to connect until you manually
+   authenticate in the LibreChat MCP Settings Panel — correct for OAuth servers.)
+10. Restart `api` container: `cd ~/LibreChat && docker compose up -d --force-recreate api`
+11. In LibreChat UI: click MCP Servers dropdown → gdrive → Authenticate.
+    Complete the Google OAuth flow in the popup.
+12. Add `gdrive` tools to the Research agent in the agent builder.
+
+**Note:** Google marks these Workspace MCP servers as part of a Developer
+Preview Program — review current docs at
+`https://www.librechat.ai/docs/mcp_servers/google_workspace` before executing,
+as scopes and endpoints may have changed.
+
+---
+
+## M365 MCP — what to do when you're ready
+
+**Estimated time:** 30-45 minutes. Requires: browser access to Azure Portal
+(`portal.azure.com`), a Microsoft account.
+
+**Package:** `@softeria/ms-365-mcp-server` — run as an HTTP server alongside
+the LibreChat stack, then point LibreChat's OAuth flow at it.
+
+**IMPORTANT — personal Microsoft account caveat (June 2026):** Personal
+Microsoft accounts (non-enterprise, non-work) have a known issue where refresh
+tokens issued via the `common` authority are rejected at the first refresh,
+killing the session ~1 hour after login. Fix: set `MS365_MCP_TENANT_ID` to
+`consumers` (not `common`) in the server config. Verify this is still current
+at `https://github.com/softeria/ms-365-mcp-server` before executing.
+
+**Steps:**
+1. Azure Portal → App registrations → New registration.
+   - Name: `LibreChat-M365-MCP`
+   - Supported account types: "Personal Microsoft accounts only" (or
+     "Accounts in any organisational directory and personal" if you might use
+     a work account later)
+   - Redirect URI: Web → `http://localhost:3080/api/mcp/m365/oauth/callback`
+2. Note the Application (client) ID and Directory (tenant) ID.
+3. Certificates & Secrets → New client secret → note the value (do NOT paste
+   into chat — add directly to `.env`).
+4. API Permissions → Add:
+   - `Mail.Read`, `Mail.Send` (Outlook)
+   - `Files.Read.All` (OneDrive)
+   - `Calendars.Read`
+   - `User.Read`
+   Grant admin consent if prompted.
+5. Add to `~/LibreChat/.env` (in terminal):
+   ```
+   M365_CLIENT_ID=<value>
+   M365_CLIENT_SECRET=<value>
+   M365_TENANT_ID=consumers
+   ```
+6. Add the Softeria server to the LibreChat stack. The cleanest approach for a
+   local single-user setup is to run it as a sidecar container. Add to
+   `docker-compose.override.yml`:
+   ```yaml
+     m365-mcp:
+       image: node:24-slim
+       command: npx -y @softeria/ms-365-mcp-server --http --port 3100
+       environment:
+         MS365_MCP_CLIENT_ID: "${M365_CLIENT_ID}"
+         MS365_MCP_TENANT_ID: "${M365_TENANT_ID}"
+       ports:
+         - "3100:3100"
+       restart: unless-stopped
+   ```
+7. Add to `librechat.yaml` under `mcpServers:`:
+   ```yaml
+   m365:
+     type: streamable-http
+     url: http://m365-mcp:3100/mcp
+     oauth:
+       authorization_url: https://login.microsoftonline.com/${M365_TENANT_ID}/oauth2/v2.0/authorize
+       token_url: https://login.microsoftonline.com/${M365_TENANT_ID}/oauth2/v2.0/token
+       client_id: "${M365_CLIENT_ID}"
+       client_secret: "${M365_CLIENT_SECRET}"
+       scope: "Mail.Read Mail.Send Files.Read.All Calendars.Read User.Read offline_access"
+       redirect_uri: "http://localhost:3080/api/mcp/m365/oauth/callback"
+     startup: false
+     serverInstructions: true
+   ```
+8. `cd ~/LibreChat && docker compose up -d m365-mcp && docker compose up -d --force-recreate api`
+9. In LibreChat UI: MCP Servers → m365 → Authenticate. Complete Microsoft
+   login in the popup.
+10. Add `m365` tools to the Clinical Work agent in the agent builder.
+
+**After wiring:** verify with a simple "list my recent emails" test through
+the Clinical Work agent. Check the `api` logs for any token refresh errors.
+If sessions die after ~1 hour, confirm `MS365_MCP_TENANT_ID=consumers` is
+set and the server is picking it up.
