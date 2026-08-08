@@ -1,4 +1,25 @@
 {
-  "mcpServers": {}
+  "mcpServers": {
+    "filesystem": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "/home/michael/ai-context",
+        "/home/michael/agent-workdir"
+      ],
+      "notes": "WSL2 paths for CLI use. LibreChat uses /app/* container paths instead."
+    },
+    "spotify": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@tbrgeek/spotify-mcp-server"],
+      "notes": "Managed via LibreChat .env. Goose would need separate token wiring."
+    }
+  },
+  "pendingOAuth": [
+    "google-drive",
+    "microsoft-365"
+  ]
 }
-
