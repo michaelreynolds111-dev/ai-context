@@ -1,0 +1,13 @@
+# gitleaks allowlist — documented false positives ONLY.
+# Every entry here must be verified by hand before adding. Format: <fingerprint>
+#
+# Never add an entry to silence something you haven't actually checked.
+# The fingerprint format is: <file>:<rule-id>:<line-number>
+
+# projects/new-build/knowledge/source/app.py:376,1199
+# Confirmed false positive 8 Aug 2026: two Python function-argument
+# expressions where PROWLARR_API_KEY and CATEGORIES are variable references
+# (not literal secret values) passed as keyword arguments. Verified by
+# reading the actual source lines by hand before allowlisting.
+projects/new-build/knowledge/source/app.py:generic-api-key:376
+projects/new-build/knowledge/source/app.py:generic-api-key:1199
