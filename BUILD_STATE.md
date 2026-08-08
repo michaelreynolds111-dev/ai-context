@@ -1,8 +1,8 @@
 # BUILD STATE
 
-**Last updated:** 8 August 2026 (session 6 — Phase 4 COMPLETE)
-**Current phase:** Phase 5 — Portable Memory (§9)
-**Current sub-step:** §9.1 — OpenMemory MCP container + LibreChat memory config.
+**Last updated:** 8 August 2026 (session 7 — Phase 5 COMPLETE)
+**Current phase:** Phase 6 — Projects / RAG Knowledge Bases (§10)
+**Current sub-step:** §10.1 — first low-stakes project reconstruction before household DB.
 
 ## Phase status
 | Phase | Status | Exit test | Date |
@@ -13,8 +13,8 @@
 | 2 — Providers | **PASSED (scope revised, v1.2)** | 6/8 checks green; 2 rescoped out — see below | 7 Aug 2026 |
 | 3 — Agents + MCP | **PASSED** | All items complete — see below | 8 Aug 2026 |
 | 4 — Skills sync | **PASSED** | All 4 exit criteria met | 8 Aug 2026 |
-| 5 — Memory | IN PROGRESS | — | started 8 Aug 2026 |
-| 6 — Projects/RAG | NOT STARTED | — | — |
+| 5 — Memory | **PASSED** | Native memory cross-conversation verified | 8 Aug 2026 |
+| 6 — Projects/RAG | IN PROGRESS | — | started 8 Aug 2026 |
 | 7 — Goose | NOT STARTED | — | — |
 | 8 — Validation | NOT STARTED | — | — |
 | 9 — Cutover | NOT STARTED | — | — |
@@ -161,16 +161,28 @@ See prior BUILD_STATE entries (preserved in git history).
 - Model picker cleaned up: `endpointsMenu: false` hides unused providers; 18 models in 5 tiers via `modelSpecs`; `fetch: false` keeps list curated — ✓
 - Model list sourced from live DeepInfra API output (deepinfra_models.md, 8 Aug 2026) — ✓
 
-## Phase 5 progress (8 Aug 2026) — IN PROGRESS
-- Starting §9.1 — OpenMemory MCP container + LibreChat native memory config.
+## Phase 5 exit test — PASSED (8 Aug 2026)
+- LibreChat native memory configured at top-level in librechat.yaml — ✓
+- `validKeys` allow-list set (preferences, tone, systems, people, working_style) — ✓
+- Memory agent pointed at DeepInfra Work-tier (no OpenAI dependency) — ✓
+- `agent.enabled: true` explicitly set (required in v0.8.7, now opt-in) — ✓
+- `messageWindowSize: 10` (conservative) — ✓
+- Memory stored in conversation 1 recalled correctly in conversation 2 — ✓ VERIFIED
+- `~/ai-context/memory/` markdown files seeded: preferences.md, systems.md, people.md, decisions.md — ✓
+- OpenMemory MCP deferred: default setup requires OpenAI for extraction LLM (§14.4 violation). Revisit once DeepInfra routing for extraction is confirmed viable.
+
+## Phase 6 progress (8 Aug 2026) — IN PROGRESS
+- Starting §10.1 — first low-stakes project reconstruction (pattern proof before household DB).
 
 ## NEXT STEP
-**Phase 5 §9.1 — Deploy OpenMemory MCP and configure LibreChat native memory.**
+**Phase 6 §10.1 — reconstruct first project (low-stakes, non-sensitive).**
 
-1. Add OpenMemory container to `docker-compose.override.yml`
-2. Wire OpenMemory MCP server in `librechat.yaml`
-3. Configure LibreChat native memory block (`validKeys` allow-list, `messageWindowSize`)
-4. Seed `~/ai-context/memory/` markdown files (preferences, systems, people, decisions)
-5. Verify: `add_memories` writes, `search_memory` retrieves across two separate conversations
-6. Confirm `Household Admin` agent has no memory tool (already verified in Phase 3, re-check)
-7. Dump memory store end-to-end and confirm no identifiers present
+Per plan: prove the RAG + agent + skill + instructions pattern on a low-stakes project before touching household data. Household DB (§10.4) comes last in this phase.
+
+1. Identify a current Claude Project to port (non-sensitive — pick one together)
+2. Create `~/ai-context/projects/<name>/INSTRUCTIONS.md`
+3. Create the RAG file collection in LibreChat and upload knowledge files
+4. Create or update the relevant agent with the collection attached
+5. Test RAG retrieval returns correct passages with citations
+6. Repeat for remaining non-sensitive projects
+7. §10.4 household DB — Session 10 (Tier-1 quarantine first, then classify, then build)
