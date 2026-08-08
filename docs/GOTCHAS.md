@@ -316,11 +316,71 @@ silent fallthrough to "no credentials found."
 `mcpServers.spotify.env`. Confirmed: the full 10-tool set appears once
 `SPOTIFY_ACCESS_TOKEN` is present.
 
-**Note:** In env-var mode the package logs "refreshed tokens will NOT be
-persisted" — it re-derives a fresh access token from the refresh token in
-memory on each container start. Long-term fine (refresh tokens are durable),
-but it means the `spotify_mcp_credentials` Docker volume we created for this
-server currently goes unused in the env-var-only config.
+## Same package: env-var mode fakes token expiry and never refreshes — MUST set `SPOTIFY_EXPIRES_AT=1`
+
+**Symptom (8 Aug 2026):** All 10 tools loaded and `spotify_get_auth_status`
+reported "authenticated", but every `spotify_search` (and any other real API
+call) failed with `401 "Bad or expired token"`. Restarting the `api` container
+did NOT fix it. Injecting a freshly-minted access token into `.env` and
+restarting did NOT fix it either — same 401.
+
+**Root cause (confirmed by reading `dist/auth/token-manager.js`, not guessed):**
+In env-var mode the package trusts the static `SPOTIFY_ACCESS_TOKEN` string and
+**fabricates its expiry**:
+```js
+const expiresAt = process.env.SPOTIFY_EXPIRES_AT
+  ? parseInt(process.env.SPOTIFY_EXPIRES_AT)
+  : Date.now() + 3600 * 1000;   // default: 1 HOUR FROM CONTAINER START
+```
+`ensureValid()` only calls the refresh endpoint when `isExpired()` is true, and
+`isExpired()` checks against that fabricated `expiresAt`. So with
+`SPOTIFY_EXPIRES_AT` unset, for the first hour after every container start the
+package **believes the stale static token is valid and never refreshes it** —
+it sends the dead token verbatim and gets 401. `spotify_get_auth_status` only
+checks that credentials are *present* (`isConfigured()`), not that they work,
+so it always says "authenticated" — which is what sends you chasing a
+re-auth/credentials red herring. Restarting doesn't help because it just
+re-reads the same stale static token and re-fakes another hour of validity.
+
+**This corrects an earlier note in this section** which claimed the package
+"re-derives a fresh access token on each container start." It does NOT, in
+env-var mode, unless it thinks the token is expired. That earlier assumption
+was wrong.
+
+**Fix (verified end-to-end, 8 Aug 2026):** Add a permanently-past expiry so the
+token manager always refreshes on boot from the (durable, valid) refresh token:
+```
+# in ~/LibreChat/.env
+SPOTIFY_EXPIRES_AT=1
+```
+and pass it through in `librechat.yaml`:
+```yaml
+    env:
+      SPOTIFY_CLIENT_ID: "${SPOTIFY_CLIENT_ID}"
+      SPOTIFY_CLIENT_SECRET: "${SPOTIFY_CLIENT_SECRET}"
+      SPOTIFY_ACCESS_TOKEN: "${SPOTIFY_ACCESS_TOKEN}"
+      SPOTIFY_REFRESH_TOKEN: "${SPOTIFY_REFRESH_TOKEN}"
+      SPOTIFY_EXPIRES_AT: "${SPOTIFY_EXPIRES_AT}"
+```
+With `expiresAt` in the past, `isExpired()` is true on every start →
+`ensureValid()` runs `_refreshTokens()` → a proper Basic-auth refresh call
+(which returns HTTP 200 with the valid refresh token) → the fresh token is held
+in memory for that session. `SPOTIFY_ACCESS_TOKEN` still has to be *present*
+(the four-var gate above), but its value no longer matters — it's replaced by a
+live refresh immediately. Confirmed working via `spotify_search` in the
+LibreChat agent UI (real Radiohead discography returned).
+
+**General lesson for stdio MCP servers using static token env vars:** if a
+server takes an access token as a static env var, check whether it also honours
+an expiry env var. A static access token with no expiry hint is a trap — the
+server will trust a dead token. Prefer forcing refresh-on-boot over pasting a
+"fresh" access token that's stale by the time the container reads it.
+
+**Diagnostic that pinned this down (reusable):** read env values *inside* the
+container and run the package's real refresh + a live `/v1/search` call in one
+node script (never printing token values, only HTTP status + results). If the
+raw refresh→search works but the MCP tool fails, the bug is in how the package
+manages token lifecycle, not the credentials.
 
 ## MCP OAuth auth flow / credential store runs where the server runs
 

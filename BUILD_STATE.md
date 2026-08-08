@@ -1,8 +1,8 @@
 # BUILD STATE
 
-**Last updated:** 8 August 2026
+**Last updated:** 8 August 2026 (session 2 — Spotify smoke test + token fix)
 **Current phase:** Phase 3 — Agents + MCP (§7)
-**Current sub-step:** Blocker resolved — MongoDB fresh init complete, login confirmed working. Ready to resume §7.3 MCP table (Spotify UI smoke test first, then next server).
+**Current sub-step:** §7.3 Spotify MCP — **UI smoke test PASSED** (real search returned through agent). Spotify token-lifecycle bug found + fixed. Ready for next MCP server in the §7.3 table.
 
 ## Phase status
 | Phase | Status | Exit test | Date |
@@ -59,9 +59,10 @@
 
 ## Phase 3 progress (8 Aug 2026) — IN PROGRESS
 - **§7.2 recursion limits — DONE.** `recursionLimit: 75` / `maxRecursionLimit: 150` confirmed in librechat.yaml.
-- **§7.3 first MCP server — Spotify — INSTALLED + OAuth-TESTED.** `@tbrgeek/spotify-mcp-server` via npx in api container. All 10 tools confirmed via log inspection. UI smoke test still pending.
+- **§7.3 first MCP server — Spotify — INSTALLED + OAuth-TESTED + UI SMOKE TEST PASSED.** `@tbrgeek/spotify-mcp-server` via npx in api container. All 10 tools confirmed. A `Music`/`Spotify` agent was built in the LibreChat UI (model: anthropic/claude-sonnet-5 for the test; downgrade to a cheap model for daily use), Spotify tools attached, subagents/handoffs/chain OFF, no skills, no file context. `spotify_search` for Radiohead returned the real discography through the agent — verified by the tool-call block in the UI, not self-report. **§7.3 smoke test = PASS.**
+- **Spotify token-lifecycle bug — FOUND + FIXED (8 Aug 2026).** After install, every real Spotify API call 401'd ("Bad or expired token") despite auth-status reporting authenticated, and neither container restart nor injecting a fresh access token fixed it. Root cause (confirmed by reading `dist/auth/token-manager.js`): in env-var mode the package fakes token expiry to "start + 1 hour" when `SPOTIFY_EXPIRES_AT` is unset, so it never refreshes and sends the stale static token. **Fix: `SPOTIFY_EXPIRES_AT=1` in `.env` + passthrough in `librechat.yaml`** forces refresh-on-boot from the durable refresh token. Verified end-to-end. Full write-up in GOTCHAS §6.
 - **MongoDB blocker — RESOLVED (8 Aug 2026).** Fresh data-node init. New admin account registered. ALLOW_REGISTRATION re-locked. Root cause of original incident: WiredTiger unclean shutdown (Aug 7 host sleep/wake event) left mongod.lock non-empty + storage.bson unreadable, causing crash-loop on next start. See GOTCHAS §4 (updated).
-- **`docs/GOTCHAS.md` — CREATED and populated** (prior session). Updated this session with MongoDB resolution + UID/GID clarification.
+- **`docs/GOTCHAS.md` — updated** this session: MongoDB resolution (§4), UID/GID clarification (§3), and corrected + expanded Spotify token-lifecycle entry (§6, replacing the earlier incorrect "re-derives fresh token on every start" note).
 
 ## Decisions made
 - Ubuntu-24.04 LTS chosen (over 26.04) — 1 Aug 2026
@@ -83,6 +84,8 @@
 - D: cannot be BitLockered confirmed — 7 Aug 2026
 - **MongoDB fresh init chosen over WiredTiger recovery** — 8 Aug 2026. Lost data was early-phase test content only; no household/clinical data was ever in the DB. Pragmatic call.
 - **UID/GID in .env NOT the correct fix** — 8 Aug 2026. Setting UID=1000 in .env causes MongoDB to run as uid 1000, which can't read its own uid-999 data files. The UID/GID warnings from docker compose are cosmetic noise; MongoDB runs correctly as uid 999 (its internal default) when the Compose `user:` directive resolves to blank. The real prevention is clean shutdown handling (see GOTCHAS §4 updated).
+- **MCP agent design pattern (established with Spotify, applies to all Cluster-3 MCP agents)** — 8 Aug 2026. Scope each MCP agent NARROW: one service per agent for now (don't pre-merge Drive/M365/Spotify into one general agent — decide consolidation later). Use a reliable tool-calling model (sonnet-5) for the first smoke test to eliminate "did it even call the tool" as a variable, then downgrade to a cheap model for daily use. No skills, no file context, minimal system prompt for simple tool-call agents. Subagents/Handoffs/Chain OFF (beta, don't build on them). This does NOT relax the hard tool-exclusion rules for Household Admin / Clinical Work agents — those still get built with exclusions from the start.
+- **Spotify token-lifecycle: force refresh-on-boot** — 8 Aug 2026. Env-var-mode static access tokens are a trap in `@tbrgeek/spotify-mcp-server` (fakes expiry, never refreshes). `SPOTIFY_EXPIRES_AT=1` forces a real refresh from the durable refresh token on every start. General principle for any static-token MCP server: prefer forcing refresh over pasting a "fresh" access token. See GOTCHAS §6.
 
 ## Documentation conventions
 - **`BACKUP_AI_MASTER_BUILD_PLAN.md`** — spine, versioned (v1.2). Change via logged plan revision only.
@@ -110,6 +113,7 @@
 2. **UID=1000 in .env attempted and immediately reverted** — caused MongoDB crash-loop (can't read uid-999 data files). Lesson: the UID/GID warnings are cosmetic; don't try to fix them by setting michael's uid — MongoDB needs to run as its own internal uid 999. Added to GOTCHAS §3 and §4.
 3. **`docker compose exec` service name vs container name** — compose uses service name `mongodb`; `docker exec` uses container name `chat-mongodb`. These are different and not interchangeable. Used `docker exec chat-mongodb` + `docker cp` for all container operations this session.
 4. **GitHub MCP connector unavailable at session start** — required toggling on in the Claude UI before it appeared in tool_search. Once available it worked fine. Reinforces GOTCHAS §5: treat it as available for reads at session start only; don't depend on it surviving a long session.
+5. **Spotify 401 debug — corrected a prior session's wrong root cause.** The Aug 7 session's note that the package "re-derives a fresh access token on every container start" was disproven by reading the source. It only refreshes when it believes the token is expired, and in env-var mode it fakes expiry to start+1h. Fixed with `SPOTIFY_EXPIRES_AT=1`. GOTCHAS §6 corrected. Lesson reinforced: verify package behaviour against source, don't carry forward an unverified assumption.
 
 ## Deviations from plan (previous sessions — 7 Aug 2026, 6 Aug 2026)
 See prior BUILD_STATE entries (preserved in git history).
@@ -120,11 +124,12 @@ See prior BUILD_STATE entries (preserved in git history).
 (Full exit test detail preserved in git history / prior BUILD_STATE versions)
 
 ## NEXT STEP
-**Resume Phase 3 — Agents + MCP (§7).** Blocker cleared.
+**Resume Phase 3 — Agents + MCP (§7).** Spotify (§7.3 first server) fully done: installed, token bug fixed, UI smoke test passed.
 
-1. **Spotify UI smoke test** — open LibreChat, use the Spotify agent, confirm the 10 tools work end-to-end in the UI (search, play, pause, current playback). Log-inspect after, don't trust agent self-report.
-2. **Continue §7.3 MCP table** — next server(s) in lower-stakes-first order. Read BACKUP_AI_MASTER_BUILD_PLAN.md §7 before starting.
-3. **§7.4 purpose-built agents** — Household Admin + Clinical Work, with hard tool exclusions built in from the start (never deferred).
-4. **§7.6 exit test** — inspection-based verification of tool exclusions (not agent-reported).
+1. **Next MCP server in the §7.3 table** — pick the next lower-stakes server and wire it the same way. Read BACKUP_AI_MASTER_BUILD_PLAN.md §7 first. Apply the MCP agent design pattern from Decisions (narrow scope, reliable model for smoke test, no skills/file-context, orchestration OFF). Watch for the same static-token trap on any OAuth server (GOTCHAS §6).
+2. **§7.4 purpose-built agents** — Household Admin + Clinical Work, with hard tool exclusions (no browser, shell, web search, code exec, memory) built in from the start — never deferred.
+3. **§7.6 exit test** — inspection-based verification of tool exclusions (not agent-reported).
 
-All commands via Desktop Commander → `wsl -d Ubuntu-24.04` / UNC path. Read GOTCHAS.md §3/§4 before touching MongoDB or Docker again.
+Optional cleanup when convenient (low priority): downgrade the Spotify agent's model from sonnet-5 to a cheap model for daily use; remove `~/LibreChat/data-node.old-20260808`.
+
+All commands via Desktop Commander → `wsl -d Ubuntu-24.04` / UNC path. Read GOTCHAS.md §3/§4 before touching MongoDB or Docker, §6 before wiring another OAuth MCP server.
