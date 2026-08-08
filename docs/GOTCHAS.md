@@ -473,6 +473,44 @@ future rebuilds.
   container was stopped and removed (it's superseded by the LibreChat decision
   anyway). Port 3000 is used by LibreChat's bundled `admin-panel`.
 
+## Deployment skills are scanned ONCE at container startup — not live-watched
+
+**Symptom (8 Aug 2026, Phase 4):** Wrote 6 new `SKILL.md` files into
+`~/ai-context/skills/` while the `api` container was already running. All 7
+skill directories were confirmed visible inside the container at `/app/skill`
+(bind mount is live for file content). But the LibreChat UI's Skills catalog
+only showed the 1 skill (`session-close`) that existed **before** the
+container started — the 6 new ones were invisible in the UI despite being
+physically present in the mounted directory.
+
+**Root cause (confirmed via logs, not guessed):**
+```
+[deploymentSkills] Loaded 1 deployment skill(s) from /app/skill
+```
+This log line appears exactly once, at container startup. LibreChat scans
+`/app/skill` (or wherever `DEPLOYMENT_SKILLS_DIR` points) **once when the
+process boots** and builds its in-memory skill catalog from that snapshot. It
+does not re-scan on a live filesystem change, even though the bind mount
+itself updates instantly.
+
+**Fix:** restart the `api` container after adding or editing any skill file:
+```bash
+cd ~/LibreChat && docker compose up -d --force-recreate api
+```
+Then confirm the new count in the logs:
+```bash
+docker compose logs api 2>&1 | grep -i skill | tail -3
+```
+Expect `[deploymentSkills] Loaded N deployment skill(s) from /app/skill` with
+`N` matching the actual directory count. Verified: after restart, count went
+from 1 → 7 correctly.
+
+**General lesson:** don't assume a bind mount being "live" means the
+*application* treats it as live — the mount can update in real time while the
+app's internal cache/catalog built from that mount only refreshes on next
+boot. Always check for a one-time-scan log line before assuming a file change
+took effect without a restart.
+
 ---
 
 # 9. Deferred OAuth flows (ready to execute, not yet done)
