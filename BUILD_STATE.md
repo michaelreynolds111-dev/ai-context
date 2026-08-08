@@ -1,8 +1,8 @@
 # BUILD STATE
 
-**Last updated:** 9 August 2026 (Phase 8 complete — Phases 0–8 done, Phase 9 next)
+**Last updated:** 9 August 2026 (Phase 8 complete — Phases 0–8 done, Phase 9 in progress)
 **Current phase:** Phase 9 — Cutover (§13)
-**Current sub-step:** §13.1 — Declare system ready for daily use. Begin using LibreChat + Goose as primary AI interface.
+**Current sub-step:** §13.2 — Work through deferred items in priority order (below). Claude Projects migration is last, as it is the largest and slowest-moving item.
 
 ## Phase status
 | Phase | Status | Exit test | Date |
@@ -17,7 +17,7 @@
 | 6 — Projects/RAG | **PASSED** | Pattern proven, scope decision made | 8 Aug 2026 |
 | 7 — Goose | **PASSED** | All 4 exit criteria met | 8 Aug 2026 |
 | 8 — Validation | **PASSED** | All 6 clusters passed, security audit clean | 9 Aug 2026 |
-| 9 — Cutover | IN PROGRESS | — | next |
+| 9 — Cutover | IN PROGRESS | System live; working through deferred items | ongoing |
 
 ## Environment facts (confirmed)
 - Machine: Michael-PC, Windows 11 Home 26200, i5-12400, 15.8 GB RAM
@@ -39,7 +39,7 @@
 | Cluster | Result | Notes |
 |---|---|---|
 | 1 — Sysadmin (Goose) | ✅ PASSED | Removed stray hello-world container + image autonomously; Stash stack untouched |
-| 2 — Clinical (LibreChat) | ✅ PASSED | Submission-quality progress note; no tool calls; routing unverified (network tab not captured) |
+| 2 — Clinical (LibreChat) | ✅ PASSED | Submission-quality progress note; no tool calls; routing confirmed via network tab (DeepInfra fetch only, no external hosts) |
 | 3 — Agentic MCP (LibreChat) | ✅ PASSED | Tavily + filesystem MCP both fired; min_wage_research.md confirmed on disk with full junior/apprentice rate table |
 | 4 — Research (LibreChat) | ✅ PASSED | Accurate s.524 FWA analysis; Qantas TWU [2022] FCAFC 71 correctly cited and characterised |
 | 5 — Persistent context (LibreChat) | ✅ PASSED | Cross-session memory working; project recalled correctly after one-time seed |
@@ -52,30 +52,30 @@
 
 ### Notes
 - Cluster 5 required a one-time memory seed (project context had never been mentioned in a LibreChat conversation before). Expected and acceptable — from here forward memory carries it automatically.
-- Cluster 2 routing was not verified via network tab (screenshot not captured this session). Content quality was strong; routing assumed correct based on DeepInfra-only provider config. Recommend spot-checking routing next session.
+- Cluster 2 routing confirmed 9 Aug 2026 via DevTools network tab: only call was `DeepInfra` fetch, 200, 189ms. No calls to OpenAI, OpenRouter, or any other external host. Routing verified clean.
 
-## Phase 9 — Cutover (next steps)
+## Phase 9 — Cutover (in progress)
 
-Phase 9 is operational, not a build phase. The system is ready. What this means in practice:
+System is live. LibreChat at `localhost:3080` + Goose are now the primary AI interface, replacing Claude Pro Desktop for daily use.
 
-**Start using it:**
-- LibreChat at `localhost:3080` is your primary AI interface for daily work
-- Goose for autonomous multi-step tasks that need a real shell loop
-- Claude Desktop (this interface) for supervised build work and session management only
+### Deferred items — priority order
 
-**Remaining deferred items (complete when convenient, don't block cutover):**
-- Google Drive MCP OAuth — GOTCHAS §9 has the full steps, ~30-45 min
-- M365 MCP OAuth — GOTCHAS §9 has the full steps, ~30-45 min
-- Cluster 2 routing spot-check (network tab, one message)
-- `~/LibreChat/data-node.old-20260808` cleanup (low priority)
-- `ADHD Treatment Plan.md` RAG reindex to correct collection (low priority)
+Work through these in the order listed. **Claude Projects migration is deliberately last** — it is the largest-scope, slowest-moving item, and migrating projects via LibreChat is itself the real-world validation of the whole system, so it benefits from a settled, fully-OAuth'd environment underneath it.
 
-**Session 10 (planned, separate session):**
-- Encrypted C: drive data migration
-- Legacy `D:\Data` pipeline audit and decommission (7 scheduled tasks)
-- Credential quarantine for discovered cleartext files
+1. **Google Drive MCP OAuth** — ~30-45 min. Full steps in GOTCHAS.md §9. Needed for Research/Clinical agents to reach Drive-hosted documents.
+2. **M365 MCP OAuth** — ~30-45 min. Full steps in GOTCHAS.md §9. Note the `MS365_MCP_TENANT_ID=consumers` requirement for personal MS accounts.
+3. **Housekeeping cleanup (low priority, quick wins):**
+   - `~/LibreChat/data-node.old-20260808` — remove via docker exec (leftover from the Aug 7-8 MongoDB reinit, see GOTCHAS §4)
+   - `ADHD Treatment Plan.md` — currently in an unscoped RAG collection, needs reindexing to the correct scoped collection
+   - `~/agent-workdir/goose_exit_test.md` and `min_wage_research.md` — Phase 7/8 test artefacts, safe to delete once no longer needed for reference
+4. **Claude Projects migration (last, largest item)** — migrate remaining Claude Pro Projects into LibreChat's Projects/RAG feature (pattern already proven in Phase 6). This is the parallel-run validation period: as each project migrates, confirm retrieval quality matches or beats Claude Pro before considering that project's migration complete. No fixed deadline — proceed at a sustainable pace.
+
+### Session 10 (separate, planned session — book when ready)
+- Encrypted C: drive data migration from `D:\Data`
+- Legacy pipeline decommission (`D:\Data`, 7 live scheduled tasks)
+- Credential quarantine for any discovered cleartext files
 - H3: Password manager decision (Bitwarden recommended, currently undecided)
-- H4: Sarah's access decision
+- H4: Sarah's access setup decision (shared-machine approach recommended over LAN exposure)
 
 ## Open questions
 - H3: Password manager — Google PM currently; Bitwarden recommended. UNDECIDED — hard dependency for Session 10
@@ -86,7 +86,10 @@ Phase 9 is operational, not a build phase. The system is ready. What this means 
 See git history for full detail.
 
 ## NEXT STEP
-**Phase 9 — Cutover.**
-Begin daily use. LibreChat + Goose replace Claude Pro Desktop as primary interface.
-Complete deferred OAuth flows (Google Drive, M365) when time permits.
-Book Session 10 for data migration + legacy pipeline decommission.
+**Phase 9 — Cutover, deferred items, in priority order:**
+1. Google Drive MCP OAuth (GOTCHAS §9)
+2. M365 MCP OAuth (GOTCHAS §9)
+3. Housekeeping cleanup (data-node.old, RAG reindex, test artefacts)
+4. Claude Projects migration (last — largest scope, ongoing parallel-run validation)
+
+Session 10 (separate): C: drive migration, legacy pipeline decommission, password manager + Sarah's access decisions.
