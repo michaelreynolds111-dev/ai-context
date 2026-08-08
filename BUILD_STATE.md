@@ -1,8 +1,8 @@
 # BUILD STATE
 
-**Last updated:** 8 August 2026 (session 5 — Phase 3 COMPLETE, Phase 4 starting)
-**Current phase:** Phase 4 — Skills Sync (§8)
-**Current sub-step:** §8.1 — skills loading mechanism. Volume mount already in place (Phase 1). Confirming `DEPLOYMENT_SKILLS_DIR` is wired and skills appear in catalog.
+**Last updated:** 8 August 2026 (session 6 — Phase 4 COMPLETE)
+**Current phase:** Phase 5 — Portable Memory (§9)
+**Current sub-step:** §9.1 — OpenMemory MCP container + LibreChat memory config.
 
 ## Phase status
 | Phase | Status | Exit test | Date |
@@ -12,8 +12,8 @@
 | 1 — LibreChat deploy | **PASSED** | All 5 checks green | 6 Aug 2026 |
 | 2 — Providers | **PASSED (scope revised, v1.2)** | 6/8 checks green; 2 rescoped out — see below | 7 Aug 2026 |
 | 3 — Agents + MCP | **PASSED** | All items complete — see below | 8 Aug 2026 |
-| 4 — Skills sync | IN PROGRESS | — | started 8 Aug 2026 |
-| 5 — Memory | NOT STARTED | — | — |
+| 4 — Skills sync | **PASSED** | All 4 exit criteria met | 8 Aug 2026 |
+| 5 — Memory | IN PROGRESS | — | started 8 Aug 2026 |
 | 6 — Projects/RAG | NOT STARTED | — | — |
 | 7 — Goose | NOT STARTED | — | — |
 | 8 — Validation | NOT STARTED | — | — |
@@ -153,23 +153,24 @@ See prior BUILD_STATE entries (preserved in git history).
 - Household Admin tool exclusion verified by MongoDB inspection — ✓
 - Research/General agents cannot reach clinical/household collections — ✓ (collections not yet built, correct by absence)
 
-## Phase 4 progress (8 Aug 2026) — IN PROGRESS
-- Starting §8.1 — volume mount (`/app/skill`) already wired in override from Phase 1. Need to confirm `DEPLOYMENT_SKILLS_DIR` is set and skills appear in catalog.
-- Skills to port per plan §8.3: session-close, clinical-writing, household-admin, seddon-financial-forensics, seddon-family-law-drafter, workplace-law-research, powershell-sysadmin, document skills (docx/pptx/xlsx/pdf).
+## Phase 4 exit test — PASSED (8 Aug 2026)
+- §8.1 volume mount (`/app/skill`) confirmed working from Phase 1 — ✓
+- §8.4 all 7 skills appear in LibreChat catalog after container restart — ✓
+- `/s` manual invocation available via Skills toolbar — ✓
+- Skills correctly absent until container restart (GOTCHAS §8 updated) — ✓
+- Model picker cleaned up: `endpointsMenu: false` hides unused providers; 18 models in 5 tiers via `modelSpecs`; `fetch: false` keeps list curated — ✓
+- Model list sourced from live DeepInfra API output (deepinfra_models.md, 8 Aug 2026) — ✓
+
+## Phase 5 progress (8 Aug 2026) — IN PROGRESS
+- Starting §9.1 — OpenMemory MCP container + LibreChat native memory config.
 
 ## NEXT STEP
-**Phase 4 §8.1 — verify skills loading, then port skills.**
+**Phase 5 §9.1 — Deploy OpenMemory MCP and configure LibreChat native memory.**
 
-First: check whether `DEPLOYMENT_SKILLS_DIR` is already set in `.env` and whether the `/app/skill` mount contains any skills yet.
-
-Then port skills in priority order per §8.3:
-1. `session-close` (high — backbone of multi-session work)
-2. `clinical-writing` (high — Cluster 2)
-3. `household-admin` (high — Cluster 6, method only)
-4. `seddon-financial-forensics` (high — [SENSITIVE], method only)
-5. `seddon-family-law-drafter` (high — [SENSITIVE])
-6. `workplace-law-research` (medium — Cluster 4)
-7. `powershell-sysadmin` (medium — Cluster 1)
-8. Document skills: `docx`, `pptx`, `xlsx`, `pdf` (medium)
-
-All commands via Desktop Commander → `wsl -d Ubuntu-24.04` / UNC path.
+1. Add OpenMemory container to `docker-compose.override.yml`
+2. Wire OpenMemory MCP server in `librechat.yaml`
+3. Configure LibreChat native memory block (`validKeys` allow-list, `messageWindowSize`)
+4. Seed `~/ai-context/memory/` markdown files (preferences, systems, people, decisions)
+5. Verify: `add_memories` writes, `search_memory` retrieves across two separate conversations
+6. Confirm `Household Admin` agent has no memory tool (already verified in Phase 3, re-check)
+7. Dump memory store end-to-end and confirm no identifiers present
