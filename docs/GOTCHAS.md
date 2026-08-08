@@ -372,7 +372,7 @@ LibreChat agent UI (real Radiohead discography returned).
 
 **General lesson for stdio MCP servers using static token env vars:** if a
 server takes an access token as a static env var, check whether it also honours
-an expiry env var. A static access token with no expiry hint is a trap — the
+an expiry env var. A static access token with no expiry env var is a trap — the
 server will trust a dead token. Prefer forcing refresh-on-boot over pasting a
 "fresh" access token that's stale by the time the container reads it.
 
@@ -655,3 +655,73 @@ at `https://github.com/softeria/ms-365-mcp-server` before executing.
 the Clinical Work agent. Check the `api` logs for any token refresh errors.
 If sessions die after ~1 hour, confirm `MS365_MCP_TENANT_ID=consumers` is
 set and the server is picking it up.
+
+---
+
+# 10. Goose (Phase 7)
+
+## Goose config locations on Windows (username = micha)
+
+- **Install dir:** `C:\Users\micha\AppData\Local\Programs\Goose\`
+- **Config dir:** `C:\Users\micha\AppData\Roaming\Block\goose\config\`
+- **config.yaml:** `C:\Users\micha\AppData\Roaming\Block\goose\config\config.yaml`
+- **Custom provider JSON:** `C:\Users\micha\AppData\Roaming\Block\goose\config\custom_providers\custom_deepinfra.json`
+- **Global skills dir:** `C:\Users\micha\.config\agents\skills\`
+- **Skills sync script:** `C:\Users\micha\AppData\Roaming\Block\goose\sync_skills.ps1`
+
+## DeepInfra custom provider: base_url / base_path split
+
+**Symptom:** 404 on `https://api.deepinfra.com/v1/openai/v1/chat/completions`
+(duplicated `/v1`) or 404 on `https://api.deepinfra.com/v1/openai` (path
+truncated). Took 3 iterations to resolve.
+
+**Root cause:** Goose's OpenAI engine behaves differently depending on whether
+`base_path` is set:
+- If `base_path` is `null` or absent: engine auto-appends `/v1/chat/completions`
+  to `base_url`. So `base_url: https://api.deepinfra.com/v1/openai` →
+  `https://api.deepinfra.com/v1/openai/v1/chat/completions` — wrong (doubled).
+- If `base_path` is set to a non-null string: engine uses `base_url + base_path`
+  verbatim with **no further suffix added**.
+- If `base_path` is `""` (empty string): behaves like `null` — still
+  auto-appends the suffix.
+
+**Fix (confirmed working):**
+```json
+"base_url": "https://api.deepinfra.com",
+"base_path": "v1/openai/chat/completions"
+```
+This constructs `https://api.deepinfra.com/v1/openai/chat/completions` exactly.
+
+## Skills: Windows junctions cannot cross the WSL UNC boundary
+
+**Symptom:** `cmd /c mklink /J "C:\Users\micha\.config\agents\skills\clinical-writing" "\\wsl.localhost\Ubuntu-24.04\home\michael\ai-context\skills\clinical-writing"` fails with "Local volumes are required to create links" — the junction is created but resolves to nothing.
+
+**Root cause:** Windows directory junctions require both source and target to be
+on local NTFS volumes. WSL UNC paths (`\\wsl.localhost\...`) are a network-style
+path as far as Windows is concerned, not a local volume.
+
+**Fix:** Copy SKILL.md files to the Windows-native skills dir and maintain with
+a sync script. After any skill edit in WSL:
+```powershell
+& "C:\Users\micha\AppData\Roaming\Block\goose\sync_skills.ps1"
+```
+The sync script copies all 7 skills from the WSL UNC path to
+`C:\Users\micha\.config\agents\skills\`. Skills don't change often — this is
+an acceptable trade-off.
+
+## filesystem-mcp extension cannot write to WSL UNC paths
+
+**Symptom:** Goose's `filesystem-mcp` extension (running as a Windows process)
+can read from `\\wsl.localhost\...` paths but cannot write to them — the MCP
+server's write calls fail silently or with access errors.
+
+**Root cause:** The `@modelcontextprotocol/server-filesystem` process runs as a
+Windows Node.js process. Windows write access to WSL's virtual filesystem via
+the UNC path has limitations — reads work, writes are blocked for the MCP
+server process.
+
+**Fix/workaround:** Use Goose's built-in `developer` shell extension for any
+write that needs to land in WSL. Goose self-corrects: when filesystem-mcp
+write fails, it falls back to `shell` → `wsl -e cp` or equivalent. This is the
+correct division of labour — `developer` shell for WSL ops, `filesystem-mcp`
+for Windows-side file ops.
