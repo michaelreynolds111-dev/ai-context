@@ -1,6 +1,6 @@
 # BACKUP AI SYSTEM — MASTER BUILD PLAN
 
-**Version:** 1.4
+**Version:** 1.5
 **Created:** 28 July 2026
 **Last revised:** 8 August 2026
 **Source research:** `AI_Build.pdf` — *Backup AI System Design for a Windows 11 Power User (July 2026)*
@@ -15,6 +15,7 @@
 | 1.2 | 7 Aug 2026 | **OpenRouter demoted from Phase 2 requirement to backlog/resilience item.** During Phase 2, confirmed DeepInfra's catalog now hosts Claude Sonnet 5 and other closed-lab models directly (verified 6 Aug 2026), closing the capability gap OpenRouter was originally meant to cover. OpenRouter's remaining value is vendor redundancy — a second, independent inference relationship — not capability. `librechat.yaml` keeps a scaffolded, commented-out OpenRouter block ready to activate; the Anthropic-direct endpoint is likewise no longer required for the Ceiling tier since DeepInfra covers it. Updated: §1.1, §1.2, §2, §3.3, §6.1, §6.2, §6.4, §14.3, §18. |
 | 1.3 | 8 Aug 2026 | **`docs/GOTCHAS.md` added as a first-class build doc.** A permanent record of environment-specific facts for this machine (Node-on-Windows quirks, PowerShell↔WSL↔Docker quoting, Docker UID/volume behaviour, MCP auth specifics), distinct from `PLAN_DEVIATIONS` (about the plan) and GitHub Issues (open problems). Registered in the repo tree (§4), the project-knowledge file list (§16.2), and the session-open/close rituals (§16.4, §16.6). Also: local git via the WSL2 clone recorded as the default push method (the GitHub MCP connector proved unreliable across a long session). No change to build steps or architecture. |
 | 1.4 | 8 Aug 2026 | **`docs/MIGRATION_INVENTORY.md` added as a first-class build doc.** A live tracking file for locating and migrating scattered Claude Projects and working folders into the new `ai-context/projects/` + RAG collection + agent structure, companion to the static Appendix A worksheet template. Created when Phase 6 began and it became clear many existing Claude Projects predate the new system and are scattered across the filesystem with unknown current locations. Registered in the repo tree (§4.2) and the project-knowledge file list (§16.2). No change to build steps or architecture. |
+| 1.5 | 8 Aug 2026 | **Project migration deferred to post-cutover (§10.2, §10.3, §17 revised).** Phase 6 scope narrowed to proving the RAG + agent + INSTRUCTIONS.md pattern on one project (done: New Build/Stash). All remaining Claude Project migrations deferred to the Phase 9 parallel-run period, to be done *using LibreChat* as the real-world validation that it has replaced Claude Pro. §17 roadmap updated to reflect actual session sequence. No change to architecture or security model. |
 
 ---
 
@@ -684,13 +685,37 @@ For each project:
 
 ### 10.2 Projects to migrate
 
-Inventory every current Claude Project. For each, capture: Project Instructions text, knowledge files, attached skills, typical model tier, and whether it is **[SENSITIVE]** or **[IDENTITY]**.
+**Decision (8 Aug 2026):** Individual project migrations are deferred until
+after Phase 9 cutover. The full inventory lives in
+`docs/MIGRATION_INVENTORY.md` — every known Claude Project and scattered
+working folder is tracked there with its status, sensitivity classification,
+and target.
+
+**Why deferred:** migrating projects mid-build fragments momentum and some
+projects could each take a full session. More importantly, doing the migration
+*using* LibreChat (rather than Claude Desktop) is itself the real-world proof
+that the system is working — making it the natural Phase 9 / parallel-run
+period work.
+
+**Phase 6 scope:** prove the RAG + agent + INSTRUCTIONS.md pattern on one
+low-stakes project. Done: `projects/new-build/` (Stash/TorBox bridge stack),
+`Stash Ops` agent built, pattern confirmed. All remaining projects marked
+DEFERRED in `MIGRATION_INVENTORY.md`.
+
+**Post-cutover process** (for each deferred project, using LibreChat):
+1. Open the original Claude Project — copy Instructions + list knowledge files
+2. Locate associated files on disk
+3. Classify sensitivity (General / [SENSITIVE] / [IDENTITY])
+4. Write `INSTRUCTIONS.md`, copy knowledge files, create RAG collection, build agent
+5. Test RAG retrieval with citations
+6. Update `MIGRATION_INVENTORY.md` → MIGRATED with commit SHA
 
 ### 10.3 Exit test
 
-- [ ] One project fully reconstructed (instructions + knowledge + skills + agent)
+- [ ] One project fully reconstructed (instructions + knowledge + agent) — proves the pattern
 - [ ] RAG retrieval returns correct passages with citations from the knowledge files
-- [ ] The reconstructed project produces output of comparable quality to the Claude original on a known task
+- [ ] `docs/MIGRATION_INVENTORY.md` populated with all known projects, each classified and either MIGRATED or DEFERRED with a reason
+- [ ] **(v1.4 revised)** Full project migration is deliberately deferred to post-cutover — the exit criterion is pattern proven on one project, not all projects migrated. Remaining migrations happen using LibreChat itself during Phase 9 parallel-run period.
 
 ---
 
@@ -1125,16 +1150,19 @@ Do not summarise the conversation. Produce the artifact.
 | **Sessions 4–5** | Phase 3 | Agents + core MCP servers, OAuth tested |
 | **Session 6** | Phase 4 | Skills syncing from repo |
 | **Session 7** | Phase 5 | Memory portable across tools |
-| **Sessions 8–9** | Phase 6 — general projects | Projects reconstructed, RAG pattern proven on low-stakes material |
-| **Sessions 10–11** **(v1.1, revised 1 Aug 2026)** | Phase 6 §10.4 — household DB | Cluster 6 live. Session 10 is **Tier-1 quarantine (step 0), legacy-pipeline audit, classification, and extraction — no building.** Session 11 indexes and builds the agent |
-| **Week 2+** | Phase 7 | Goose added *only if* a real ceiling is hit |
-| **Weeks 3–4** | Phases 8–9 | Validated, parallel-run, cutover |
+| **Session 8** | Phase 6 — RAG pattern proof | One project reconstructed (New Build / Stash — done). All other projects marked DEFERRED in `docs/MIGRATION_INVENTORY.md`. **(v1.4 revised — see below)** |
+| **Session 9** | Phase 6 §10.4 — household DB | Cluster 6 live. Tier-1 quarantine (step 0), legacy-pipeline audit, classification, and extraction — no building. Indexes and builds the agent. |
+| **Session 10** | Phase 7 — Goose | Goose installed, configured, proven on a real sysadmin task. First natural task: scoped live access to Stash stack. |
+| **Weeks 2–3** | Phases 8–9 | Validated, parallel-run, cutover |
+| **Post-cutover** | Project migrations | Remaining Claude Projects migrated one at a time *using LibreChat*, per `docs/MIGRATION_INVENTORY.md`. This is Phase 9's real validation: if the system can migrate its own predecessors, it has replaced Claude Pro. |
 
 **Minimum viable backup = Phases 0–3.** That alone replaces most of Claude Pro's day-to-day value in one window. Everything after that is depth.
 
+**(v1.4 revised — project migration sequencing).** The original plan called for Sessions 8–9 to reconstruct all general Claude Projects before moving to the household DB. This was revised on 8 Aug 2026: migrating projects mid-build fragments momentum and some could each take a full session. The migration is now deliberately deferred to the post-cutover parallel-run period. Doing it *using* LibreChat is itself the real-world proof that it has replaced Claude Pro. The Phase 6 exit criterion is pattern proven on one project, not all projects migrated.
+
 **On sequencing Cluster 6 (v1.1).** It is tempting to pull the household database forward — it is the most immediately useful thing in this plan and the most concrete. Resist that. It depends on local embeddings (Phase 2), agent tool scoping (Phase 3), and a proven RAG workflow (Phase 6). Building it early means building it on unproven infrastructure with your family's documents as the test data.
 
-Session 10 exists as a separate session on purpose: classification is unglamorous, it is the step most likely to get rushed, and it is the step where getting it wrong is unrecoverable. It gets its own session with nothing to build at the end of it.
+The household DB session exists as a separate session on purpose: classification is unglamorous, it is the step most likely to get rushed, and it is the step where getting it wrong is unrecoverable. It gets its own session with nothing to build at the end of it.
 
 ---
 
