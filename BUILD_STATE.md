@@ -1,8 +1,8 @@
 # BUILD STATE
 
-**Last updated:** 9 August 2026 (Session 9 — mid-day commits reconciled: workspace plan link, Goose+LibreChat integration item, and Docker anomaly restored after being overwritten by later Phase 9a pushes)
+**Last updated:** 9 August 2026 (Session 9 — Cluster 6 build workstream and operational hardening backlog surfaced; scaffolds committed for household project and build-session-close skill)
 **Current phase:** Phase 9 — Cutover (§13)
-**Current sub-step:** §9a — Remote mobile access + STT. Deferred items 4–6 queued behind it.
+**Current sub-step:** §9a — Remote mobile access + STT. Deferred items 4–7 queued behind it.
 
 ## Phase status
 | Phase | Status | Exit test | Date |
@@ -14,7 +14,7 @@
 | 3 — Agents + MCP | **PASSED** | All items complete | 8 Aug 2026 |
 | 4 — Skills sync | **PASSED** | All 4 exit criteria met | 8 Aug 2026 |
 | 5 — Memory | **PASSED** | Native memory cross-conversation verified | 8 Aug 2026 |
-| 6 — Projects/RAG | **PASSED** | Pattern proven, scope decision made | 8 Aug 2026 |
+| 6 — Projects/RAG | **PASSED (pattern only — Cluster 6 build outstanding)** | Pattern proven on New Build; Cluster 6 household DB still to build post-Session 10 | 8 Aug 2026 |
 | 7 — Goose | **PASSED** | All 4 exit criteria met | 8 Aug 2026 |
 | 8 — Validation | **PASSED** | All 6 clusters passed, security audit clean | 9 Aug 2026 |
 | 9 — Cutover | IN PROGRESS | System live; working through deferred items | ongoing |
@@ -47,7 +47,7 @@
 | 3 — Agentic MCP (LibreChat) | ✅ PASSED | Tavily + filesystem MCP both fired; min_wage_research.md confirmed on disk with full junior/apprentice rate table |
 | 4 — Research (LibreChat) | ✅ PASSED | Accurate s.524 FWA analysis; Qantas TWU [2022] FCAFC 71 correctly cited and characterised |
 | 5 — Persistent context (LibreChat) | ✅ PASSED | Cross-session memory working; project recalled correctly after one-time seed |
-| 6 — Household Admin (LibreChat) | ✅ PASSED | No tool calls fired; hard exclusions confirmed |
+| 6 — Household Admin (LibreChat) | ✅ PASSED (tool-exclusion test only) | No tool calls fired; hard exclusions confirmed. **Full Cluster 6 build (vault, RAG collection, real-task test) still outstanding — see Deferred item 7** |
 
 ### Security audit — PASSED
 - `git log -p` grep: all matches are placeholders (`changeme`), `<REDACTED>` markers, env var references, or documentation text. No real credential values in history.
@@ -99,10 +99,23 @@ System is live. LibreChat at `localhost:3080` + Goose are now the primary AI int
    - Full inventory, rationale, and execution brief in **`SESSION_10_WORKSPACE_PLAN.md`**.
    - **Overlaps with legacy pipeline decommission** — reconcile into one work item at Session 10 start. The `D:\Data` legacy pipeline audit and the `ai-workspace/` junction plan touch overlapping directories.
 
-6. **Claude Projects migration** — LAST. No fixed deadline. Parallel-run validation period.
+6. **Claude Projects migration** — LAST-BUT-ONE. No fixed deadline. Parallel-run validation period.
    - Pattern proven in Phase 6. Migrate remaining Claude Pro Projects into LibreChat Projects/RAG at a sustainable pace.
    - For each project: upload docs → confirm retrieval quality → mark migrated in `docs/MIGRATION_INVENTORY.md`.
    - RAG data will move to C: drive in Session 10 — migration can begin now and carry over.
+
+7. **Cluster 6 — Household DB agent build** — 🏗️ THE BIG ONE, POST-SESSION-10
+   - The Household Admin agent's *tool exclusions* were verified at Phase 8, but its actual purpose (retrieve household identifiers from a scoped RAG collection) has not been built. This is the single largest piece of remaining build work.
+   - **Hard dependency:** Session 10 Tier-1 quarantine (§10.4.2 step 0) must complete first. No indexing of the household staging tree happens before every known credential file is quarantined into the password manager.
+   - **Scope (per master plan §10.4):**
+     - Populate `~/household-vault/{documents,identifiers,renewals.md}` from the cleaned staging tree
+     - Refine `projects/household/SCHEMA.md` (scaffolded now — needs field-set matched to actual household data at build time)
+     - Refine `projects/household/INSTRUCTIONS.md` (scaffolded now — behaviour rules already encoded)
+     - Create `household` RAG collection with **local embeddings** — verify no outbound traffic at index time
+     - Wire the collection to the `Household Admin` agent (tools already `[]` — do not change)
+     - Write `skills/household-admin/SKILL.md` — method only, no values
+   - **Exit test:** master plan §10.4.5 in full — every item classified, zero Tier-1 in vault, agent cites source document, agent says "not found" instead of confabulating, real household form completed end-to-end faster than by hand, `git log -p` clean for identifier patterns.
+   - **Do not pull forward.** Master plan §17 warning: "It is tempting to pull the household database forward — it is the most immediately useful thing in this plan and the most concrete. Resist that."
 
 ### Session 10 (separate, planned session — book when ready)
 
@@ -111,14 +124,31 @@ System is live. LibreChat at `localhost:3080` + Goose are now the primary AI int
 - H4: Sarah's access setup decision (shared-machine approach recommended over LAN exposure).
 - ai-workspace root path choice (see SESSION_10_WORKSPACE_PLAN.md).
 
-**Session 10 work items:**
-- Verify Docker `admin-panel`/`clickhouse` display anomaly (quick first task; see Environment facts).
-- Locate LibreChat's real filesystem location — first Goose task at session start (needed for workspace junction step).
-- Tier-1 quarantine per master plan §10.4.2 step 0 — blocking, must complete before any indexing of the household staging tree.
-- Legacy pipeline audit and decommission — port/redesign/retire each component per §10.4.4. Covers the seven live scheduled tasks and predecessor automation (`.lancedb`, `profile.db`, gateway component, password-email/PDF readers).
-- Workspace consolidation via NTFS junctions per SESSION_10_WORKSPACE_PLAN.md (reconcile with legacy pipeline scope above).
-- Encrypted C: drive data migration from `D:\Data` (only after each scheduled task is repointed or retired).
-- Credential quarantine for any cleartext files discovered during audit.
+**Session 10 work items (in order):**
+1. Verify Docker `admin-panel`/`clickhouse` display anomaly (quick first task; see Environment facts).
+2. Locate LibreChat's real filesystem location — first Goose task at session start (needed for workspace junction step).
+3. **Tier-1 quarantine** per master plan §10.4.2 step 0 — **blocking, must complete before any indexing** of the household staging tree.
+4. Legacy pipeline audit and decommission — port/redesign/retire each component per §10.4.4. Covers the seven live scheduled tasks and predecessor automation (`.lancedb`, `profile.db`, gateway component, password-email/PDF readers).
+5. Workspace consolidation via NTFS junctions per SESSION_10_WORKSPACE_PLAN.md (reconcile with legacy pipeline scope above).
+6. Encrypted C: drive data migration from `D:\Data` (only after each scheduled task is repointed or retired).
+7. Credential quarantine sweep for any cleartext files discovered during audit.
+
+### Operational hardening — backlog (surface, no fixed deadline)
+
+Items promised by master plan §14 and §16 but not yet built. None are blockers for cutover; each is a durability improvement. Rank and schedule after Phase 9a.
+
+- **Backup automation** (§14.1) — MongoDB scheduled dump; `.env`/`librechat.yaml`/`docker-compose.override.yml` encrypted backup; `~/household-vault/` encrypted backup to a destination separate from the repo remote; pgvector volume backup at [IDENTITY] classification (post-Cluster 6).
+- **Restore drill** (§14.1) — twice-yearly test. Needs a calendar entry and a written procedure.
+- **Agent-tool drift check** — scheduled MongoDB query that alerts if `Clinical Work` or `Household Admin` gains any tool. The Phase 8 audit confirmed intact-today; drift over time is silent unless watched.
+- **Memory audit schedule** (§14.4 enforcement point 2) — monthly `mongodump` of the memory collection + grep for identifier patterns.
+- **Post-commit gitleaks** — weekly `gitleaks detect --source .` over full history in `ai-context/`. Complements the pre-commit hook.
+- **Stack health monitoring** — `docker compose ps` health check with Tailscale-sent notification on any container not `healthy`. Currently no visibility if MongoDB dies overnight.
+- **STT canary** (post Phase 9a) — weekly canned-audio POST to the DeepInfra Whisper endpoint. Detects endpoint or model-ID drift before it matters in the field.
+- **Cost monitor automation** (§14.3) — weekly DeepInfra spend + cached-input hit-rate report (email or Tailscale-served dashboard).
+- **Update cadence** (§14.2) — monthly reminder to `git pull` LibreChat, read release notes, `docker compose pull && up -d`.
+- **Log rotation** — LibreChat + Goose logs currently unbounded.
+- **Missing skills** (§16.4, §16.5) — `session-open`, `verify-before-executing`, `config-file-writer`. Optional but referenced in master plan.
+- **`USAGE_PATTERNS.md`** — documents the plan-in-LibreChat / execute-in-Goose decision rule and the shared-workspace convention. Created as part of Deferred item 4.
 
 ## Open questions
 - H3: Password manager — Google PM currently; Bitwarden recommended. UNDECIDED — hard dependency for Session 10.
@@ -127,6 +157,8 @@ System is live. LibreChat at `localhost:3080` + Goose are now the primary AI int
 - Drive MCP: apply to Google Developer Preview Program or pivot to self-hosted `@aaronsb/google-workspace-mcp`? UNDECIDED.
 - **ai-workspace root path** — not yet decided. Resolve at Session 10 start (see SESSION_10_WORKSPACE_PLAN.md).
 - **LibreChat's real filesystem location** — needed for workspace plan junction step; not yet located. First Goose task at Session 10 start.
+- **Music agent** — mentioned as one of five agents built at Phase 3. Confirm it's actually used or drop from agent list (unused agents are maintenance surface for no benefit).
+- **Deferred Tools verified?** — master plan §7.4 recommends enabling for the multi-tool agents (Research, Desktop Ops). Not confirmed as actually toggled on. Materially affects the 128-tool ceiling.
 
 ## Prior phase exit tests
 See git history for full detail.
@@ -147,9 +179,10 @@ Quick reference sequence:
 9. Test mic on phone at `.ts.net` URL
 10. Record exit test result in BUILD_STATE.md
 
-**After 9a completes:** Items 4–6 in the deferred list above:
+**After 9a completes:** Items 4–7 in the deferred list above:
 - Item 4: Goose + LibreChat integration polish (small workstream, high leverage — can run in parallel with Session 10 or post-cutover)
 - Item 5: Workspace consolidation (Session 10)
-- Item 6: Claude Projects migration (last, ongoing, parallel-run validation)
+- Item 6: Claude Projects migration (last-but-one, ongoing, parallel-run validation)
+- Item 7: **Cluster 6 Household DB agent build** (post-Session-10 — the largest remaining piece of build work; scaffolds now in `projects/household/`)
 
 **Session 10 (book separately, after H3+H4 decisions):** Docker anomaly verify → LibreChat filesystem locate → Tier-1 quarantine → legacy pipeline audit → workspace consolidation → C: drive migration.
