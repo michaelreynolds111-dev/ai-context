@@ -86,12 +86,15 @@ System is live. LibreChat at `localhost:3080` + Goose are now the primary AI int
 - Credential quarantine for any discovered cleartext files
 - H3: Password manager decision (Bitwarden recommended, currently undecided)
 - H4: Sarah's access setup decision (shared-machine approach recommended over LAN exposure)
+- **Workspace consolidation** — new item, planned in a chat-history audit session (9 Aug 2026): consolidate scattered pre-project builds (torbox-system, Stash, downloads scanner, resource watchdog, standalone scripts, browser extensions) under a single `ai-workspace/` root using NTFS junctions, so LibreChat's filesystem MCP and Goose's developer extension can be scoped to one directory instead of a growing multi-path allowlist. Full inventory, rationale, and execution brief in **`SESSION_10_WORKSPACE_PLAN.md`**. This overlaps with the "legacy pipeline decommission" item above (the resource watchdog junction covers the same `D:\Data` scheduled-task scope) — reconcile into one work item at Session 10 start, don't duplicate.
 
 ## Open questions
 - H3: Password manager — Google PM currently; Bitwarden recommended. UNDECIDED — hard dependency for Session 10
 - H4: Sarah's access — Option A (shared machine) recommended. UNDECIDED
 - Why can't D: be BitLockered? Worth pinning before Session 10.
 - Drive MCP: apply to Google Developer Preview Program (company field awkward for personal use) or pivot to self-hosted `@aaronsb/google-workspace-mcp`? UNDECIDED.
+- **ai-workspace root path** — not yet decided with Michael. Resolve at Session 10 start (see SESSION_10_WORKSPACE_PLAN.md).
+- **LibreChat's real filesystem location** — needed for the workspace plan's junction step; not yet located. First Goose task at Session 10 start.
 
 ## Prior phase exit tests
 See git history for full detail.
@@ -105,4 +108,4 @@ See git history for full detail.
   3. Delete `~/agent-workdir/goose_exit_test.md` and `min_wage_research.md`
 - Item 4: Claude Projects migration (last — largest scope, ongoing parallel-run validation)
 
-Session 10 (separate): C: drive migration, legacy pipeline decommission, password manager + Sarah's access decisions.
+Session 10 (separate): C: drive migration, legacy pipeline decommission, password manager + Sarah's access decisions, **and workspace consolidation (see SESSION_10_WORKSPACE_PLAN.md)**.
