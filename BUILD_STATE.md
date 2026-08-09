@@ -1,8 +1,8 @@
 # BUILD STATE
 
-**Last updated:** 9 August 2026 (Session 9 — housekeeping complete)
+**Last updated:** 9 August 2026 (Session 9 — mobile access phase added)
 **Current phase:** Phase 9 — Cutover (§13)
-**Current sub-step:** §13.2 — Deferred items 1–3 resolved. Next: Claude Projects migration (item 4, no fixed deadline).
+**Current sub-step:** §9a.1 — Remote mobile access + STT. Next after that: Claude Projects migration (item 4).
 
 ## Phase status
 | Phase | Status | Exit test | Date |
@@ -18,6 +18,7 @@
 | 7 — Goose | **PASSED** | All 4 exit criteria met | 8 Aug 2026 |
 | 8 — Validation | **PASSED** | All 6 clusters passed, security audit clean | 9 Aug 2026 |
 | 9 — Cutover | IN PROGRESS | System live; working through deferred items | ongoing |
+| **9a — Remote mobile access + STT** | **👉 NEXT** | See §9a exit test in master plan | — |
 
 ## Environment facts (confirmed)
 - Machine: Michael-PC, Windows 11 Home 26200, i5-12400, 15.8 GB RAM
@@ -33,6 +34,7 @@
 - **Goose skills:** 7 skills at `C:\Users\micha\.config\agents\skills\`. Sync script: `C:\Users\micha\AppData\Roaming\Block\goose\sync_skills.ps1`
 - **mcp-servers.json:** populated, commit 7331a32
 - **gcloud CLI 579.0.0** installed in WSL2 Ubuntu, authenticated as michael.reynolds111@gmail.com, project librechat-504922
+- **Tailscale:** installed on Windows host. Not yet configured for LibreChat remote access — Phase 9a.
 
 ## Phase 8 exit test — PASSED (9 Aug 2026)
 
@@ -79,7 +81,7 @@ System is live. LibreChat at `localhost:3080` + Goose are now the primary AI int
    - `ADHD Treatment Plan.md` — already absent from RAG store (cleared during Aug 7-8 MongoDB reinit); no action needed
    - `~/agent-workdir/` is now empty
 
-4. **Claude Projects migration** — 👉 NEXT (no fixed deadline, parallel-run validation)
+4. **Claude Projects migration** — ⏳ AFTER Phase 9a
    - Pattern proven in Phase 6. Migrate remaining Claude Pro Projects into LibreChat Projects/RAG at a sustainable pace.
    - For each project: upload docs → confirm retrieval quality → mark migrated.
    - RAG data will move to C: drive in Session 10 — migration can begin now and carry over.
@@ -101,8 +103,15 @@ System is live. LibreChat at `localhost:3080` + Goose are now the primary AI int
 See git history for full detail.
 
 ## NEXT STEP
-**Phase 9 — Claude Projects migration (item 4):**
-- No fixed deadline — proceed at a sustainable pace during parallel-run period.
-- For each Claude Pro Project: create matching LibreChat Project → upload source docs → test retrieval → confirm quality → mark migrated.
+**Phase 9a — Remote mobile access + STT (do this first — highest daily-use impact):**
+See §13a in BACKUP_AI_MASTER_BUILD_PLAN.md for full steps.
+1. Enable HTTPS certs in Tailscale admin console
+2. Install Tailscale on phone, confirm tailnet membership
+3. Run `tailscale serve 3080` on Windows host
+4. Make Serve persistent (Windows scheduled task)
+5. Verify mic works in phone browser at .ts.net URL
+6. Add STT block to librechat.yaml
+
+**After 9a completes:** Phase 9 Claude Projects migration (item 4) — no fixed deadline, parallel-run validation.
 
 **Session 10 (book separately):** C: drive migration, legacy pipeline decommission, password manager + Sarah's access decisions.
