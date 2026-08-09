@@ -1,8 +1,8 @@
 # BUILD STATE
 
-**Last updated:** 9 August 2026 (Session 9 — mobile access phase added)
+**Last updated:** 9 August 2026 (Session 9 — Phase 9a detail expanded)
 **Current phase:** Phase 9 — Cutover (§13)
-**Current sub-step:** §9a.1 — Remote mobile access + STT. Next after that: Claude Projects migration (item 4).
+**Current sub-step:** §9a — Remote mobile access + STT. Next after that: Claude Projects migration (item 4).
 
 ## Phase status
 | Phase | Status | Exit test | Date |
@@ -18,7 +18,7 @@
 | 7 — Goose | **PASSED** | All 4 exit criteria met | 8 Aug 2026 |
 | 8 — Validation | **PASSED** | All 6 clusters passed, security audit clean | 9 Aug 2026 |
 | 9 — Cutover | IN PROGRESS | System live; working through deferred items | ongoing |
-| **9a — Remote mobile access + STT** | **👉 NEXT** | See §9a exit test in master plan | — |
+| **9a — Remote mobile access + STT** | **👉 NEXT** | See §13a exit test in master plan | — |
 
 ## Environment facts (confirmed)
 - Machine: Michael-PC, Windows 11 Home 26200, i5-12400, 15.8 GB RAM
@@ -28,13 +28,13 @@
 - git: core.autocrlf = false. Identity: michaelreynolds111-dev / michael.reynolds111@gmail.com
 - Disk: C: 464 GB / FullyEncrypted. D: FullyDecrypted. D: cannot be BitLockered (confirmed).
 - .wslconfig: memory=8GB, processors=6, swap=2GB
-- **LibreChat v0.8.7** at ~/LibreChat — 6-container stack healthy
+- **LibreChat v0.8.7** at ~/LibreChat — 6-container stack healthy, frontend published on host port 3080
 - **Goose v41.0.0** at `C:\Users\micha\AppData\Local\Programs\Goose\`
 - **Goose provider:** custom_deepinfra — `base_url: https://api.deepinfra.com`, `base_path: v1/openai/chat/completions`. 10 models.
 - **Goose skills:** 7 skills at `C:\Users\micha\.config\agents\skills\`. Sync script: `C:\Users\micha\AppData\Roaming\Block\goose\sync_skills.ps1`
 - **mcp-servers.json:** populated, commit 7331a32
 - **gcloud CLI 579.0.0** installed in WSL2 Ubuntu, authenticated as michael.reynolds111@gmail.com, project librechat-504922
-- **Tailscale:** installed on Windows host. Not yet configured for LibreChat remote access — Phase 9a.
+- **Tailscale:** installed on Windows host (version TBC). Not yet configured for LibreChat remote access — Phase 9a.
 
 ## Phase 8 exit test — PASSED (9 Aug 2026)
 
@@ -91,7 +91,7 @@ System is live. LibreChat at `localhost:3080` + Goose are now the primary AI int
 - Legacy pipeline decommission (`D:\Data`, 7 live scheduled tasks)
 - Credential quarantine for any discovered cleartext files
 - H3: Password manager decision (Bitwarden recommended, currently undecided)
-- H4: Sarah's access setup decision (shared-machine approach recommended over LAN exposure)
+- H4: Sarah's access setup decision (shared-machine approach recommended over LAN exposure, undecided)
 
 ## Open questions
 - H3: Password manager — Google PM currently; Bitwarden recommended. UNDECIDED — hard dependency for Session 10
@@ -104,13 +104,19 @@ See git history for full detail.
 
 ## NEXT STEP
 **Phase 9a — Remote mobile access + STT (do this first — highest daily-use impact):**
-See §13a in BACKUP_AI_MASTER_BUILD_PLAN.md for full steps.
-1. Enable HTTPS certs in Tailscale admin console
-2. Install Tailscale on phone, confirm tailnet membership
-3. Run `tailscale serve 3080` on Windows host
-4. Make Serve persistent (Windows scheduled task)
-5. Verify mic works in phone browser at .ts.net URL
-6. Add STT block to librechat.yaml
+See §13a in BACKUP_AI_MASTER_BUILD_PLAN.md for full steps and exit test.
+
+Quick reference sequence:
+1. Check Tailscale version: `tailscale version` (Windows PowerShell or system tray)
+2. Enable HTTPS certs in Tailscale admin console → DNS tab
+3. Install Tailscale on phone, log in to same account, confirm device appears in tailnet
+4. On Windows host (PowerShell): `tailscale serve 3080`
+5. Note the `.ts.net` URL printed, open it on phone — confirm LibreChat loads over HTTPS
+6. Make Serve persistent: create a Windows Scheduled Task (see §13a.4 in master plan for exact steps)
+7. Add STT block to `librechat.yaml` (see §13a.5 in master plan)
+8. Restart LibreChat API container: in WSL2 — `cd ~/LibreChat && docker compose restart api`
+9. Test mic on phone at `.ts.net` URL
+10. Record exit test result in BUILD_STATE.md
 
 **After 9a completes:** Phase 9 Claude Projects migration (item 4) — no fixed deadline, parallel-run validation.
 

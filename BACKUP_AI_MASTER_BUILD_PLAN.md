@@ -1,8 +1,8 @@
 # BACKUP AI SYSTEM — MASTER BUILD PLAN
 
-**Version:** 1.5
+**Version:** 1.6
 **Created:** 28 July 2026
-**Last revised:** 8 August 2026
+**Last revised:** 9 August 2026
 **Source research:** `AI_Build.pdf` — *Backup AI System Design for a Windows 11 Power User (July 2026)*
 **Status:** SPINE DOCUMENT — this is the authoritative build reference for the project.
 
@@ -16,6 +16,7 @@
 | 1.3 | 8 Aug 2026 | **`docs/GOTCHAS.md` added as a first-class build doc.** A permanent record of environment-specific facts for this machine (Node-on-Windows quirks, PowerShell↔WSL↔Docker quoting, Docker UID/volume behaviour, MCP auth specifics), distinct from `PLAN_DEVIATIONS` (about the plan) and GitHub Issues (open problems). Registered in the repo tree (§4), the project-knowledge file list (§16.2), and the session-open/close rituals (§16.4, §16.6). Also: local git via the WSL2 clone recorded as the default push method (the GitHub MCP connector proved unreliable across a long session). No change to build steps or architecture. |
 | 1.4 | 8 Aug 2026 | **`docs/MIGRATION_INVENTORY.md` added as a first-class build doc.** A live tracking file for locating and migrating scattered Claude Projects and working folders into the new `ai-context/projects/` + RAG collection + agent structure, companion to the static Appendix A worksheet template. Created when Phase 6 began and it became clear many existing Claude Projects predate the new system and are scattered across the filesystem with unknown current locations. Registered in the repo tree (§4.2) and the project-knowledge file list (§16.2). No change to build steps or architecture. |
 | 1.5 | 8 Aug 2026 | **Project migration deferred to post-cutover (§10.2, §10.3, §17 revised).** Phase 6 scope narrowed to proving the RAG + agent + INSTRUCTIONS.md pattern on one project (done: New Build/Stash). All remaining Claude Project migrations deferred to the Phase 9 parallel-run period, to be done *using LibreChat* as the real-world validation that it has replaced Claude Pro. §17 roadmap updated to reflect actual session sequence. No change to architecture or security model. |
+| 1.6 | 9 Aug 2026 | **Phase 9a — Remote mobile access + STT added (§13a).** Tailscale Serve selected as the remote-access method (zero new software, automatic HTTPS cert, private tailnet only). STT configuration via `librechat.yaml` speech block added. Windows Scheduled Task persistence pattern documented. GOTCHAS entry added. Rationale: highest daily-use impact of any remaining deferred item — fixes mobile mic, enables out-of-office access on 4G/5G, adds no maintenance overhead. |
 
 ---
 
@@ -86,6 +87,13 @@ This rule is not negotiable and does not have a change trigger. If a build step 
 │  │ CAPABILITY   │   └──────────────────────────────────┘     │
 │  │ CEILING      │                                            │
 │  └──────────────┘                                            │
+│                                                              │
+│  ┌──────────────────────────────────────────────────────┐    │
+│  │ TAILSCALE (host service)                             │    │
+│  │ tailscale serve 3080 → https://<host>.ts.net/        │    │
+│  │ Private tailnet only — NOT public internet (Funnel)  │    │
+│  │ Provides HTTPS cert → browser mic API works on phone │    │
+│  └──────────────────────────────────────────────────────┘    │
 └──────────────────────────────────────────────────────────────┘
               │                          │
               ▼                          ▼
@@ -126,6 +134,7 @@ This rule is not negotiable and does not have a change trigger. If a build step 
 | **Cherry Studio** | Warm spare, demoted | (current partial backup) |
 | **Local embeddings model** | In-container embeddings so [SENSITIVE] and [IDENTITY] content is never sent to a third-party embeddings endpoint at index time | — (new in v1.1) |
 | **Password manager (external)** | Holds every Tier-1 credential. **Outside this system by design.** The AI holds pointers to it, never values | — (new in v1.1) |
+| **Tailscale Serve** | Remote HTTPS access to LibreChat from phone over 4G/5G. Provides a real `.ts.net` cert — fixes browser mic API. Private tailnet only. | — (new in v1.6) |
 
 ### 1.3 The six usage clusters this must serve
 
@@ -159,6 +168,7 @@ These were settled by the research. Do not relitigate them mid-build.
 | **Local embeddings are mandatory, not a fallback** (v1.1) | Indexing is not inference. Every [SENSITIVE] and [IDENTITY] document gets chunked and sent to whatever embeddings endpoint is configured — a third-party endpoint would see clinical notes and identity documents in plaintext at index time, regardless of how careful the chat-model routing is. Decided in Phase 2, not deferred | Never for [SENSITIVE]/[IDENTITY]. General-purpose collections may use a hosted endpoint if throughput demands it |
 | **Credentials never enter the system** (v1.1) | pgvector is a search index, not a secret store: no per-document ACL, plaintext alongside the embedding, retrievable by any agent holding `file_search` on that collection. Mem0 auto-extraction compounds it | **None.** This is the one decision in this document with no change trigger |
 | **Household Admin agent gets no browser and no shell** (v1.1) | An agent that can both read identity documents and fetch untrusted web content is the Operation Pale Fire exfiltration path (§11.4) with better loot | Never while the agent retains [IDENTITY] retrieval |
+| **Remote access via Tailscale Serve, not a public reverse proxy** (v1.6) | Tailscale already installed on host; Serve provides automatic HTTPS cert (fixes browser mic API secure-context requirement); private tailnet only — nothing exposed to the internet; zero new software or cert maintenance | If a family member needs access without a Tailscale account → evaluate Caddy + auth proxy at that time |
 
 ---
 
@@ -452,7 +462,7 @@ endpoints:
     #   modelDisplayLabel: "OpenRouter"
 ```
 
-Anthropic is a **native** endpoint in LibreChat — enable it via `ANTHROPIC_API_KEY` in `.env` rather than as a custom endpoint. **(v1.2) Optional** — DeepInfra's `anthropic/claude-sonnet-5` already covers the Ceiling tier without this.
+Anthropicis a **native** endpoint in LibreChat — enable it via `ANTHROPIC_API_KEY` in `.env` rather than as a custom endpoint. **(v1.2) Optional** — DeepInfra's `anthropic/claude-sonnet-5` already covers the Ceiling tier without this.
 
 ### 6.3 RAG embeddings — **local, mandatory** (revised in v1.1)
 
@@ -881,6 +891,131 @@ Run a **real task from each cluster** — not a toy prompt — and score against
 
 ---
 
+## 13a. PHASE 9a — REMOTE MOBILE ACCESS + STT (v1.6)
+
+**Goal:** use LibreChat from phone on 4G/5G with working voice input. This is the highest daily-use-impact deferred item — do it before Claude Projects migration.
+
+**Why Tailscale Serve and not a reverse proxy:**
+Tailscale is already installed on the host. Serve provides an automatic `.ts.net` HTTPS cert with zero new software, zero cert maintenance, and zero public internet exposure. The HTTPS cert is what fixes the browser mic API (browsers block `getUserMedia` on non-secure origins; `http://192.168.x.x:3080` is not a secure origin even on LAN). Tailscale Funnel (public internet) is explicitly **not** used — this stays private to the tailnet.
+
+**Scope note:** this applies to **LibreChat only** (the web UI). Goose is a local CLI/desktop tool and is unaffected.
+
+### 13a.1 Prerequisites
+
+- LibreChat frontend port `3080` is already published to the Windows host (`-p 3080:3080` in the compose file — confirmed in Phase 1)
+- Tailscale account exists (you already have it)
+- Tailscale app installed on phone and logged into the same account
+
+### 13a.2 Enable HTTPS certificates (one-time, tailnet-wide)
+
+1. Open [https://login.tailscale.com/admin/dns](https://login.tailscale.com/admin/dns)
+2. Scroll to **HTTPS Certificates** and toggle it on
+3. This enables automatic cert provisioning for all devices in your tailnet — no renewal steps
+
+### 13a.3 Start Tailscale Serve
+
+Run in **Windows PowerShell** (not WSL):
+
+```powershell
+tailscale serve 3080
+```
+
+Expected output:
+```
+Available within your tailnet:
+https://<your-machine-name>.<tailnet-name>.ts.net/
+|-- proxy http://127.0.0.1:3080
+```
+
+Note that URL — bookmark it on your phone.
+
+**Verify on phone:** connect Tailscale on phone, open the `.ts.net` URL in browser — LibreChat should load over HTTPS. Check the padlock.
+
+### 13a.4 Make Serve persistent (survives reboots)
+
+The `tailscale serve` config persists once set — you do not need to re-run the command after reboots as long as Tailscale itself is running. Tailscale on Windows runs as a system service and starts automatically. Confirm:
+
+```powershell
+# Check Tailscale service is set to auto-start
+Get-Service -Name Tailscale | Select-Object Name, StartType, Status
+```
+
+Expected: `StartType = Automatic`, `Status = Running`.
+
+If it is not automatic:
+```powershell
+Set-Service -Name Tailscale -StartupType Automatic
+```
+
+Verify the serve config survives a restart:
+```powershell
+tailscale serve status
+```
+
+Should show the proxy still active after a reboot.
+
+### 13a.5 Add STT to LibreChat
+
+The HTTPS cert enables the mic *button*. LibreChat still needs an STT engine configured or the button does nothing.
+
+**[VERIFY]** the exact `librechat.yaml` speech block schema against current LibreChat docs before applying — this schema moves with versions.
+
+Add to `librechat.yaml` (in WSL2 at `~/LibreChat/librechat.yaml`):
+
+```yaml
+speech:
+  tts:
+    localAI: false          # not using local TTS for now
+  stt:
+    openai:                 # DeepInfra exposes a Whisper-compatible endpoint
+      url: "https://api.deepinfra.com/v1/openai/audio/transcriptions"
+      model: "openai/whisper-large-v3-turbo"   # [VERIFY] model ID on DeepInfra
+      apiKey: "${DEEPINFRA_API_KEY}"
+```
+
+**[VERIFY]** before applying:
+- That DeepInfra's transcription endpoint accepts the standard OpenAI `/audio/transcriptions` request format
+- The exact model ID for Whisper on DeepInfra (check [https://deepinfra.com/models](https://deepinfra.com/models) → filter by Audio)
+- The exact `librechat.yaml` key names for a custom STT endpoint in v0.8.7 — check [https://www.librechat.ai/docs/configuration/librechat_yaml](https://www.librechat.ai/docs/configuration/librechat_yaml)
+
+After editing `librechat.yaml`, restart the API container (WSL2 shell):
+
+```bash
+cd ~/LibreChat && docker compose restart api
+```
+
+### 13a.6 Check Tailscale ACLs
+
+If you have a custom ACL policy in the Tailscale admin console, confirm it does not block traffic between your phone device and your PC device. The default Tailscale policy allows all devices in the tailnet to reach each other — only custom ACLs would restrict this.
+
+Check: [https://login.tailscale.com/admin/acls](https://login.tailscale.com/admin/acls)
+
+If the default policy is in place (no custom rules), no action needed.
+
+### 13a.7 Phone bookmark
+
+Once working: add the `.ts.net` URL to your phone home screen (Safari: Share → Add to Home Screen; Chrome: menu → Add to Home Screen). This gives you a one-tap launch that feels like an app.
+
+### 13a.8 Exit test
+
+- [ ] `tailscale serve status` shows the proxy active on Windows host
+- [ ] `Get-Service Tailscale` shows `StartType = Automatic`
+- [ ] Phone Tailscale connected (verify over 4G, not just WiFi — disconnect WiFi and test)
+- [ ] LibreChat loads at the `.ts.net` URL on phone — padlock visible, no certificate warning
+- [ ] Mic button is visible in the LibreChat UI on phone
+- [ ] Dictate a short sentence — transcription appears in the input field
+- [ ] A complete chat exchange completes over 4G (inference routing unchanged — still DeepInfra)
+- [ ] Reboot the PC, wait for Tailscale to start, confirm the `.ts.net` URL still works without any manual intervention
+
+### 13a.9 GOTCHAS for this step
+
+- **`tailscale funnel` vs `tailscale serve`** — Funnel exposes the service to the public internet. `serve` is tailnet-private. Always use `serve` here. If you accidentally run `funnel`, run `tailscale funnel --remove 3080` to undo it.
+- **Tailscale must be running before Docker** — if Tailscale hasn't started yet at boot time and you test immediately, the serve proxy may not be up. Give it 30 seconds after login.
+- **Phone browser must support `getUserMedia`** — Safari on iOS 16.4+ and Chrome on Android both support it over HTTPS. If the mic still doesn't work after the cert is in place, check the browser version.
+- **STT verify step is mandatory** — the `librechat.yaml` speech schema has changed across minor versions. Do not apply the block above without checking the current docs first.
+
+---
+
 ## 14. OPERATIONS
 
 ### 14.1 Backup
@@ -935,7 +1070,7 @@ A gap in any one of the three defeats the other two.
 
 - No no-confirmation autonomy outside scoped directories (see §11.4)
 - Registration closed on LibreChat
-- **LibreChat is bound to localhost. This is now load-bearing (v1.1).** In v1.0 this was hygiene protecting a chat app. It now protects your family's identity documents. Exposing this beyond localhost — even on the LAN, even "just to reach it from the laptop" — requires a reverse proxy with real auth, and is a decision to make deliberately rather than in passing
+- **LibreChat is accessed via Tailscale Serve (v1.6).** Direct localhost access remains available for desktop use. The `.ts.net` endpoint is HTTPS and tailnet-private — not reachable from the public internet. If you ever need to expose it to a non-Tailscale device (e.g. a family member without Tailscale), use a reverse proxy with real auth — do not use Tailscale Funnel, which is public.
 - Private repo only for `ai-context`
 - Treat MCP servers as untrusted code — read source before installing
 - **(v1.1)** Secret-scanning pre-commit hook active on `ai-context` (§4.4a)
@@ -963,6 +1098,7 @@ A gap in any one of the three defeats the other two.
 | **(v1.1)** Identity data accidentally committed and pushed | **Medium** | **Severe and irreversible** — you cannot rotate a Medicare number, and GitHub history is effectively permanent | Vault physically outside the repo; `.gitignore`; tested pre-commit scanner (§4.4a); `git log -p` audit at Phase 8 |
 | **(v1.1)** Household DB becomes stale and is silently trusted | **High** — this is the most likely failure by a distance, and the least dramatic | Medium — a confidently-returned superseded policy number causes real-world harm | Mandatory source-document citation and expiry surfacing (§10.4.3); renewal dates in `renewals.md`; scheduled quarterly review |
 | **(1 Aug 2026)** Known cleartext Tier-1 files in staging are indexed before quarantine, or the legacy pipeline (`.lancedb`, `profile.db`, gateway token) is carried forward unaudited | **Medium** — the files are known and named, but Session 10 is weeks away and staging is browsable in the meantime | **Severe** — live credentials embedded in pgvector, or a legacy component with stored auth quietly running alongside the new build | Blocking step 0 quarantine in §10.4.2; legacy pipeline audit (port/redesign/retire per component); old embeddings store and profile DB securely deleted, never migrated; staging tree treated as [IDENTITY]+[SENSITIVE] from now, not from Session 10 |
+| **(v1.6)** Tailscale Funnel accidentally enabled instead of Serve | Low | High — LibreChat exposed to public internet | `tailscale serve status` shows "Available within your tailnet" not "Available on the internet"; run `tailscale funnel --remove 3080` if wrong |
 
 ---
 
@@ -1043,7 +1179,7 @@ the exact next step. I will paste this back into project knowledge.
 | `librechat.yaml` (working copy) | Current config for reference | Once Phase 2 starts |
 | `mcp-servers.json` | Canonical MCP list | Once Phase 3 starts |
 | `CLUSTER_VALIDATION.md` | Phase 8 test results | Phase 8 |
-| `HOUSEHOLD_CLASSIFICATION.md` **(v1.1)** | Appendix D worksheet, filled in — the tier assignment for every item **[IDENTITY]** | Before Phase 6. **Structure and field names only. No values — this file goes into project knowledge, which is not the vault** | 
+| `HOUSEHOLD_CLASSIFICATION.md` **(v1.1)** | Appendix D worksheet, filled in — the tier assignment for every item **[IDENTITY]** | Before Phase 6. **Structure and field names only. No values — this file goes into project knowledge, which is not the vault** |
 
 ### 16.3 `BUILD_STATE.md` template
 
@@ -1152,6 +1288,7 @@ Do not summarise the conversation. Produce the artifact.
 | **Session 7** | Phase 5 | Memory portable across tools |
 | **Session 8** | Phase 6 — RAG pattern proof | One project reconstructed (New Build / Stash — done). All other projects marked DEFERRED in `docs/MIGRATION_INVENTORY.md`. **(v1.4 revised — see below)** |
 | **Session 9** | Phase 6 §10.4 — household DB | Cluster 6 live. Tier-1 quarantine (step 0), legacy-pipeline audit, classification, and extraction — no building. Indexes and builds the agent. |
+| **Session 9a** | Phase 9a — remote mobile access + STT | Tailscale Serve live, mic working on phone, `.ts.net` bookmarked. See §13a. |
 | **Session 10** | Phase 7 — Goose | Goose installed, configured, proven on a real sysadmin task. First natural task: scoped live access to Stash stack. |
 | **Weeks 2–3** | Phases 8–9 | Validated, parallel-run, cutover |
 | **Post-cutover** | Project migrations | Remaining Claude Projects migrated one at a time *using LibreChat*, per `docs/MIGRATION_INVENTORY.md`. This is Phase 9's real validation: if the system can migrate its own predecessors, it has replaced Claude Pro. |
@@ -1177,6 +1314,7 @@ The household DB session exists as a separate session on purpose: classification
 - **(v1.1)** **LibreChat gains per-document ACLs within a RAG collection** → the strict collection separation in §6.3 could relax. Until then, collection boundaries are the only real boundary
 - **(v1.1)** **A maintained MCP server appears for your password manager** that returns *references* rather than secret values → could reduce Tier-1 friction. **[VERIFY]** carefully: any server that returns secrets into model context is disqualified regardless of how it is marketed
 - **(v1.1)** **You start wanting the Household agent to browse** → do not add the tool. That impulse is the signal to revisit §7.4 deliberately, in writing, not to make a quick config change
+- **(v1.6)** **A family member needs access to LibreChat from their own device** → evaluate adding them to the tailnet (simplest) or standing up Caddy + auth proxy for non-Tailscale access. Do not use Tailscale Funnel (public internet).
 
 ---
 
@@ -1211,6 +1349,12 @@ git add -A && git commit -m "session: <phase>" && git push
 docker stats                          # resource usage
 docker compose exec api sh            # shell into the API container
 wsl --shutdown                        # from PowerShell — hard reset WSL2
+
+# --- Tailscale (Windows PowerShell) ---
+tailscale serve 3080                  # start serving LibreChat on .ts.net
+tailscale serve status                # verify serve config is active
+tailscale funnel --remove 3080        # undo if Funnel was accidentally used
+Get-Service -Name Tailscale | Select-Object Name, StartType, Status
 ```
 
 ---
@@ -1231,6 +1375,7 @@ Retained so the reasoning survives even if this plan is edited.
 - **Skills** — the Agent Skills / SKILL.md open standard is supported by 16+ tools. Stick to the core spec (name, description, markdown body); avoid agent-specific frontmatter.
 - **Memory** — OpenMemory MCP: local-first, Mem0-powered, one docker-compose, exposes `add_memories` / `search_memory` over MCP to any client.
 - **Security** — Block's "Operation Pale Fire" red-team exercise (January 2026) compromised Goose via a poisoned recipe with malicious instructions hidden in invisible Unicode characters.
+- **Tailscale** — mesh VPN, installed on Windows host. `tailscale serve` proxies a local port to a private `.ts.net` HTTPS endpoint; auto-provisions TLS certs; tailnet-private by default. `tailscale funnel` is the public-internet variant — not used in this build.
 
 **All version numbers and prices above are as of July 2026 and move fast.**
 
