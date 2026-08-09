@@ -1,8 +1,8 @@
 # BUILD STATE
 
-**Last updated:** 9 August 2026 (Phase 8 complete — Phases 0–8 done, Phase 9 in progress)
+**Last updated:** 9 August 2026 (Session 9 — Phase 9 deferred items partially complete)
 **Current phase:** Phase 9 — Cutover (§13)
-**Current sub-step:** §13.2 — Work through deferred items in priority order (below). Claude Projects migration is last, as it is the largest and slowest-moving item.
+**Current sub-step:** §13.2 — Deferred items. Drive MCP parked (preview program gate). M365 deferred (work IT policy). Next: housekeeping cleanup.
 
 ## Phase status
 | Phase | Status | Exit test | Date |
@@ -32,6 +32,7 @@
 - **Goose provider:** custom_deepinfra — `base_url: https://api.deepinfra.com`, `base_path: v1/openai/chat/completions`. 10 models.
 - **Goose skills:** 7 skills at `C:\Users\micha\.config\agents\skills\`. Sync script: `C:\Users\micha\AppData\Roaming\Block\goose\sync_skills.ps1`
 - **mcp-servers.json:** populated, commit 7331a32
+- **gcloud CLI 579.0.0** installed in WSL2 Ubuntu, authenticated as michael.reynolds111@gmail.com, project librechat-504922
 
 ## Phase 8 exit test — PASSED (9 Aug 2026)
 
@@ -58,17 +59,26 @@
 
 System is live. LibreChat at `localhost:3080` + Goose are now the primary AI interface, replacing Claude Pro Desktop for daily use.
 
-### Deferred items — priority order
+### Deferred items — status after Session 9
 
-Work through these in the order listed. **Claude Projects migration is deliberately last** — it is the largest-scope, slowest-moving item, and migrating projects via LibreChat is itself the real-world validation of the whole system, so it benefits from a settled, fully-OAuth'd environment underneath it.
+1. **Google Drive MCP OAuth** — ⚠️ PARKED
+   - gcloud CLI 579.0.0 installed in WSL2; drive.googleapis.com + drivemcp.googleapis.com enabled on project librechat-504922.
+   - librechat.yaml `drive` mcpServer block added (corrected against current LibreChat docs — GOTCHAS §9 original entry was stale; new entry is the source of truth).
+   - OAuth flow completed successfully; tokens stored; 8 Drive tools discovered by LibreChat.
+   - **Blocker:** Google Workspace MCP servers require enrollment in the Developer Preview Program (`https://developers.google.com/workspace/preview`). Tool calls return permission denied for non-enrolled accounts. Program requires company name/website — not suitable for personal accounts without workaround.
+   - **Options when ready to revisit:** (a) apply to preview program anyway, or (b) pivot to self-hosted `@aaronsb/google-workspace-mcp` which works with personal Gmail + standard Drive API without preview enrollment.
+   - Chrome popup blocker gotcha documented: `http://localhost:3080` must be added to Chrome's allowed popups list for OAuth flows to work (Settings → Privacy → Pop-ups and redirects → Allowed).
 
-1. **Google Drive MCP OAuth** — ~30-45 min. Full steps in GOTCHAS.md §9. Needed for Research/Clinical agents to reach Drive-hosted documents.
-2. **M365 MCP OAuth** — ~30-45 min. Full steps in GOTCHAS.md §9. Note the `MS365_MCP_TENANT_ID=consumers` requirement for personal MS accounts.
-3. **Housekeeping cleanup (low priority, quick wins):**
-   - `~/LibreChat/data-node.old-20260808` — remove via docker exec (leftover from the Aug 7-8 MongoDB reinit, see GOTCHAS §4)
-   - `ADHD Treatment Plan.md` — currently in an unscoped RAG collection, needs reindexing to the correct scoped collection
-   - `~/agent-workdir/goose_exit_test.md` and `min_wage_research.md` — Phase 7/8 test artefacts, safe to delete once no longer needed for reference
-4. **Claude Projects migration (last, largest item)** — migrate remaining Claude Pro Projects into LibreChat's Projects/RAG feature (pattern already proven in Phase 6). This is the parallel-run validation period: as each project migrates, confirm retrieval quality matches or beats Claude Pro before considering that project's migration complete. No fixed deadline — proceed at a sustainable pace.
+2. **M365 MCP OAuth** — ⏭️ DEFERRED INDEFINITELY
+   - Only available Microsoft account is work-managed. Work IT policy likely blocks external OAuth app connections. Not safe to attempt without IT approval.
+   - Revisit only if a personal Microsoft account becomes available or IT consent is obtained.
+
+3. **Housekeeping cleanup** — 👉 NEXT
+   - `~/LibreChat/data-node.old-20260808` — remove (leftover from Aug 7-8 MongoDB reinit, GOTCHAS §4)
+   - `ADHD Treatment Plan.md` — in unscoped RAG collection, needs reindexing to correct scoped collection
+   - `~/agent-workdir/goose_exit_test.md` and `min_wage_research.md` — Phase 7/8 test artefacts, safe to delete
+
+4. **Claude Projects migration** — LAST. No fixed deadline. Parallel-run validation period.
 
 ### Session 10 (separate, planned session — book when ready)
 - Encrypted C: drive data migration from `D:\Data`
@@ -81,15 +91,18 @@ Work through these in the order listed. **Claude Projects migration is deliberat
 - H3: Password manager — Google PM currently; Bitwarden recommended. UNDECIDED — hard dependency for Session 10
 - H4: Sarah's access — Option A (shared machine) recommended. UNDECIDED
 - Why can't D: be BitLockered? Worth pinning before Session 10.
+- Drive MCP: apply to Google Developer Preview Program (company field awkward for personal use) or pivot to self-hosted `@aaronsb/google-workspace-mcp`? UNDECIDED.
 
 ## Prior phase exit tests
 See git history for full detail.
 
 ## NEXT STEP
-**Phase 9 — Cutover, deferred items, in priority order:**
-1. Google Drive MCP OAuth (GOTCHAS §9)
-2. M365 MCP OAuth (GOTCHAS §9)
-3. Housekeeping cleanup (data-node.old, RAG reindex, test artefacts)
-4. Claude Projects migration (last — largest scope, ongoing parallel-run validation)
+**Phase 9 — Cutover, deferred items:**
+- Items 1 (Drive) and 2 (M365) parked/deferred — see status above.
+- **Item 3: Housekeeping cleanup** (next active work):
+  1. Remove `~/LibreChat/data-node.old-20260808`
+  2. Reindex `ADHD Treatment Plan.md` to correct scoped RAG collection
+  3. Delete `~/agent-workdir/goose_exit_test.md` and `min_wage_research.md`
+- Item 4: Claude Projects migration (last — largest scope, ongoing parallel-run validation)
 
 Session 10 (separate): C: drive migration, legacy pipeline decommission, password manager + Sarah's access decisions.
