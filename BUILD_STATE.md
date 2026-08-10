@@ -186,3 +186,85 @@ Quick reference sequence:
 - Item 7: **Cluster 6 Household DB agent build** (post-Session-10 — the largest remaining piece of build work; scaffolds now in `projects/household/`)
 
 **Session 10 (book separately, after H3+H4 decisions):** Docker anomaly verify → LibreChat filesystem locate → Tier-1 quarantine → legacy pipeline audit → workspace consolidation → C: drive migration.
+
+## 2026-08-10 — MongoDB bind-mount data loss + fix (unscheduled, Phase 9 ops)
+
+### What happened
+After a Windows restart, LibreChat login failed with "User Not Found" for all
+accounts. Root cause: MongoDB's data directory (`chat-mongodb`) was a **bind
+mount** (`./data-node:/data/db`) on the Ubuntu-24.04 WSL2 filesystem. On boot,
+Docker Desktop started the mongo container before the cross-distro bind mount
+was fully live. Mongo saw what looked like an empty directory and initialized
+a fresh WiredTiger catalog — while the real data files remained on disk,
+orphaned and un-cataloged. Log showed `"Startup from clean shutdown?": true`
+(not a crash — a silent re-init).
+
+Initially suspected a Goose Phase 9a session (`docker compose down api`,
+which per Compose V2 behavior tears down the whole project when given a
+service arg) as the cause. Ruled out by timeline: container `Created`
+timestamp (2026-08-07T23:21:46Z) predates that session, and the old catalog
+(`base write gen: 10269`) was actively checkpointing as late as this
+morning — the reset occurred specifically during today's restart, not
+during any Goose-run command.
+
+### Decision: accept data loss, fix root cause
+User (Michael) explicitly deprioritized the old chat history and reprioritized
+preventing recurrence. No forensic WiredTiger salvage was attempted.
+
+### Fix applied (live, interactive session)
+1. Confirmed via `docker inspect` + `mongosh` queries that the `LibreChat` db
+   was cataloged empty (0 users) while ~30 orphaned `.wt` files sat unreferenced
+   on disk — proved catalog reset, not physical data loss.
+2. Took a full `sudo cp -a` backup of the pre-fix `data-node/` directory
+   (permission-denied on non-sudo copy; uid 999-owned files) before any change.
+   Backup at `~/LibreChat/data-node.backup-20260810-2238/` (233M).
+3. Migrated MongoDB from bind mount to a **named Docker volume**:
+   - `~/LibreChat/docker-compose.yml` line ~60: changed
+     `- ./data-node:/data/db` → `- librechat_mongo_data:/data/db`
+     (single documented exception to override-only rule — Compose cannot
+     cleanly override/replace a service-level bind mount from an override
+     file without risking a duplicate `/data/db` mount; confirmed via
+     Docker's own docs that override lists are appended, not replaced).
+   - `~/LibreChat/docker-compose.override.yml`: added `librechat_mongo_data:`
+     to the existing top-level `volumes:` key (alongside `spotify_mcp_credentials:`).
+   - Verified via `docker compose config` render before applying — confirmed
+     exactly one `/data/db` mount, `type: volume`, before running `up`.
+4. Ran `docker compose up -d mongodb`, then `docker compose up -d` for the
+   full stack. Named volume created: `librechat_librechat_mongo_data`.
+5. Recreated the user account via `npm run create-user` (interactive, inside
+   the `api` container) since `ALLOW_REGISTRATION=false` blocks the normal
+   Sign Up flow. Login confirmed working.
+
+### Files created/changed
+- `~/LibreChat/docker-compose.yml` — mongodb volume line changed (backed up
+  as `docker-compose.yml.bak-<timestamp>` before edit)
+- `~/LibreChat/docker-compose.override.yml` — added `librechat_mongo_data`
+  to top-level volumes
+- `~/LibreChat/data-node.backup-20260810-2236/` and `-2238/` — pre-fix backups
+  (kept, not git-tracked, not deleted)
+- `~/LibreChat/data-node/` — original bind-mount directory, left in place as
+  a reference/potential future forensic-recovery source, NOT deleted
+
+### Known follow-up, not yet fixed
+- `${UID}:${GID}` in `docker-compose.yml`'s mongodb service resolves to an
+  empty string (`user: ':'` in rendered config) because `UID`/`GID` aren't
+  set in `.env`. Pre-existing, unrelated to this incident, low priority —
+  flag for a future session.
+- `~/LibreChat/data-node.backup-20260808/` — an unrelated near-empty stub
+  directory discovered during investigation, predates this incident,
+  harmless, not cleaned up.
+
+### Blockers
+None currently. GitHub MCP connector was unavailable for the entirety of
+this session (both read and write) — this update is being pushed via the
+documented WSL2 local git fallback, not the connector.
+
+### Next step
+Hand `GOOSE_TASK_PHASE_9B_MONGO_DURABILITY.md` (already created, in
+`~/agent-workdir/` or wherever Michael saved it) to Goose to build:
+automated daily mongodump backups (Windows Task Scheduler → WSL2, 14-day
+retention, local-only), a mongodb healthcheck + `depends_on condition:
+service_healthy` on the api service, and a tested restore drill against a
+scratch database. GOTCHAS.md additions for the named-volume requirement and
+the `docker compose down <service>` footgun are included in that task file
+(Task 5) and should be committed once Goose completes it.
