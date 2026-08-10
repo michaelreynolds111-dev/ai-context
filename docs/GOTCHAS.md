@@ -139,6 +139,19 @@ UID/GID unset in .env. MongoDB runs fine as uid 999 with `user: ":"`.
 **Actual prevention for data loss:** see §4 — the real risk is unclean
 shutdown, not the UID/GID warnings.
 
+## Never `docker compose down <service>` — service arg is ignored in Compose V2
+
+**Symptom:** Running `docker compose down <service>` (e.g. `down api`) tears
+down the ENTIRE project, not just the named service.
+
+**Root cause:** In Compose V2, the `down` command ignores positional service
+arguments. It shuts down all services and removes all containers/networks for
+the project.
+
+**Fix:** Use `docker compose stop <service>` to stop a single service, or
+`docker compose up -d --force-recreate <service>` to recreate one. Never use
+`down` with a service argument.
+
 ## `--force-recreate <service>` can recreate more than the named service
 
 **Symptom:** `docker compose up -d --force-recreate api` also recreated
@@ -255,6 +268,43 @@ mongodb after an unclean host event. Two mitigations:
 
 **What was NOT lost:** all build progress. The plan, BUILD_STATE, config files,
 skills live in git. Phase 1/2 exit tests remain validly passed.
+
+## MongoDB must use a NAMED VOLUME, never a bind mount, on WSL2+Docker Desktop
+
+**Symptom (Phase 9a, Aug 10 2026):** After a Windows restart, the MongoDB
+catalog was silently reinitialized — all user-created collections (users,
+conversations, messages, etc.) were gone, replaced with seed data only. The
+MongoDB log still reported `"Startup from clean shutdown?: true"`.
+
+**Root cause:** The `data-node/` directory was a bind mount on the Ubuntu-24.04
+WSL2 filesystem. On Windows boot, Docker Desktop starts before the cross-distro
+bind path is fully mounted, so MongoDB sees an empty directory and initializes
+fresh — silently overwriting all data.
+
+**Fix (Phase 9B, Aug 11 2026):** Migrated MongoDB data to a named volume
+(`librechat_librechat_mongo_data`). Docker named volumes are managed by Docker
+itself and are available before container startup, regardless of WSL2 mount
+state.
+
+**Verify:** `docker inspect chat-mongodb --format '{{json .Mounts}}' | python3 -m json.tool`
+should show `/data/db` as `"Type": "volume"`, NOT `"Type": "bind"`.
+
+## Daily mongodump backup via Windows Task Scheduler
+
+**Backup script:** `~/librechat-backups/backup.sh` (WSL2 native, 700 perms,
+not git-tracked). Retains last 14 dumps.
+
+**Windows Task Scheduler job:** `LibreChat-Mongo-Backup` runs daily at 06:00
+via `wsl -d Ubuntu-24.04 -- bash -lc '~/librechat-backups/backup.sh'`.
+
+**Restore drill (documented in Phase 9B Task 4):** restore into throwaway db
+to verify backups work without touching live data:
+```bash
+LATEST=$(ls -1t ~/librechat-backups/librechat-*.archive.gz | head -1)
+docker exec -i chat-mongodb mongorestore --gzip --archive \
+  --nsFrom 'LibreChat.*' --nsTo 'LibreChat_restoretest.*' < "$LATEST"
+```
+Then verify collection counts and `db.dropDatabase()` on the restoretest db.
 
 ---
 
