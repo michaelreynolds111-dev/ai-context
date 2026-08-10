@@ -35,7 +35,7 @@
 - **mcp-servers.json:** populated, commit 7331a32
 - **gcloud CLI 579.0.0** installed in WSL2 Ubuntu, authenticated as michael.reynolds111@gmail.com, project librechat-504922
 - **Tailscale:** installed on Windows host (version TBC). Not yet configured for LibreChat remote access — Phase 9a.
-- **Docker stacks on host:** two independent Compose stacks — `librechat` (6 project containers + 1 GitHub-MCP container `objective_ganguly` = 7 total) and pre-existing `torbox-system` (7 containers, unrelated to AI build). **Anomaly to verify at Session 10 start:** the `admin-panel` container displays as `clickhouse` in Docker Desktop — does not match the expected LibreChat admin panel image. Confirm the image/tag against `docker inspect` before touching.
+- **Docker stacks on host:** two independent Compose stacks — `librechat` (6 project containers; GitHub MCP server managed by Claude Desktop via `claude_desktop_config.json`, not a persistent container) and pre-existing `torbox-system` (7 containers, unrelated to AI build). **Anomaly to verify at Session 10 start:** the `admin-panel` container displays as `clickhouse` in Docker Desktop — does not match the expected LibreChat admin panel image. Confirm the image/tag against `docker inspect` before touching.
 
 ## Phase 8 exit test — PASSED (9 Aug 2026)
 
