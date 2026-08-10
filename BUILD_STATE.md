@@ -268,3 +268,47 @@ service_healthy` on the api service, and a tested restore drill against a
 scratch database. GOTCHAS.md additions for the named-volume requirement and
 the `docker compose down <service>` footgun are included in that task file
 (Task 5) and should be committed once Goose completes it.
+
+## 2026-08-10/11 — Admin panel access gap (follow-up to Mongo fix)
+
+### What happened
+After the MongoDB durability fix, login worked (user recreated via
+`npm run create-user`, role: ADMIN confirmed in DB), but the separate
+Admin Panel service (port 3000) rejected the account: "You do not have
+admin privileges." LibreChat API logs showed:
+  [requireCapability] Forbidden: user ... missing capability 'access:admin'
+
+### Root cause
+Admin access is gated by a `access:admin` system grant record (in the
+`systemgrants` collection), not just the `role: ADMIN` field on the user
+document. That grant is normally created by a first-user bootstrap routine
+(seedSystemGrants) that runs as part of the real Sign Up / registration
+flow. `npm run create-user` is a lower-level CLI utility that inserts
+directly into the `users` collection and does not trigger this seeding —
+so the account had the right role but not the underlying capability.
+
+### Fix
+1. Temporarily set ALLOW_REGISTRATION=true in ~/LibreChat/.env
+2. Recreated api container: docker compose up -d --force-recreate api
+   (NOT `restart` — stale bind-mount error, same class as the documented
+   restart-vs-up gotcha; `up -d --force-recreate` required)
+3. Deleted the CLI-created account: npm run delete-user <email>
+4. Registered fresh via the actual Sign Up UI at localhost:3080 — this is
+   what triggers the first-user capability seed
+5. Confirmed admin panel (localhost:3000) access works
+6. Set ALLOW_REGISTRATION back to false, recreated api again
+
+### Lesson
+When an account needs to be recreated on a fresh/reset database, use the
+Sign Up UI for the FIRST account, not `npm run create-user` — even though
+create-user correctly sets role: ADMIN, it skips the system-grant seeding
+that the admin panel actually checks. create-user remains fine for
+additional, non-first accounts on an already-bootstrapped instance.
+
+### Status
+Phase 9B (MongoDB durability + backup hardening) is now fully closed:
+named volume in place, health-gated startup verified working (mongodb
+reported Healthy during today's api recreation), automated daily backups
+scheduled and restore-drill-validated, admin access restored via the
+correct path, GOTCHAS.md updated (commit 2afff83 + this session's addition
+below).

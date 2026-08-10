@@ -799,3 +799,26 @@ All other mounts in the override already use absolute paths. Fixed 9 Aug 2026.
 **Recovery:** When stuck in this state, `docker compose restart` will not work.
 Use `docker compose up -d api` — this recreates the container from scratch
 using the current override file.
+
+## Admin panel access requires Sign Up flow, not npm run create-user
+
+**Symptom:** User has `role: ADMIN` confirmed in MongoDB, login works fine,
+but the Admin Panel (port 3000) rejects with "You do not have admin
+privileges." API logs show:
+  [requireCapability] Forbidden: user ... missing capability 'access:admin'
+
+**Root cause:** Admin panel access is gated by an `access:admin` system
+grant record in the `systemgrants` collection — not just the `role: ADMIN`
+field on the user document. That grant is created by a first-user
+bootstrap routine that runs during the real Sign Up / registration flow.
+`npm run create-user` inserts directly into the `users` collection and
+skips this seeding step.
+
+**Fix:** If the FIRST/admin account needs to be recreated (e.g. after a
+database reset), temporarily set ALLOW_REGISTRATION=true, delete any
+CLI-created account (npm run delete-user), and register fresh through the
+actual Sign Up UI. Then set ALLOW_REGISTRATION back to false. Remember to
+recreate the api container with `up -d --force-recreate`, not `restart`,
+after each .env change (see stale bind-mount gotcha above).
+`npm run create-user` remains fine for additional, non-first accounts once
+the instance is already bootstrapped.
