@@ -725,3 +725,27 @@ write that needs to land in WSL. Goose self-corrects: when filesystem-mcp
 write fails, it falls back to `shell` → `wsl -e cp` or equivalent. This is the
 correct division of labour — `developer` shell for WSL ops, `filesystem-mcp`
 for Windows-side file ops.
+
+## Relative bind mounts in docker-compose.override.yml break on container restart
+
+**Symptom:** `docker compose restart api` fails with:
+`error mounting ".../docker-desktop-bind-mounts/Ubuntu-24.04/<hash>" to rootfs at "/app/librechat.yaml": no such file or directory`
+The container was previously running fine; nothing changed in the filesystem.
+
+**Root cause:** Docker Desktop translates WSL2 paths to internal bind-mount
+paths at container creation time and stores the resolved path in the container
+config. A relative `source: ./librechat.yaml` resolves correctly at first `up`,
+but the stored hash path becomes stale after a Docker Desktop update or WSL2
+restart. On next `restart`, Docker tries to remount using the stale hash and
+fails.
+
+**Fix:** Use absolute WSL2 paths for all bind mounts in
+`docker-compose.override.yml`. Replace:
+`- type: bind / source: ./librechat.yaml / target: /app/librechat.yaml`
+With:
+`- /home/michael/LibreChat/librechat.yaml:/app/librechat.yaml:ro`
+All other mounts in the override already use absolute paths. Fixed 9 Aug 2026.
+
+**Recovery:** When stuck in this state, `docker compose restart` will not work.
+Use `docker compose up -d api` — this recreates the container from scratch
+using the current override file.
