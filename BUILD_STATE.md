@@ -312,3 +312,52 @@ reported Healthy during today's api recreation), automated daily backups
 scheduled and restore-drill-validated, admin access restored via the
 correct path, GOTCHAS.md updated (commit 2afff83 + this session's addition
 below).
+
+## 2026-08-11 — Boot orchestration fix (unscheduled, Phase 9 ops)
+
+### What happened
+After every Windows reboot the `LibreChat` API container failed to start
+(exit 127). Root cause: Docker Desktop was launching via an HKCU\Run registry
+key before the WSL2 bind-mount bridge was fully initialised. Docker tried to
+mount `librechat.yaml` (a single-file WSL2 bind mount) before the bridge was
+live — the mount path didn't exist, container create failed, exit 127. The
+`restart: always` policy cannot heal a create-time OCI failure — the container
+never started, so the policy never engaged.
+
+### Fix applied
+1. Removed Docker Desktop from HKCU\Run (was the uncontrolled launcher).
+2. Authored `C:\Users\micha\scripts\docker-boot-orchestrator.ps1` (v3) —
+   a PowerShell orchestrator that:
+   - Polls WSL2 readiness before touching Docker
+   - Launches Docker Desktop via Start-Process
+   - Polls Docker engine until it answers (caught a 39-second gap on real boot)
+   - Runs `docker compose up -d` on librechat stack (idempotent heal)
+   - Waits for chat-mongodb healthy, then starts torbox-system (staggered)
+   - Logs every step to `C:\Users\micha\scripts\logs\docker-boot.log`
+3. Registered "Docker Boot Orchestrator" Windows Scheduled Task:
+   - Trigger: logon, user micha, 60s delay
+   - Action: powershell.exe -NonInteractive -WindowStyle Hidden
+     -ExecutionPolicy Bypass -File docker-boot-orchestrator.ps1
+   - RunLevel: Highest
+
+### Exit test — PASSED (2026-08-11)
+Post-reboot log confirmed:
+- WSL2 poll fired, engine poll waited 39s (race caught and handled)
+- LibreChat container: Starting → Started
+- All 13 containers up across both stacks
+- docker-boot.log: === Boot orchestrator complete ===
+
+### Files created
+- `C:\Users\micha\scripts\docker-boot-orchestrator.ps1` — orchestrator script
+- `C:\Users\micha\scripts\logs\docker-boot.log` — runtime log (appends each boot)
+
+### GOTCHAS additions needed
+- Single-file WSL2 bind mounts fail create-time on boot races — `restart: always`
+  cannot heal an OCI create failure; only `docker compose up -d` on a warm
+  system does. Design boot automation around explicit `up -d`, not restart policy.
+- Docker Desktop HKCU\Run entry launches Docker before WSL2 bridge is ready —
+  remove it and replace with an orchestrated scheduled task that polls for
+  WSL2 and engine readiness before running compose.
+
+### Next step
+Unchanged: Phase 9a — Tailscale Serve + STT (see NEXT STEP section above).
