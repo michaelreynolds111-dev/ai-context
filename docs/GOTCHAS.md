@@ -822,3 +822,39 @@ recreate the api container with `up -d --force-recreate`, not `restart`,
 after each .env change (see stale bind-mount gotcha above).
 `npm run create-user` remains fine for additional, non-first accounts once
 the instance is already bootstrapped.
+
+## Docker Desktop HKCU\Run launcher starts Docker before WSL2 bridge is ready
+
+**Symptom:** After every Windows reboot the LibreChat `api` container failed
+to start (exit 127). Manual `docker compose up -d` afterwards always worked.
+
+**Root cause:** Docker Desktop was auto-launched by an `HKCU\Run` registry
+entry, which fires before the WSL2 cross-distro bind-mount bridge is fully
+initialised. Docker tried to mount `librechat.yaml` (a single-file WSL2 bind
+mount) before the mount path existed, so container create failed at OCI level
+with exit 127. `restart: always` cannot heal a *create-time* failure — the
+container never starts, so the restart policy never engages.
+
+**Fix:** Remove Docker Desktop from `HKCU\Run`. Replace it with an orchestrated
+Windows Scheduled Task that polls for WSL2 and Docker-engine readiness before
+running `docker compose up -d`. Orchestrator script lives at
+`C:\Users\micha\scripts\docker-boot-orchestrator.ps1` (logon trigger, 60s
+delay, RunLevel Highest); it logs to
+`C:\Users\micha\scripts\logs\docker-boot.log`. On a real boot it caught and
+waited out a 39-second engine-startup gap. Fixed 11 Aug 2026.
+
+## Single-file WSL2 bind mounts fail create-time on boot races
+
+**Symptom:** Container create fails with a missing-path error for a single-file
+bind mount (e.g. `librechat.yaml`) immediately after a host boot or Docker
+restart, even though the file plainly exists once the system is warm.
+
+**Root cause:** Single-file bind mounts across the WSL2 bridge are more fragile
+to timing than directory mounts — the file path can be momentarily absent while
+the bridge is still coming up. This is a create-time OCI failure, which no
+`restart` policy can recover.
+
+**Fix/workaround:** Design boot automation around an explicit
+`docker compose up -d` on a warm system (see the boot orchestrator above), not
+around `restart: always`. `up -d` recreates the container from the current
+override file once mounts are live; `restart` cannot.

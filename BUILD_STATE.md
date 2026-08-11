@@ -351,7 +351,8 @@ Post-reboot log confirmed:
 - `C:\Users\micha\scripts\docker-boot-orchestrator.ps1` — orchestrator script
 - `C:\Users\micha\scripts\logs\docker-boot.log` — runtime log (appends each boot)
 
-### GOTCHAS additions needed
+### GOTCHAS additions — ✅ COMMITTED (11 Aug 2026)
+Both entries now live in `docs/GOTCHAS.md`:
 - Single-file WSL2 bind mounts fail create-time on boot races — `restart: always`
   cannot heal an OCI create failure; only `docker compose up -d` on a warm
   system does. Design boot automation around explicit `up -d`, not restart policy.
@@ -361,3 +362,45 @@ Post-reboot log confirmed:
 
 ### Next step
 Unchanged: Phase 9a — Tailscale Serve + STT (see NEXT STEP section above).
+
+## 2026-08-11 — Workspace reconciliation + housekeeping (state audit)
+
+Cross-checked the live WSL2 workspace against BUILD_STATE claims. Local
+`ai-context` and GitHub `origin/master` were already in perfect sync (HEAD
+`ef6d184`, clean tree). Two stale claims and one unverified exit criterion
+were found and corrected.
+
+### Corrections applied
+1. **`~/agent-workdir/` was NOT empty** (Session 9 housekeeping claimed it was).
+   It held Phase 9A/9B task + result files plus two 9ops handoff pairs. These
+   are records of completed work, so they were **archived**, not deleted, to
+   `~/agent-workdir/archive/phase-9a-9b/` (11 files). Top level now clean;
+   `tasks/`, `outputs/`, `scripts/` empty and ready for the next handoff.
+
+2. **Phase 9B daily backups verified — mechanism OK, snapshots near-empty.**
+   The three `~/librechat-backups/librechat-20260811-0749*.archive.gz` files
+   pass `gunzip -t` and the `backup.sh` script is correct
+   (`mongodump --db LibreChat --archive --gzip`, 14-file retention). BUT each
+   decompresses to only 1,581 bytes — a dump of an essentially empty DB. They
+   ran at 07:49 on 11 Aug, *before* the admin account was recreated via the
+   Sign Up flow, so they captured the DB while it was still empty post-reset.
+   **The backup automation works; these specific archives predate real data.**
+   Kept as proof-of-mechanism (822 bytes each). **Follow-up:** confirm the
+   next scheduled run captures a non-trivial dump, then trust Phase 9B backups.
+
+3. **Two boot-orchestration GOTCHAS committed** (were flagged "needed" but
+   never written) — see updated section above.
+
+### Deletions (safe, orphaned, not git-tracked)
+- `~/LibreChat/data-node.backup-20260808/` (12K near-empty stub)
+- `~/LibreChat/data-node.backup-20260810-2236/` (16K partial pre-fix backup)
+
+### Deliberately KEPT (do not delete yet)
+- `~/LibreChat/data-node/` (3.8M) — original bind-mount dir; forensic reference.
+- `~/LibreChat/data-node.backup-20260810-2238/` (3.8M) — full pre-fix backup;
+  the only copy of the orphaned catalog. Keep until the named volume
+  (`librechat_librechat_mongo_data`, confirmed live at `/data/db`) has several
+  more clean reboots behind it.
+
+### Next step
+Unchanged: Phase 9a — Tailscale Serve + STT.
