@@ -1,8 +1,8 @@
 # BUILD STATE
 
-**Last updated:** 9 August 2026 (Session 9 — Cluster 6 build workstream and operational hardening backlog surfaced; scaffolds committed for household project and build-session-close skill)
+**Last updated:** 11 August 2026 (Phase 9a complete: Tailscale Serve + STT passed)
 **Current phase:** Phase 9 — Cutover (§13)
-**Current sub-step:** §9a — Remote mobile access + STT. Deferred items 4–7 queued behind it.
+**Current sub-step:** Deferred item 4 — Goose + LibreChat integration polish (can run alongside Session 10 prep)
 
 ## Phase status
 | Phase | Status | Exit test | Date |
@@ -18,7 +18,7 @@
 | 7 — Goose | **PASSED** | All 4 exit criteria met | 8 Aug 2026 |
 | 8 — Validation | **PASSED** | All 6 clusters passed, security audit clean | 9 Aug 2026 |
 | 9 — Cutover | IN PROGRESS | System live; working through deferred items | ongoing |
-| **9a — Remote mobile access + STT** | **👉 NEXT** | See §13a exit test in master plan | — |
+| **9a — Remote mobile access + STT** | **✅ PASSED** | Mobile HTTPS + browser-native STT confirmed | 11 Aug 2026 |
 
 ## Environment facts (confirmed)
 - Machine: Michael-PC, Windows 11 Home 26200, i5-12400, 15.8 GB RAM
@@ -404,3 +404,48 @@ were found and corrected.
 
 ### Next step
 Unchanged: Phase 9a — Tailscale Serve + STT.
+
+## 2026-08-11 — Phase 9a: Tailscale Serve + STT (PASSED)
+
+### What was done
+- Diagnosed Tailscale NoState + DNS file lock: service crashed at 20:52:31, SCM auto-restarted,
+  left DNS config registry locked. Two tailscaled.exe processes fighting over state file.
+- Fix: `tailscale down` then `tailscale up --unattended --accept-dns=true` released the lock
+  without needing process kill (SYSTEM-owned processes blocked taskkill anyway).
+- Configured Tailscale Serve: `tailscale serve --https=443 http://localhost:3080`
+- Serve config persists across reboots in Tailscale 1.102.x node state — no Scheduled Task needed.
+- HTTPS confirmed on mobile: https://michael-pc.tailcad985.ts.net
+- Browser-native STT confirmed working over HTTPS (Android, Chrome) — no DeepInfra Whisper
+  config in librechat.yaml required for basic dictation.
+
+### Exit test — PASSED (11 Aug 2026)
+| Check | Result |
+|---|---|
+| HTTPS on `.ts.net` URL | ✅ |
+| LibreChat loads on mobile browser | ✅ |
+| Valid TLS certificate (padlock visible) | ✅ |
+| STT mic transcribes speech | ✅ (browser-native; "hello" confirmed) |
+| Tailnet-only, not public internet | ✅ |
+
+### GOTCHAS to add to docs/GOTCHAS.md
+- **Tailscale NoState + DNS lock:** `tailscale down && tailscale up --unattended --accept-dns=true`
+  releases the DNS config file lock without needing a full process/service kill. SYSTEM-owned
+  tailscaled.exe processes cannot be killed from a non-elevated shell; the down/up cycle is
+  the correct fix.
+- **Tailscale Serve persistence (1.102.x):** Serve config is stored in node state and survives
+  reboots automatically. No Scheduled Task or boot orchestrator entry needed.
+- **Browser-native STT over HTTPS:** LibreChat's mic button works via browser WebSpeech API
+  over HTTPS without any librechat.yaml STT configuration. No DeepInfra Whisper block needed
+  for basic dictation on mobile.
+- **`tailscale serve 3080` shorthand is stale:** Correct syntax for 1.70+ is
+  `tailscale serve --https=443 http://localhost:3080`.
+
+### Environment facts added
+- Tailnet name: tailcad985.ts.net
+- Mobile URL: https://michael-pc.tailcad985.ts.net
+- Tailscale auth key expiry: 2027-02-06
+- Tailscale version: 1.102.2
+
+### Next step
+Deferred item 4 — Goose + LibreChat integration polish (see deferred items above).
+Session 10 prep decisions (H3 password manager, H4 Sarah access) can run in parallel.
