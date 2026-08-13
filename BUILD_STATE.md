@@ -1,8 +1,8 @@
 # BUILD STATE
 
-**Last updated:** 11 August 2026 (Phase 9a complete: Tailscale Serve + STT passed)
+**Last updated:** 13 August 2026 (Deferred item 4 complete: Goose + LibreChat integration polish passed)
 **Current phase:** Phase 9 — Cutover (§13)
-**Current sub-step:** Deferred item 4 — Goose + LibreChat integration polish (can run alongside Session 10 prep)
+**Current sub-step:** Session 10 prep (Deferred item 4 complete)
 
 ## Phase status
 | Phase | Status | Exit test | Date |
@@ -35,7 +35,7 @@
 - **mcp-servers.json:** populated, commit 7331a32
 - **gcloud CLI 579.0.0** installed in WSL2 Ubuntu, authenticated as michael.reynolds111@gmail.com, project librechat-504922
 - **Tailscale:** installed on Windows host (version TBC). Not yet configured for LibreChat remote access — Phase 9a.
-- **Docker stacks on host:** two independent Compose stacks — `librechat` (6 project containers; GitHub MCP server managed by Claude Desktop via `claude_desktop_config.json`, not a persistent container) and pre-existing `torbox-system` (7 containers, unrelated to AI build). **Anomaly to verify at Session 10 start:** the `admin-panel` container displays as `clickhouse` in Docker Desktop — does not match the expected LibreChat admin panel image. Confirm the image/tag against `docker inspect` before touching.
+- **Docker stacks on host:** two independent Compose stacks — `librechat` (6 project containers; GitHub MCP server managed by Claude Desktop via `claude_desktop_config.json`, not a persistent container) and pre-existing `torbox-system` (7 containers, unrelated to AI build). **VERIFIED (13 Aug 2026):** the `admin-panel` container displays as `clickhouse` in Docker Desktop because the image is `registry.librechat.ai/clickhouse/librechat-admin-panel:latest` — hosted under the ClickHouse GitHub org. Not an anomaly. See `GOOSE_RESULT_DOCKER_ANOMALY_VERIFY.md`.
 
 ## Phase 8 exit test — PASSED (9 Aug 2026)
 
@@ -82,7 +82,7 @@ System is live. LibreChat at `localhost:3080` + Goose are now the primary AI int
    - `ADHD Treatment Plan.md` — already absent from RAG store (cleared during Aug 7-8 MongoDB reinit); no action needed
    - `~/agent-workdir/` is now empty
 
-4. **Goose + LibreChat integration polish** — **COMPLETE** (exit test pending) — 12 Aug 2026
+4. **Goose + LibreChat integration polish** — **✅ PASSED** — 13 Aug 2026
 
 5. **Workspace consolidation** — 📋 SESSION 10
    - Consolidate scattered pre-project builds (torbox-system, Stash, downloads scanner, resource watchdog, standalone scripts, browser extensions) under a single `ai-workspace/` root using NTFS junctions, so LibreChat's filesystem MCP and Goose's developer extension can be scoped to one directory instead of a growing multi-path allowlist.
