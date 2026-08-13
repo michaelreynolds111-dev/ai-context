@@ -82,17 +82,7 @@ System is live. LibreChat at `localhost:3080` + Goose are now the primary AI int
    - `ADHD Treatment Plan.md` — already absent from RAG store (cleared during Aug 7-8 MongoDB reinit); no action needed
    - `~/agent-workdir/` is now empty
 
-4. **Goose + LibreChat integration polish** — 🆕 NEW WORKSTREAM (queued behind 9a)
-   - Both tools are production-ready individually. Making them work as a coherent pair is a small, discrete workstream — not required for cutover, but high leverage for daily use.
-   - **Scope:**
-     - Formalise `~/agent-workdir/tasks/` and `~/agent-workdir/outputs/` as handoff folders between LibreChat (planning) and Goose (execution). Document the convention in `GOTCHAS.md` or a new `USAGE_PATTERNS.md`.
-     - Create `~/agent-workdir/prompts/` as a shared reusable prompt library, referenced by path from both tools.
-     - Add a "skill index" line to each LibreChat agent's system prompt listing available skills (skills auto-load in Goose but not in LibreChat).
-     - Add a WSL alias `goose-task <file>` that opens Goose in `~/agent-workdir` with a task file preloaded — removes handoff friction.
-     - Write down the decision rule ("thinking → LibreChat, doing → Goose") somewhere visible; codify the hard boundary that clinical content never crosses into Goose.
-   - **Exit test:** Run one real task end-to-end through the plan-in-LibreChat / execute-in-Goose pattern using the new folder convention. Confirm both surfaces read/write the shared workspace cleanly.
-   - **Non-goals:** No memory sharing between the two. No LibreChat↔Goose IPC. No changes to routing rules or agent tool sets.
-   - **Dependencies:** None. Can run in parallel with Session 10 or slot into the post-cutover parallel-run period.
+4. **Goose + LibreChat integration polish** — **COMPLETE** (exit test pending) — 12 Aug 2026
 
 5. **Workspace consolidation** — 📋 SESSION 10
    - Consolidate scattered pre-project builds (torbox-system, Stash, downloads scanner, resource watchdog, standalone scripts, browser extensions) under a single `ai-workspace/` root using NTFS junctions, so LibreChat's filesystem MCP and Goose's developer extension can be scoped to one directory instead of a growing multi-path allowlist.
@@ -449,3 +439,39 @@ Unchanged: Phase 9a — Tailscale Serve + STT.
 ### Next step
 Deferred item 4 — Goose + LibreChat integration polish (see deferred items above).
 Session 10 prep decisions (H3 password manager, H4 Sarah access) can run in parallel.
+
+## 2026-08-12 — Deferred item 4: Goose + LibreChat integration polish (COMPLETE, exit test pending)
+
+### Scope
+Formalize the file-based handoff model between LibreChat (planner/verifier)
+and Goose (executor). No memory sharing, no IPC, no routing/tool changes.
+
+### Deliverables created
+- `docs/USAGE_PATTERNS.md` — definitive guide to LibreChat↔Goose collaboration
+  (core rule, handoff protocol, task/result file formats, usage patterns, anti-patterns)
+- `prompts/GOOSE_TASK_TEMPLATE.md` — template for GOOSE_TASK files
+- `prompts/GOOSE_RESULT_TEMPLATE.md` — template for GOOSE_RESULT files
+- `~/agent-workdir/tasks/README.md` — explains the tasks/ folder protocol
+- `~/agent-workdir/outputs/README.md` — explains the outputs/ folder protocol
+- `~/agent-workdir/scripts/goose-task.sh` — WSL2 shell function for scaffolding task/result files
+- `~/agent-workdir/scripts/README.md` — explains the scripts/ folder
+- Skill-index block drafted for LibreChat agent instructions (see USAGE_PATTERNS.md §6)
+
+### Architecture decision
+Option 3 (file-based handoff) is the integration model.
+Option 4 (Goose headless as OpenAI-compatible custom endpoint for LibreChat) is
+documented as a future enhancement but out of scope — the file handoff is
+deliberately simple, debuggable, and sufficient for the current workload.
+
+### Exit test
+Docker anomaly verify task (`GOOSE_TASK_DOCKER_ANOMALY_VERIFY.md`)
+created in tasks/ — to be executed by Goose through the full plan→execute→verify
+pattern. Once verified, the final checkbox in USAGE_PATTERNS.md §9 is checked.
+
+### Exit test status
+| Check | Result |
+|---|---|
+| USAGE_PATTERNS.md committed to ai-context | ✅ |
+| prompts/ library committed to ai-context | ✅ |
+| goose-task alias installed in WSL2 | ✅ |
+| One real task end-to-end through plan→execute→verify | ⏳ pending Goose execution of DOCKER_ANOMALY_VERIFY |
