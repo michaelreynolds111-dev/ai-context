@@ -229,7 +229,13 @@ The integration is considered "polished" when:
 - [x] `goose-task` alias is available in WSL2
 - [x] Skill-index lines are drafted for LibreChat agent instructions
 - [x] This document (USAGE_PATTERNS.md) is committed to ai-context
-- [ ] One real task executed end-to-end through the plan→execute→verify pattern
+- [x] One real task executed end-to-end through the plan→execute→verify pattern
 
-The final checkbox is the live exit test — pick one queued work item (e.g.
-Docker anomaly verify) and run it through the full handoff.
+The final checkbox was the live exit test — the Docker anomaly verify task
+(`GOOSE_TASK_DOCKER_ANOMALY_VERIFY.md`) was executed through the full
+plan→execute→verify pattern on 13 Aug 2026. Result:
+`GOOSE_RESULT_DOCKER_ANOMALY_VERIFY.md`. Verdict: not an anomaly — the
+`admin-panel` container image is `registry.librechat.ai/clickhouse/librechat-admin-panel:latest`,
+a legitimate LibreChat component hosted under the ClickHouse GitHub org.
+
+**All exit test checkboxes checked — Deferred item 4 PASSED (13 Aug 2026).**
