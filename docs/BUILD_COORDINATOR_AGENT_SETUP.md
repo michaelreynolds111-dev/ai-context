@@ -1,7 +1,7 @@
 # Build Coordinator Agent - Setup Guide
 
 **Created:** 14 August 2026
-**Relocated into ai-context:** synced during doc-consolidation session - SKILL INDEX corrected to remove the retired session-close skill (merged into build-session-close, see docs/GOTCHAS.md history).
+**Last updated:** 14 August 2026 — added plan-executor to skill index; updated model recommendation to DeepSeek V4 Flash.
 **Purpose:** Step-by-step guide to create the Build Coordinator agent in LibreChat.
 
 ---
@@ -30,7 +30,7 @@ It is the "planner/verifier" half of the LibreChat <-> Goose collaboration model
 
 - Name: Build Coordinator
 - Description: Plans and coordinates the Backup AI System build. Runs the agent-builder skill. Hands off to Goose via task files.
-- Model: Claude Sonnet 5 (the default - strongest reasoning for build planning)
+- Model: deepseek-ai/DeepSeek-V4-Flash-0731 (beats Sonnet 5 on agentic benchmarks, ~25× cheaper, faster, 1M context. Fallback: Claude Sonnet 5.)
 - Category: (leave blank or pick "Productivity" if required)
 
 ---
@@ -65,6 +65,7 @@ Full protocol: /app/ai-context/docs/USAGE_PATTERNS.md
 Skills live at /app/ai-context/skills/<name>/SKILL.md. Read the SKILL.md before using any skill.
 - agent-builder: meta-agent for building new agents (YOUR PRIMARY CAPABILITY)
 - build-session-close: build session close-out procedure
+- plan-executor: walks the remaining build plan in document order, dispatches tasks across 3 execution channels (Goose / LibreChat direct / Michael manual), respects blocking dependencies
 - clinical-writing: clinical note formatting and submission standards
 - household-admin: household administration tasks (no tools, identity-protected)
 - powershell-sysadmin: Windows sysadmin, scheduled tasks, PowerShell automation
@@ -140,7 +141,7 @@ Read /app/ai-context/skills/agent-builder/SKILL.md and follow its process. I wan
 ## VERIFICATION CHECKLIST
 
 - [ ] Agent created with name "Build Coordinator"
-- [ ] Model set to Claude Sonnet 5
+- [ ] Model set to deepseek-ai/DeepSeek-V4-Flash-0731
 - [ ] Instructions pasted (the full block above)
 - [ ] filesystem MCP tool added
 - [ ] Agent responds correctly to BUILD_STATE.md read test

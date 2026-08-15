@@ -1,7 +1,7 @@
 # Safety Architecture — Extract from the Self-Improvement Protocol
 
-**Source:** `docs/SELF_IMPROVEMENT_PROTOCOL.md` v2.0, §3 (staged at `staging-ai-context/docs/`).
-**Purpose:** The safety architecture the agent-builder inherits. This is an extract with citation — the canonical version lives in the protocol. If the protocol is committed, read it fresh from `ai-context/docs/SELF_IMPROVEMENT_PROTOCOL.md` rather than relying on this extract.
+**Source:** `docs/SELF_IMPROVEMENT_PROTOCOL.md` v2.0, §3 (committed at `ai-context/docs/`).
+**Purpose:** The safety architecture the agent-builder inherits. This is an extract with citation — the canonical version lives in the protocol. Read it fresh from `ai-context/docs/SELF_IMPROVEMENT_PROTOCOL.md` rather than relying on this extract.
 **Extracted:** 14 August 2026.
 
 ---
@@ -87,5 +87,5 @@ the user knows the change path and checkpoint requirements.
 ---
 
 *End of extract. The canonical safety architecture lives in
-`docs/SELF_IMPROVEMENT_PROTOCOL.md` §3. When that protocol is committed,
-re-read it fresh rather than relying on this extract.*
+`docs/SELF_IMPROVEMENT_PROTOCOL.md` §3 (committed at `ai-context/docs/`).
+Re-read it fresh rather than relying on this extract.*

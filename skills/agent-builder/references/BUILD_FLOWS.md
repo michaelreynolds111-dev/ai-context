@@ -1,6 +1,6 @@
 # BUILD_FLOWS — Agent Types, Change Paths, and Goose Handoff
 
-**Source:** `docs/V0_8_7_CAPABILITIES.md` (change paths) + `docs/USAGE_PATTERNS.md` (collaboration model), both staged at `staging-ai-context/docs/`.
+**Source:** `docs/V0_8_7_CAPABILITIES.md` (change paths) + `docs/USAGE_PATTERNS.md` (collaboration model), both committed at `ai-context/docs/`.
 **Purpose:** The step-by-step flows for each agent type (A–E), including the Goose task planning and the dynamic-vs-staged change path for each.
 **Last derived:** 14 August 2026.
 
@@ -186,4 +186,5 @@ goose-task --result <name>        # creates outputs/GOOSE_RESULT_<NAME>.md from 
 ---
 
 *End of build flows. Re-read `docs/V0_8_7_CAPABILITIES.md` and
-`docs/USAGE_PATTERNS.md` if the LibreChat version or handoff model changes.*
+`docs/USAGE_PATTERNS.md` (both committed at `ai-context/docs/`) if the
+LibreChat version or handoff model changes.*
