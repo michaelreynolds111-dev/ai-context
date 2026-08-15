@@ -1,8 +1,8 @@
 # BUILD STATE
 
-**Last updated:** 16 August 2026 (GOTCHAS.md recovered after PowerShell accident; state-update-guard skill operational; edit-script redesign agreed; Build Coordinator agent prep complete)
+**Last updated:** 16 August 2026 (Option A decided for H3 commit treatment; commit task staged; GOTCHAS.md recovery still pending Goose execution; state-update-guard + build-session-close skills operational; edit-script model in use for this close)
 **Current phase:** Phase 9 — Cutover (§13)
-**Current sub-step:** Build Coordinator agent created; Session 10 prep (H3 resolved=Bitwarden; H4 + ai-workspace path open; GOTCHAS.md recovery pending Goose execution)
+**Current sub-step:** Build Coordinator agent operational; Session 10 items 2+3 Stage 1 complete; H3 resolved=Bitwarden (Option A: folded into BUILD_STATE, no standalone file); commit + GOTCHAS recovery tasks staged for Goose; H4 + ai-workspace path open
 
 ## Phase status
 | Phase | Status | Exit test | Date |
@@ -36,7 +36,7 @@
 - **mcp-servers.json:** populated, commit 7331a32
 - **gcloud CLI 579.0.0** installed in WSL2 Ubuntu, authenticated as michael.reynolds111@gmail.com, project librechat-504922
 - **Tailscale 1.102.2** installed; Tailnet `tailcad985.ts.net`; Serve persisted; mobile HTTPS live at `https://michael-pc.tailcad985.ts.net`
-- **Password manager (H3 RESOLVED):** Bitwarden, free tier — CLI `bw 2026.7.0` (/snap/bin/bw, WSL2) + desktop app + browser extension installed, account verified, passwords imported. See `H3_DECISION_BITWARDEN.md`.
+- **Password manager (H3 RESOLVED):** Bitwarden, free tier — CLI `bw 2026.7.0` (/snap/bin/bw, WSL2) + desktop app + browser extension installed, account verified, passwords imported. Decision folded into BUILD_STATE per Option A — no standalone decision file.
 - **Docker stacks on host:** two independent Compose stacks — `librechat` (6 project containers; GitHub MCP server managed by Claude Desktop via `claude_desktop_config.json`, not a persistent container) and pre-existing `torbox-system` (7 containers, unrelated to AI build). VERIFIED: admin-panel shows as `clickhouse` (image hosted under ClickHouse GitHub org) — not an anomaly.
 - **Build Coordinator agent:** LibreChat agent configured with `deepseek-ai/DeepSeek-V4-Flash-0731`, 10-skill index in instructions, filesystem MCP tool. Agent created per Michael (manual UI step). Step 5 test pending.
 
@@ -84,6 +84,14 @@
 - 2026-08-16 [gotchas-recovery-and-architecture-review] [PLANNED] Implement edit-script handoff model for LibreChat→Goose state updates — evidence: none yet. Verify: state-update-guard SKILL.md updated; Goose recipe updated; first end-to-end edit-script session close completed
 - 2026-08-16 [gotchas-recovery-and-architecture-review] [PLANNED] Apply BUILD_STATE_UPDATE.md (this file) via Goose session-close recipe — evidence: none yet. Verify: commit SHA returned, BUILD_STATE.md on origin/master reflects 16 Aug date
 
+- 2026-08-16 [session-10-commit-prep] [DONE] Decided Option A for H3 commit treatment: fold into BUILD_STATE only, no standalone H3_DECISION_BITWARDEN.md in repo — evidence: user stated "use option A" (explicit named deliverable)
+- 2026-08-16 [session-10-commit-prep] [DONE] Updated GOOSE_TASK_COMMIT_SESSION10.md to Option A (removed standalone file from promotion list, updated exit test) — evidence: edit_file_mcp_filesystem on task file confirmed both edits applied; read_text_file_mcp_filesystem confirmed current content
+- 2026-08-16 [session-10-commit-prep] [DONE] Produced session-close BUILD_STATE_EDIT_SCRIPT.md for state-update-guard → Goose handoff — evidence: write_file_mcp_filesystem on /app/agent-workdir/BUILD_STATE_EDIT_SCRIPT.md this session
+- 2026-08-16 [session-10-commit-prep] [DISCUSSED] Goose commit task (GOOSE_TASK_COMMIT_SESSION10.md) ready but not yet executed — evidence: task file present in tasks/; search_files_mcp_filesystem for GOOSE_RESULT_COMMIT_SESSION10* returned no matches. Verify: Goose reads task, checks parity, commits, pushes, writes result file
+- 2026-08-16 [session-10-commit-prep] [DISCUSSED] GOTCHAS.md recovery task (GOOSE_TASK_GOTCHAS_RECOVERY.md) still pending from prior session — evidence: task file present in tasks/; no matching result file in outputs/. Verify: Goose reads and executes task
+- 2026-08-16 [session-10-commit-prep] [DISCUSSED] Staged BUILD_STATE_SESSION10_PROGRESS_2026-08-15.md still in staging-ai-context/ — not yet promoted to live BUILD_STATE.md — evidence: list_directory_mcp_filesystem on staging-ai-context/ confirmed file present; live BUILD_STATE.md does not contain 2026-08-14/15 session block. Verify: Goose applies this edit script (which folds the equivalent into BUILD_STATE)
+- 2026-08-16 [session-10-commit-prep] [PLANNED] Goose executes commit + push after applying BUILD_STATE_EDIT_SCRIPT — evidence: none yet. Verify: GOOSE_RESULT_COMMIT_SESSION10.md written with commit SHA and parity confirmation
+- 2026-08-16 [session-10-commit-prep] [PLANNED] Next session resumes with Session 10 item 3 Stage 2 — Michael-manual Bitwarden transfer (Priority 2: Chrome password CSV → import into Bitwarden, verify, delete cleartext) — evidence: none yet
 ## 2026-08-16 — GOTCHAS.md recovery & architecture review (this session)
 
 ### What happened
@@ -182,22 +190,25 @@ See git history for full detail.
 
 ## NEXT STEP
 
-**Immediate (Goose): Run the GOTCHAS recovery task.**
+**Immediate (Goose): Run the BUILD_STATE_EDIT_SCRIPT first, then the commit task.**
 
-```
-Goose action: Read ~/agent-workdir/tasks/GOOSE_TASK_GOTCHAS_RECOVERY.md
-Execute: git restore docs/GOTCHAS.md + rm GOTCHAS_UPDATE.md + apply BUILD_STATE_UPDATE.md
-```
+1. Goose reads `~/agent-workdir/BUILD_STATE_EDIT_SCRIPT.md` and applies each edit to the live `~/ai-context/BUILD_STATE.md` (find-replace validation — STOP if any `old` text doesn't match).
+2. Goose reads `~/agent-workdir/tasks/GOOSE_TASK_COMMIT_SESSION10.md` and executes it end-to-end:
+   - Parity check (local HEAD == origin/master, clean working tree) — STOP if not identical.
+   - Copy `docs/results/GOOSE_RESULT_TIER1_INVENTORY.md` from staging to `~/ai-context/docs/results/`.
+   - `git add` BUILD_STATE.md + docs/results/GOOSE_RESULT_TIER1_INVENTORY.md + docs/results/ path.
+   - `git commit` (gitleaks hook active — do NOT disable).
+   - `git push origin master`.
+   - Post-commit parity re-verify (local == origin/master at new SHA).
+   - Write `GOOSE_RESULT_COMMIT_SESSION10.md` to `~/agent-workdir/outputs/`.
+3. If commit succeeds AND parity is confirmed: also execute `GOOSE_TASK_GOTCHAS_RECOVERY.md` (restore `docs/GOTCHAS.md` from HEAD, delete polluted `GOTCHAS_UPDATE.md`).
 
-Expected: GOTCHAS.md restored to 888 lines, GOTCHAS_UPDATE.md deleted, BUILD_STATE.md updated to this version, commit pushed.
+**After commit + recovery:**
+Resolve open decisions (ai-workspace root path, H4 Sarah's access), then Session 10 item 3 Stage 2 (**Michael-manual Bitwarden transfer** — Chrome password exports → CSV import → verify → delete cleartext files, now unblocked by H3=Bitwarden).
 
-**After recovery:**
-Resolve the two remaining Session 10 blockers (H4 — Sarah's access; ai-workspace root path), then begin Session 10 with item 3 Stage 2 (**Tier-1 quarantine — Michael-manual Bitwarden transfer**, now unblocked by H3=Bitwarden). Michael handles actual credential entry/removal via Bitwarden; Goose/Plan Executor runs a metadata-only verify pass afterwards.
+**Session 10 remaining items (in order):** Item 3 Stage 2 (Michael-manual tier-1 quarantine) → Item 3 Stage 3 (Goose verify pass) → Item 4 (legacy pipeline audit) → Item 5 (workspace consolidation — gated on ai-workspace path) → Item 6 (C: drive migration) → Item 7 (credential sweep).
 
-**Session 10 remaining items (in order):** Item 3 Stage 2 (Tier-1 quarantine) → Item 4 (legacy pipeline audit) → Item 5 (workspace consolidation) → Item 6 (C: drive migration) → Item 7 (credential quarantine sweep).
-
-**Design work pending:** Edit-script handoff model implementation (discussed, agreed, not yet implemented).
-
+**Open decisions blocking items:** ai-workspace root path (gates item 5), H4 Sarah's access (design only, not build-blocking).
 ## Historical ops log (unchanged from prior state)
 The following incident/handling sections are preserved in full from the prior
 BUILD_STATE and remain accurate:
