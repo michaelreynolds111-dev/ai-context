@@ -1,8 +1,8 @@
 # BUILD STATE
 
-**Last updated:** 13 August 2026 (Deferred item 4 complete: Goose + LibreChat integration polish passed)
+**Last updated:** 16 August 2026 (GOTCHAS.md restored after PowerShell accident; state-update-guard skill built and fixed; Build Coordinator agent prep complete)
 **Current phase:** Phase 9 — Cutover (§13)
-**Current sub-step:** Session 10 prep (Deferred item 4 complete)
+**Current sub-step:** Build Coordinator agent created; Session 10 prep (H3 resolved=Bitwarden; H4 + ai-workspace path open)
 
 ## Phase status
 | Phase | Status | Exit test | Date |
@@ -19,6 +19,7 @@
 | 8 — Validation | **PASSED** | All 6 clusters passed, security audit clean | 9 Aug 2026 |
 | 9 — Cutover | IN PROGRESS | System live; working through deferred items | ongoing |
 | **9a — Remote mobile access + STT** | **✅ PASSED** | Mobile HTTPS + browser-native STT confirmed | 11 Aug 2026 |
+| **9B — MongoDB durability + backup** | **✅ PASSED** | Named volume + daily mongodump + restore drill | 11 Aug 2026 |
 
 ## Environment facts (confirmed)
 - Machine: Michael-PC, Windows 11 Home 26200, i5-12400, 15.8 GB RAM
@@ -141,7 +142,7 @@ Items promised by master plan §14 and §16 but not yet built. None are blockers
 - **`USAGE_PATTERNS.md`** — documents the plan-in-LibreChat / execute-in-Goose decision rule and the shared-workspace convention. Created as part of Deferred item 4.
 
 ## Open questions
-- H3: Password manager — Google PM currently; Bitwarden recommended. UNDECIDED — hard dependency for Session 10.
+- H3: Password manager — **RESOLVED: Bitwarden** (decided 15 Aug 2026). Unblocks Session 10 item 3 (Tier-1 quarantine).
 - H4: Sarah's access — Option A (shared machine) recommended. UNDECIDED.
 - Why can't D: be BitLockered? Worth pinning before Session 10.
 - Drive MCP: apply to Google Developer Preview Program or pivot to self-hosted `@aaronsb/google-workspace-mcp`? UNDECIDED.
@@ -154,28 +155,31 @@ Items promised by master plan §14 and §16 but not yet built. None are blockers
 See git history for full detail.
 
 ## NEXT STEP
-**Phase 9a — Remote mobile access + STT (do this first — highest daily-use impact):**
-See §13a in BACKUP_AI_MASTER_BUILD_PLAN.md for full steps and exit test.
+**Verify the Build Coordinator agent works (Step 5 of the 5-step checklist).**
+Start a new chat with Build Coordinator and send:
 
-Quick reference sequence:
-1. Check Tailscale version: `tailscale version` (Windows PowerShell or system tray)
-2. Enable HTTPS certs in Tailscale admin console → DNS tab
-3. Install Tailscale on phone, log in to same account, confirm device appears in tailnet
-4. On Windows host (PowerShell): `tailscale serve 3080`
-5. Note the `.ts.net` URL printed, open it on phone — confirm LibreChat loads over HTTPS
-6. Make Serve persistent: create a Windows Scheduled Task (see §13a.4 in master plan for exact steps)
-7. Add STT block to `librechat.yaml` (see §13a.5 in master plan)
-8. Restart LibreChat API container: in WSL2 — `cd ~/LibreChat && docker compose restart api`
-9. Test mic on phone at `.ts.net` URL
-10. Record exit test result in BUILD_STATE.md
+```
+Read /app/ai-context/BUILD_STATE.md and tell me the current phase and what's next.
+```
 
-**After 9a completes:** Items 4–7 in the deferred list above:
-- Item 4: Goose + LibreChat integration polish (small workstream, high leverage — can run in parallel with Session 10 or post-cutover)
-- Item 5: Workspace consolidation (Session 10)
-- Item 6: Claude Projects migration (last-but-one, ongoing, parallel-run validation)
-- Item 7: **Cluster 6 Household DB agent build** (post-Session-10 — the largest remaining piece of build work; scaffolds now in `projects/household/`)
+Expected: "Phase 9 — Cutover, IN PROGRESS" and the Session 10 prep items. Then send:
 
-**Session 10 (book separately, after H3+H4 decisions):** Docker anomaly verify → LibreChat filesystem locate → Tier-1 quarantine → legacy pipeline audit → workspace consolidation → C: drive migration.
+```
+Read /app/ai-context/skills/agent-builder/SKILL.md and follow its process.
+```
+
+It should read the SKILL.md and begin the agent-builder flow.
+
+**After Step 5 confirms the agent:**
+Resolve the two remaining Session 10 blockers (H4 — Sarah's access; ai-workspace root path), then begin Session 10 with item 3 Stage 2 (**Tier-1 quarantine — Michael-manual Bitwarden transfer**, now unblocked by H3=Bitwarden). Michael handles actual credential entry/removal via Bitwarden; Goose/Plan Executor runs a metadata-only verify pass afterwards.
+
+**Session 10 remaining items (in order):** Item 3 Stage 2 (Tier-1 quarantine) → Item 4 (legacy pipeline audit) → Item 5 (workspace consolidation) → Item 6 (C: drive migration) → Item 7 (credential quarantine sweep).
+
+**Deferred items still open:**
+- Deferred 1 (Drive MCP): preview program vs self-hosted — UNDECIDED
+- Deferred 2 (M365 MCP): DEFERRED INDEFINITELY
+- Deferred 6 (Claude Projects migration): ongoing, parallel-run validation
+- Deferred 7 (Cluster 6 Household DB): needs H3 + Session 10 item 3 — DO NOT PULL FORWARD
 
 ## 2026-08-10 — MongoDB bind-mount data loss + fix (unscheduled, Phase 9 ops)
 
