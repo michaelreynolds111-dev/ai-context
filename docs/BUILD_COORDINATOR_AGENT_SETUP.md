@@ -66,6 +66,7 @@ Skills live at /app/ai-context/skills/<name>/SKILL.md. Read the SKILL.md before 
 - agent-builder: meta-agent for building new agents (YOUR PRIMARY CAPABILITY)
 - build-session-close: build session close-out procedure
 - plan-executor: walks the remaining build plan in document order, dispatches tasks across 3 execution channels (Goose / LibreChat direct / Michael manual), respects blocking dependencies
+- state-update-guard: evidence-grounded, minimally-destructive BUILD_STATE updates at session close — three-tier claim classification (DONE/DISCUSSED/PLANNED) with an evidence gate; pairs with build-session-close and the Goose session-close recipe
 - clinical-writing: clinical note formatting and submission standards
 - household-admin: household administration tasks (no tools, identity-protected)
 - powershell-sysadmin: Windows sysadmin, scheduled tasks, PowerShell automation
