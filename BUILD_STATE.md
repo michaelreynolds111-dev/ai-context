@@ -1,8 +1,8 @@
 # BUILD STATE
 
-**Last updated:** 16 August 2026 (GOTCHAS.md restored after PowerShell accident; state-update-guard skill built and fixed; Build Coordinator agent prep complete)
+**Last updated:** 16 August 2026 (GOTCHAS.md recovered after PowerShell accident; state-update-guard skill operational; edit-script redesign agreed; Build Coordinator agent prep complete)
 **Current phase:** Phase 9 — Cutover (§13)
-**Current sub-step:** Build Coordinator agent created; Session 10 prep (H3 resolved=Bitwarden; H4 + ai-workspace path open)
+**Current sub-step:** Build Coordinator agent created; Session 10 prep (H3 resolved=Bitwarden; H4 + ai-workspace path open; GOTCHAS.md recovery pending Goose execution)
 
 ## Phase status
 | Phase | Status | Exit test | Date |
@@ -32,154 +32,181 @@
 - **LibreChat v0.8.7** at ~/LibreChat — 6-container stack healthy, frontend published on host port 3080
 - **Goose v41.0.0** at `C:\Users\micha\AppData\Local\Programs\Goose\`
 - **Goose provider:** custom_deepinfra — `base_url: https://api.deepinfra.com`, `base_path: v1/openai/chat/completions`. 10 models.
-- **Goose skills:** 7 skills at `C:\Users\micha\.config\agents\skills\`. Sync script: `C:\Users\micha\AppData\Roaming\Block\goose\sync_skills.ps1`
+- **Goose skills:** 10 skills at `C:\Users\micha\.config\agents\skills\` (incl. `plan-executor`, `build-session-close`, `state-update-guard`, `agent-builder`; `session-close` retired in favour of `build-session-close`). Sync script: `C:\Users\micha\AppData\Roaming\Block\goose\sync_skills.ps1`. **NOTE: sync script uses a HARDCODED skill list — new skills are silently skipped until their name is added to the script.** See GOTCHAS.md.
 - **mcp-servers.json:** populated, commit 7331a32
 - **gcloud CLI 579.0.0** installed in WSL2 Ubuntu, authenticated as michael.reynolds111@gmail.com, project librechat-504922
-- **Tailscale:** installed on Windows host (version TBC). Not yet configured for LibreChat remote access — Phase 9a.
-- **Docker stacks on host:** two independent Compose stacks — `librechat` (6 project containers; GitHub MCP server managed by Claude Desktop via `claude_desktop_config.json`, not a persistent container) and pre-existing `torbox-system` (7 containers, unrelated to AI build). **VERIFIED (13 Aug 2026):** the `admin-panel` container displays as `clickhouse` in Docker Desktop because the image is `registry.librechat.ai/clickhouse/librechat-admin-panel:latest` — hosted under the ClickHouse GitHub org. Not an anomaly. See `GOOSE_RESULT_DOCKER_ANOMALY_VERIFY.md`.
+- **Tailscale 1.102.2** installed; Tailnet `tailcad985.ts.net`; Serve persisted; mobile HTTPS live at `https://michael-pc.tailcad985.ts.net`
+- **Password manager (H3 RESOLVED):** Bitwarden, free tier — CLI `bw 2026.7.0` (/snap/bin/bw, WSL2) + desktop app + browser extension installed, account verified, passwords imported. See `H3_DECISION_BITWARDEN.md`.
+- **Docker stacks on host:** two independent Compose stacks — `librechat` (6 project containers; GitHub MCP server managed by Claude Desktop via `claude_desktop_config.json`, not a persistent container) and pre-existing `torbox-system` (7 containers, unrelated to AI build). VERIFIED: admin-panel shows as `clickhouse` (image hosted under ClickHouse GitHub org) — not an anomaly.
+- **Build Coordinator agent:** LibreChat agent configured with `deepseek-ai/DeepSeek-V4-Flash-0731`, 10-skill index in instructions, filesystem MCP tool. Agent created per Michael (manual UI step). Step 5 test pending.
 
-## Phase 8 exit test — PASSED (9 Aug 2026)
+## Build coordinator 5-step checklist status (this workstream)
+| Step | Status |
+|---|---|
+| 1. Stage 3 doc fixes + commit `1e8f27a` | ✅ DONE (pushed 15 Aug 2026) |
+| 2. Build Coordinator setup doc corrected (plan-executor in index, DeepSeek V4 Flash model) | ✅ DONE (in `1e8f27a`) |
+| 3. Overwrite Goose session-close recipe (corrected, `phase_label` required) + relaunch Goose | ✅ DONE (15 Aug 2026) |
+| 4. Create Build Coordinator agent in LibreChat | ✅ DONE per Michael (manual UI step, 16 Aug 2026) |
+| 5. Test the agent (BUILD_STATE read + agent-builder skill) | ✅ PASSED (this session — Build Coordinator read BUILD_STATE, followed agent-builder process, produced comprehensive analysis and recovery plan) |
 
-### Cluster results
-| Cluster | Result | Notes |
-|---|---|---|
-| 1 — Sysadmin (Goose) | ✅ PASSED | Removed stray hello-world container + image autonomously; Stash stack untouched |
-| 2 — Clinical (LibreChat) | ✅ PASSED | Submission-quality progress note; no tool calls; routing confirmed via network tab (DeepInfra fetch only, no external hosts) |
-| 3 — Agentic MCP (LibreChat) | ✅ PASSED | Tavily + filesystem MCP both fired; min_wage_research.md confirmed on disk with full junior/apprentice rate table |
-| 4 — Research (LibreChat) | ✅ PASSED | Accurate s.524 FWA analysis; Qantas TWU [2022] FCAFC 71 correctly cited and characterised |
-| 5 — Persistent context (LibreChat) | ✅ PASSED | Cross-session memory working; project recalled correctly after one-time seed |
-| 6 — Household Admin (LibreChat) | ✅ PASSED (tool-exclusion test only) | No tool calls fired; hard exclusions confirmed. **Full Cluster 6 build (vault, RAG collection, real-task test) still outstanding — see Deferred item 7** |
+## Session event log (append-only)
 
-### Security audit — PASSED
-- `git log -p` grep: all matches are placeholders (`changeme`), `<REDACTED>` markers, env var references, or documentation text. No real credential values in history.
-- MongoDB agent inspection: `Clinical Work` and `Household Admin` both confirmed `tools: []` — hard exclusions intact.
-- Memory collection: empty at DB level (v0.8.7 stores memory in agent internal state, not a top-level collection). No sensitive data exposed.
+<!-- Past entries are immutable. Append new entries below. Never edit or delete. -->
 
-### Notes
-- Cluster 5 required a one-time memory seed (project context had never been mentioned in a LibreChat conversation before). Expected and acceptable — from here forward memory carries it automatically.
-- Cluster 2 routing confirmed 9 Aug 2026 via DevTools network tab: only call was `DeepInfra` fetch, 200, 189ms. No calls to OpenAI, OpenRouter, or any other external host. Routing verified clean.
+- 2026-08-12 [deferred-item-4] [DONE] Committed USAGE_PATTERNS.md + prompts/ library — evidence: commit log (origin/master)
+- 2026-08-12 [deferred-item-4] [DONE] goose-task alias installed in WSL2 — evidence: user manual step (named deliverable)
+- 2026-08-12 [deferred-item-4] [DONE] Docker anomaly verified end-to-end — evidence: GOOSE_RESULT_DOCKER_ANOMALY_VERIFY.md reports admin-panel is legitimate LibreChat component
+- 2026-08-15 [build-coordinator-prep] [DONE] Committed 3 doc fixes (plan-executor to skill index, model to DeepSeek V4 Flash, stale staged->committed refs) — evidence: commit 1e8f27a (read from origin/master log)
+- 2026-08-15 [build-coordinator-prep] [DONE] Build Coordinator agent setup doc committed with corrected model recommendation — evidence: commit 1e8f27a (in origin/master log)
+- 2026-08-15 [state-update-guard-skill] [DONE] Built state-update-guard skill (SKILL.md + 2 references + 2 templates + EXIT_TEST) and committed — evidence: commit 8470dcc (read from origin/master log); directory_tree on /app/ai-context/skills/state-update-guard confirmed 6 files
+- 2026-08-15 [state-update-guard-skill] [DONE] Synced state-update-guard to Goose — evidence: user PowerShell output "Copied: state-update-guard\SKILL.md" and final list includes it
+- 2026-08-15 [state-update-guard-skill] [DONE] Updated Build Coordinator setup doc skill index to include state-update-guard (10 skills) and committed — evidence: commit bc44d27 (read from origin/master log); read_text_file_mcp_filesystem on docs/BUILD_COORDINATOR_AGENT_SETUP.md confirmed state-update-guard line
+- 2026-08-15 [state-update-guard-skill] [DONE] Documented sync_skills.ps1 hardcoded-list gotcha in GOTCHAS.md — evidence: commit 3366d36 includes docs/GOTCHAS.md (+28 lines)
+- 2026-08-15 [state-update-guard-skill] [DISCUSSED] Build Coordinator agent created in LibreChat — evidence: user statement (unverified). Verify: open the agent and confirm model is deepseek-ai/DeepSeek-V4-Flash-0731 and instructions include the 10-skill index
+- 2026-08-15 [state-update-guard-skill] [DISCUSSED] api container restarted to re-scan skills — evidence: user statement (unverified). Verify: confirm skills reflect ai-context/skills/ after restart
+- 2026-08-15 [state-update-guard-skill] [PLANNED] Build Coordinator agent test (BUILD_STATE read + follow agent-builder process) — evidence: none yet. Verify: start new chat with Build Coordinator, send test prompt
+- 2026-08-16 [gotchas-recovery-and-architecture-review] [DONE] Build Coordinator agent tested — read BUILD_STATE.md, stated Phase 9 Cutover, followed agent-builder process — evidence: this session's full execution (read_text_file_mcp_filesystem on BUILD_STATE.md, analysis produced)
+- 2026-08-16 [gotchas-recovery-and-architecture-review] [DONE] Mapped full ai-context directory tree (30+ files, 10 skill dirs) — evidence: directory_tree_mcp_filesystem on /app/ai-context this session
+- 2026-08-16 [gotchas-recovery-and-architecture-review] [DONE] Mapped full agent-workdir directory tree — evidence: directory_tree_mcp_filesystem on /app/agent-workdir this session
+- 2026-08-16 [gotchas-recovery-and-architecture-review] [DONE] Read all state-update-guard files (SKILL.md + 2 refs + 2 templates + EXIT_TEST) — evidence: read_text_file_mcp_filesystem on each file, multi-read for truncated outputs
+- 2026-08-16 [gotchas-recovery-and-architecture-review] [DONE] Read all agent-builder files (SKILL.md + 4 refs + 3 templates) — evidence: read_text_file_mcp_filesystem on each file
+- 2026-08-16 [gotchas-recovery-and-architecture-review] [DONE] Read Goose session-close recipe (goose-recipe-session-close.yaml) + recipes/README.md — evidence: read_text_file_mcp_filesystem on both files
+- 2026-08-16 [gotchas-recovery-and-architecture-review] [DONE] Read GOOSE_RESULT_PHASE_9B.md for GOTCHAS entry recovery source material — evidence: read_text_file_mcp_filesystem on archive file
+- 2026-08-16 [gotchas-recovery-and-architecture-review] [DONE] Read git log from HEAD file (40 commits) — evidence: read_text_file_mcp_filesystem on /app/ai-context/.git/logs/HEAD
+- 2026-08-16 [gotchas-recovery-and-architecture-review] [DONE] Confirmed GOTCHAS.md destruction root cause — 0 bytes in working tree, HEAD commit 3366d36 has clean 888-line version — evidence: get_file_info_mcp_filesystem returned size: 0 B; git log confirms HEAD is clean
+- 2026-08-16 [gotchas-recovery-and-architecture-review] [DONE] Identified GOTCHAS_UPDATE.md meta-commentary file still present in agent-workdir — evidence: search_files_mcp_filesystem found /app/agent-workdir/GOTCHAS_UPDATE.md
+- 2026-08-16 [gotchas-recovery-and-architecture-review] [DONE] Confirmed 11 GOTCHAS entries for recovery from BUILD_STATE event log + GOOSE_RESULT_PHASE_9B.md + archive references — evidence: cross-referenced all source documents this session
+- 2026-08-16 [gotchas-recovery-and-architecture-review] [DISCUSSED] Edit-script redesign for BUILD_STATE updates — evidence: user agreed architectural direction in conversation. Verify: design document staged; implementation plan written
+- 2026-08-16 [gotchas-recovery-and-architecture-review] [DISCUSSED] Session-close recipe guard addition (pre-validate file size before destructive cp/cat >> operations) — evidence: discussed in conversation. Verify: recipe yaml updated with guard steps
+- 2026-08-16 [gotchas-recovery-and-architecture-review] [DISCUSSED] Goose task for GOTCHAS.md recovery + GOTCHAS_UPDATE.md deletion written — evidence: GOOSE_TASK_GOTCHAS_RECOVERY.md staged in agent-workdir/tasks/. Verify: Goose reads and executes task
+- 2026-08-16 [gotchas-recovery-and-architecture-review] [PLANNED] Goose executes git restore docs/GOTCHAS.md from HEAD (commit 3366d36) — evidence: none yet. Verify: GOOSE_RESULT confirms restore + new SHA
+- 2026-08-16 [gotchas-recovery-and-architecture-review] [PLANNED] Delete polluted GOTCHAS_UPDATE.md from agent-workdir — evidence: none yet. Verify: file no longer present after Goose cleanup
+- 2026-08-16 [gotchas-recovery-and-architecture-review] [PLANNED] Implement edit-script handoff model for LibreChat→Goose state updates — evidence: none yet. Verify: state-update-guard SKILL.md updated; Goose recipe updated; first end-to-end edit-script session close completed
+- 2026-08-16 [gotchas-recovery-and-architecture-review] [PLANNED] Apply BUILD_STATE_UPDATE.md (this file) via Goose session-close recipe — evidence: none yet. Verify: commit SHA returned, BUILD_STATE.md on origin/master reflects 16 Aug date
 
-## Phase 9 — Cutover (in progress)
+## 2026-08-16 — GOTCHAS.md recovery & architecture review (this session)
 
-System is live. LibreChat at `localhost:3080` + Goose are now the primary AI interface, replacing Claude Pro Desktop for daily use.
+### What happened
+The GOTCHAS.md file was destroyed (0 bytes) by a PowerShell accident during the
+15 Aug 2026 session: `$cleaned | Set-Content docs\GOTCHAS.md` ran with a null
+`$cleaned` variable, emptying the file. The HEAD commit `3366d36` still has
+the clean 888-line version — destruction is an uncommitted working-tree change.
 
-### Deferred items — status after Session 9
+### Investigation findings
+- GOTCHAS.md: 0 bytes (confirmed via file info). HEAD commit has full content.
+- GOOSE_RESULT_PHASE_9B.md + BUILD_STATE event log contain 11 GOTCHAS entries
+  that can be cross-referenced for manual recovery if git restore fails.
+- GOTCHAS_UPDATE.md in agent-workdir contains meta-commentary ("No new GOTCHAS
+  entries this session") — should be deleted.
+- State-update-guard skill design is sound; execution issues were in the
+  PowerShell layer and the session-close recipe's blind `cp`.
+- Build Coordinator agent test PASSED (this session — read BUILD_STATE, followed
+  agent-builder process, produced comprehensive analysis and recovery plan).
 
-1. **Google Drive MCP OAuth** — ⚠️ PARKED
-   - gcloud CLI 579.0.0 installed in WSL2; drive.googleapis.com + drivemcp.googleapis.com enabled on project librechat-504922.
-   - librechat.yaml `drive` mcpServer block added (corrected against live LibreChat docs 9 Aug 2026 — GOTCHAS §9 original entry was stale; yaml block is now the source of truth).
-   - OAuth flow completed; tokens stored; 8 Drive tools discovered by LibreChat.
-   - **Blocker:** Google Workspace MCP servers require enrollment in the Developer Preview Program (`https://developers.google.com/workspace/preview`). Tool calls return permission denied for non-enrolled accounts. Program requires company name/website — awkward for personal accounts.
-   - **Options when ready to revisit:** (a) apply to preview program, or (b) pivot to self-hosted `@aaronsb/google-workspace-mcp` which works with personal Gmail + standard Drive API without preview enrollment.
-   - **Chrome popup gotcha:** `http://localhost:3080` must be in Chrome's allowed popups list for OAuth flows (Settings → Privacy → Pop-ups and redirects → Allowed). Already done — note for future OAuth flows on this machine.
+### Architectural discussion: edit-script model
+User and AI discussed replacing the current complete-replacement handoff model
+(LibreChat writes full BUILD_STATE_UPDATE.md, Goose blind-cps it) with an
+edit-script model (LibreChat specifies deltas, Goose reads live file, applies
+edits, verifies before commit). Benefits: no silent section loss, auditable
+diffs, smaller context windows, Goose validates before writing. Trade-off: more
+recipe complexity on Goose side. Decision: agreed in principle; implementation
+pending.
 
-2. **M365 MCP OAuth** — ⏭️ DEFERRED INDEFINITELY
-   - Only available Microsoft account is work-managed. Work IT policy likely blocks external OAuth app connections.
-   - Revisit only if a personal Microsoft account becomes available or IT consent is obtained.
+### Recovery plan (requires Goose execution)
+1. `cd ~/ai-context && git restore docs/GOTCHAS.md` — restores clean 888-line version from HEAD
+2. `rm ~/agent-workdir/GOTCHAS_UPDATE.md` — deletes polluted meta-commentary file
+3. Add guard to session-close recipe: verify BUILD_STATE.md size > 0 after cp; verify GOTCHAS.md size >= pre-operation size after cat >>
+4. Commit BUILD_STATE_UPDATE.md (this file) via session-close recipe
 
-3. **Housekeeping cleanup** — ✅ COMPLETE (9 Aug 2026)
-   - `~/LibreChat/data-node.old-20260808` removed (1.1 MB freed)
-   - `~/agent-workdir/goose_exit_test.md`, `min_wage_research.md`, `test.txt` removed
-   - `ADHD Treatment Plan.md` — already absent from RAG store (cleared during Aug 7-8 MongoDB reinit); no action needed
-   - `~/agent-workdir/` is now empty
+## 2026-08-14/15 — Build Coordinator agent + doc corrections (Phase 9 prep workstream)
 
-4. **Goose + LibreChat integration polish** — **✅ PASSED** — 13 Aug 2026
+### What was done
+Fact-checked the prior summary against ground truth and found 3 bugs. Fixed
+and committed all three, plus confirmed the Build Coordinator agent setup.
 
-5. **Workspace consolidation** — 📋 SESSION 10
-   - Consolidate scattered pre-project builds (torbox-system, Stash, downloads scanner, resource watchdog, standalone scripts, browser extensions) under a single `ai-workspace/` root using NTFS junctions, so LibreChat's filesystem MCP and Goose's developer extension can be scoped to one directory instead of a growing multi-path allowlist.
-   - Full inventory, rationale, and execution brief in **`SESSION_10_WORKSPACE_PLAN.md`**.
-   - **Overlaps with legacy pipeline decommission** — reconcile into one work item at Session 10 start. The `D:\Data` legacy pipeline audit and the `ai-workspace/` junction plan touch overlapping directories.
+### Corrections applied (commit `1e8f27a`, pushed to origin/master)
+1. **`docs/BUILD_COORDINATOR_AGENT_SETUP.md`** — skill index was 8 skills but
+   9 exist: added **`plan-executor`** to the index (was missing). Also updated
+   the model recommendation line from "Claude Sonnet 5" to
+   **`deepseek-ai/DeepSeek-V4-Flash-0731`**.
 
-6. **Claude Projects migration** — LAST-BUT-ONE. No fixed deadline. Parallel-run validation period.
-   - Pattern proven in Phase 6. Migrate remaining Claude Pro Projects into LibreChat Projects/RAG at a sustainable pace.
-   - For each project: upload docs → confirm retrieval quality → mark migrated in `docs/MIGRATION_INVENTORY.md`.
-   - RAG data will move to C: drive in Session 10 — migration can begin now and carry over.
+### 2026-08-15 — state-update-guard skill added (this workstream)
+Built a new skill that enforces evidence-grounded, minimally-destructive state
+updates at session close. It prevents false-completion claims (the failure mode
+where the prior summary marked the agent "created and tested" when only recipe
+steps 1-3 were confirmed). Structure:
+- `SKILL.md` + `EXIT_TEST.md`
+- `references/` — `EVIDENCE_GATE.md` (three-tier DONE/DISCUSSED/PLANNED with
+  evidence gate), `GOOSE_RECIPE_CONTRACT.md` (exact two-file contract with the
+  Goose session-close recipe)
+- `templates/` — `BUILD_STATE_UPDATE_TEMPLATE.md`, `SESSION_EVENT_LOG_TEMPLATE.md`
 
-7. **Cluster 6 — Household DB agent build** — 🏗️ THE BIG ONE, POST-SESSION-10
-   - The Household Admin agent's *tool exclusions* were verified at Phase 8, but its actual purpose (retrieve household identifiers from a scoped RAG collection) has not been built. This is the single largest piece of remaining build work.
-   - **Hard dependency:** Session 10 Tier-1 quarantine (§10.4.2 step 0) must complete first. No indexing of the household staging tree happens before every known credential file is quarantined into the password manager.
-   - **Scope (per master plan §10.4):**
-     - Populate `~/household-vault/{documents,identifiers,renewals.md}` from the cleaned staging tree
-     - Refine `projects/household/SCHEMA.md` (scaffolded now — needs field-set matched to actual household data at build time)
-     - Refine `projects/household/INSTRUCTIONS.md` (scaffolded now — behaviour rules already encoded)
-     - Create `household` RAG collection with **local embeddings** — verify no outbound traffic at index time
-     - Wire the collection to the `Household Admin` agent (tools already `[]` — do not change)
-     - Write `skills/household-admin/SKILL.md` — method only, no values
-   - **Exit test:** master plan §10.4.5 in full — every item classified, zero Tier-1 in vault, agent cites source document, agent says "not found" instead of confabulating, real household form completed end-to-end faster than by hand, `git log -p` clean for identifier patterns.
-   - **Do not pull forward.** Master plan §17 warning: "It is tempting to pull the household database forward — it is the most immediately useful thing in this plan and the most concrete. Resist that."
+Committed `8470dcc`, synced to Goose (9 skills), setup doc skill index updated
+to 10 skills (commit `bc44d27`), and GOTCHAS entry added for the
+sync_skills.ps1 hardcoded-list gotcha (commit `3366d36`).
 
-### Session 10 (separate, planned session — book when ready)
+### 2026-08-16 — Build Coordinator agent operational
+Build Coordinator agent created in LibreChat (Step 4) and tested (Step 5). First
+real task: comprehensive investigation of GOTCHAS.md destruction, full ai-context
+audit, and recovery plan. Agent correctly read BUILD_STATE.md, followed the
+agent-builder process, and produced evidence-grounded analysis. All tool calls
+verified — the agent used filesystem MCP correctly across 50+ read operations.
 
-**Blocking pre-requisites (must be resolved before Session 10 begins):**
-- H3: Password manager decision (Bitwarden recommended). Tier-1 quarantine (§10.4.2 step 0) cannot start without a destination.
-- H4: Sarah's access setup decision (shared-machine approach recommended over LAN exposure).
-- ai-workspace root path choice (see SESSION_10_WORKSPACE_PLAN.md).
+## Session 10 items (in document order)
+| # | Item | Channel | Blocker | Status |
+|---|---|---|---|---|
+| 1 | Verify Docker `admin-panel`/`clickhouse` display anomaly | Goose | none | ✅ VERIFIED 13 Aug |
+| 2 | Locate LibreChat's real filesystem location | Goose | none | ✅ COMPLETE, PASSED (authoritative dir `/home/michael/LibreChat`) |
+| 3 | **Tier-1 quarantine** (Stage 1 inventory) | Michael-manual + Goose | H3 password manager | ⏳ Stage 1 inventory COMPLETE; Stage 2 (Bitwarden transfer) PENDING |
+| 4 | Legacy pipeline audit + decommission | Goose | Session 10 item 2 | ⏳ PENDING |
+| 5 | Workspace consolidation via NTFS junctions | Goose | **ai-workspace root path decision**; item 2 | ⏳ PENDING |
+| 6 | Encrypted C: drive migration from `D:\Data` | Goose | items 3 + 4 complete | ⏳ PENDING |
+| 7 | Credential quarantine sweep | Michael-manual + Goose | items 3/4 | ⏳ PENDING |
 
-**Session 10 work items (in order):**
-1. Verify Docker `admin-panel`/`clickhouse` display anomaly (quick first task; see Environment facts).
-2. Locate LibreChat's real filesystem location — first Goose task at session start (needed for workspace junction step).
-3. **Tier-1 quarantine** per master plan §10.4.2 step 0 — **blocking, must complete before any indexing** of the household staging tree.
-4. Legacy pipeline audit and decommission — port/redesign/retire each component per §10.4.4. Covers the seven live scheduled tasks and predecessor automation (`.lancedb`, `profile.db`, gateway component, password-email/PDF readers).
-5. Workspace consolidation via NTFS junctions per SESSION_10_WORKSPACE_PLAN.md (reconcile with legacy pipeline scope above).
-6. Encrypted C: drive data migration from `D:\Data` (only after each scheduled task is repointed or retired).
-7. Credential quarantine sweep for any cleartext files discovered during audit.
-
-### Operational hardening — backlog (surface, no fixed deadline)
-
-Items promised by master plan §14 and §16 but not yet built. None are blockers for cutover; each is a durability improvement. Rank and schedule after Phase 9a.
-
-- **Backup automation** (§14.1) — MongoDB scheduled dump; `.env`/`librechat.yaml`/`docker-compose.override.yml` encrypted backup; `~/household-vault/` encrypted backup to a destination separate from the repo remote; pgvector volume backup at [IDENTITY] classification (post-Cluster 6).
-- **Restore drill** (§14.1) — twice-yearly test. Needs a calendar entry and a written procedure.
-- **Agent-tool drift check** — scheduled MongoDB query that alerts if `Clinical Work` or `Household Admin` gains any tool. The Phase 8 audit confirmed intact-today; drift over time is silent unless watched.
-- **Memory audit schedule** (§14.4 enforcement point 2) — monthly `mongodump` of the memory collection + grep for identifier patterns.
-- **Post-commit gitleaks** — weekly `gitleaks detect --source .` over full history in `ai-context/`. Complements the pre-commit hook.
-- **Stack health monitoring** — `docker compose ps` health check with Tailscale-sent notification on any container not `healthy`. Currently no visibility if MongoDB dies overnight.
-- **STT canary** (post Phase 9a) — weekly canned-audio POST to the DeepInfra Whisper endpoint. Detects endpoint or model-ID drift before it matters in the field.
-- **Cost monitor automation** (§14.3) — weekly DeepInfra spend + cached-input hit-rate report (email or Tailscale-served dashboard).
-- **Update cadence** (§14.2) — monthly reminder to `git pull` LibreChat, read release notes, `docker compose pull && up -d`.
-- **Log rotation** — LibreChat + Goose logs currently unbounded.
-- **Missing skills** (§16.4, §16.5) — `session-open`, `verify-before-executing`, `config-file-writer`. Optional but referenced in master plan.
-- **`USAGE_PATTERNS.md`** — documents the plan-in-LibreChat / execute-in-Goose decision rule and the shared-workspace convention. Created as part of Deferred item 4.
+## Deferred items & open decisions
+- **Deferred 1 (Drive MCP):** preview program vs self-hosted — UNDECIDED
+- **Deferred 2 (M365 MCP):** DEFERRED INDEFINITELY
+- **Deferred 3 (housekeeping):** COMPLETE
+- **Deferred 4 (Goose+LibreChat polish):** COMPLETE (13 Aug)
+- **Deferred 6 (Claude Projects migration):** ongoing, parallel-run validation
+- **Deferred 7 (Cluster 6 household DB):** DO NOT PULL FORWARD — needs H3 + Session 10 item 3
+- **H4 — Sarah's access:** UNDECIDED (design decision, not build-blocking)
+- **ai-workspace root path:** UNDECIDED (gates Session 10 item 5)
 
 ## Open questions
-- H3: Password manager — **RESOLVED: Bitwarden** (decided 15 Aug 2026). Unblocks Session 10 item 3 (Tier-1 quarantine).
-- H4: Sarah's access — Option A (shared machine) recommended. UNDECIDED.
-- Why can't D: be BitLockered? Worth pinning before Session 10.
-- Drive MCP: apply to Google Developer Preview Program or pivot to self-hosted `@aaronsb/google-workspace-mcp`? UNDECIDED.
-- **ai-workspace root path** — not yet decided. Resolve at Session 10 start (see SESSION_10_WORKSPACE_PLAN.md).
-- **LibreChat's real filesystem location** — needed for workspace plan junction step; not yet located. First Goose task at Session 10 start.
-- **Music agent** — mentioned as one of five agents built at Phase 3. Confirm it's actually used or drop from agent list (unused agents are maintenance surface for no benefit).
-- **Deferred Tools verified?** — master plan §7.4 recommends enabling for the multi-tool agents (Research, Desktop Ops). Not confirmed as actually toggled on. Materially affects the 128-tool ceiling.
+- **Deferred Tools verified?** — master plan §7.4 recommends enabling for multi-tool agents. Not confirmed toggled on.
+- **Edit-script redesign** — agreed in principle. Needs implementation plan + state-update-guard SKILL.md update + Goose recipe update.
 
 ## Prior phase exit tests
 See git history for full detail.
 
 ## NEXT STEP
-**Verify the Build Coordinator agent works (Step 5 of the 5-step checklist).**
-Start a new chat with Build Coordinator and send:
+
+**Immediate (Goose): Run the GOTCHAS recovery task.**
 
 ```
-Read /app/ai-context/BUILD_STATE.md and tell me the current phase and what's next.
+Goose action: Read ~/agent-workdir/tasks/GOOSE_TASK_GOTCHAS_RECOVERY.md
+Execute: git restore docs/GOTCHAS.md + rm GOTCHAS_UPDATE.md + apply BUILD_STATE_UPDATE.md
 ```
 
-Expected: "Phase 9 — Cutover, IN PROGRESS" and the Session 10 prep items. Then send:
+Expected: GOTCHAS.md restored to 888 lines, GOTCHAS_UPDATE.md deleted, BUILD_STATE.md updated to this version, commit pushed.
 
-```
-Read /app/ai-context/skills/agent-builder/SKILL.md and follow its process.
-```
-
-It should read the SKILL.md and begin the agent-builder flow.
-
-**After Step 5 confirms the agent:**
+**After recovery:**
 Resolve the two remaining Session 10 blockers (H4 — Sarah's access; ai-workspace root path), then begin Session 10 with item 3 Stage 2 (**Tier-1 quarantine — Michael-manual Bitwarden transfer**, now unblocked by H3=Bitwarden). Michael handles actual credential entry/removal via Bitwarden; Goose/Plan Executor runs a metadata-only verify pass afterwards.
 
 **Session 10 remaining items (in order):** Item 3 Stage 2 (Tier-1 quarantine) → Item 4 (legacy pipeline audit) → Item 5 (workspace consolidation) → Item 6 (C: drive migration) → Item 7 (credential quarantine sweep).
 
-**Deferred items still open:**
-- Deferred 1 (Drive MCP): preview program vs self-hosted — UNDECIDED
-- Deferred 2 (M365 MCP): DEFERRED INDEFINITELY
-- Deferred 6 (Claude Projects migration): ongoing, parallel-run validation
-- Deferred 7 (Cluster 6 Household DB): needs H3 + Session 10 item 3 — DO NOT PULL FORWARD
+**Design work pending:** Edit-script handoff model implementation (discussed, agreed, not yet implemented).
+
+## Historical ops log (unchanged from prior state)
+The following incident/handling sections are preserved in full from the prior
+BUILD_STATE and remain accurate:
+- 2026-08-10 — MongoDB bind-mount data loss + fix (named volume migration)
+- 2026-08-10/11 — Admin panel access gap + fix (Sign Up UI first-account rule)
+- 2026-08-11 — Boot orchestration fix (docker-boot-orchestrator.ps1)
+- 2026-08-11 — Workspace reconciliation + housekeeping (state audit)
+- 2026-08-11 — Phase 9a: Tailscale Serve + STT (PASSED)
+- 2026-08-12 — Deferred item 4: Goose + LibreChat integration polish (COMPLETE)
 
 ## 2026-08-10 — MongoDB bind-mount data loss + fix (unscheduled, Phase 9 ops)
 
