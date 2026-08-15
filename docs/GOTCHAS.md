@@ -886,3 +886,39 @@ new skill: (1) `cp` it into `~/ai-context/skills/`, (2) git add/commit/push,
 also only copies `SKILL.md` by default — skills with `references/`/`templates/`
 subdirectories (agent-builder, plan-executor, state-update-guard) need the
 script to copy whole directories, so verify the subdirs landed after syncing.
+# GOTCHAS UPDATE — 2026-08-16
+
+Append the following entry to `~/ai-context/docs/GOTCHAS.md` (via `cat >>`).
+Each entry: Symptom / Root cause / Fix.
+
+---
+
+# 11. Windows OpenSSH
+
+## Admin account SSH keys go in `administrators_authorized_keys`, not `~/.ssh/authorized_keys`
+
+**Symptom:** SSH key authentication fails for admin accounts on Windows even
+when the public key is correctly placed in the user's `~/.ssh/authorized_keys`
+file. The connection falls back to password auth or is rejected entirely.
+
+**Root cause:** Windows OpenSSH server uses a different key file location for
+members of the Administrators group. The standard `~/.ssh/authorized_keys` is
+ignored for admin accounts.
+
+**Fix:** Place the public key in:
+```
+C:\ProgramData\ssh\administrators_authorized_keys
+```
+
+**Critical:** File permissions must be set to **Administrators** and **SYSTEM**
+only (no other users/groups), or the SSH server will ignore it.
+
+**Commands to set permissions:**
+```powershell
+icacls C:\ProgramData\ssh\administrators_authorized_keys /inheritance:r
+icacls C:\ProgramData\ssh\administrators_authorized_keys /grant:r "Administrators:F" "SYSTEM:F"
+```
+
+**Context:** Discovered when setting up Termius SSH access to `michael-pc`
+(Windows) from Michael's phone. Standard `authorized_keys` placement failed;
+this was the fix. Confirmed working 14 Aug 2026.

@@ -1,8 +1,8 @@
 # BUILD STATE
 
-**Last updated:** 16 August 2026 (Option A decided for H3 commit treatment; commit task staged; GOTCHAS.md recovery still pending Goose execution; state-update-guard + build-session-close skills operational; edit-script model in use for this close)
+**Last updated:** 16 August 2026 (Termius SSH to michael-pc from phone confirmed working; Agent Marketplace enabled in librechat.yaml; GOTCHAS.md Windows OpenSSH entry added; edit-script model in use for this close)
 **Current phase:** Phase 9 — Cutover (§13)
-**Current sub-step:** Build Coordinator agent operational; Session 10 items 2+3 Stage 1 complete; H3 resolved=Bitwarden (Option A: folded into BUILD_STATE, no standalone file); commit + GOTCHAS recovery tasks staged for Goose; H4 + ai-workspace path open
+**Current sub-step:** Termius SSH access to michael-pc confirmed from phone (Windows OpenSSH admin key gotcha resolved); Agent Marketplace enabled (marketplace: true) in librechat.yaml; Session 10 items 2+3 Stage 1 complete; H3 resolved=Bitwarden; H4 + ai-workspace path open
 
 ## Phase status
 | Phase | Status | Exit test | Date |
@@ -92,6 +92,10 @@
 - 2026-08-16 [session-10-commit-prep] [DISCUSSED] Staged BUILD_STATE_SESSION10_PROGRESS_2026-08-15.md still in staging-ai-context/ — not yet promoted to live BUILD_STATE.md — evidence: list_directory_mcp_filesystem on staging-ai-context/ confirmed file present; live BUILD_STATE.md does not contain 2026-08-14/15 session block. Verify: Goose applies this edit script (which folds the equivalent into BUILD_STATE)
 - 2026-08-16 [session-10-commit-prep] [PLANNED] Goose executes commit + push after applying BUILD_STATE_EDIT_SCRIPT — evidence: none yet. Verify: GOOSE_RESULT_COMMIT_SESSION10.md written with commit SHA and parity confirmation
 - 2026-08-16 [session-10-commit-prep] [PLANNED] Next session resumes with Session 10 item 3 Stage 2 — Michael-manual Bitwarden transfer (Priority 2: Chrome password CSV → import into Bitwarden, verify, delete cleartext) — evidence: none yet
+- 2026-08-16 [remote-ssh-and-marketplace] [DONE] Termius SSH access to michael-pc confirmed working from phone — Windows OpenSSH admin key placed in C:\ProgramData\ssh\administrators_authorized_keys with Administrators+SYSTEM perms — evidence: user statement (explicit named deliverable "confirmed working on my phone")
+- 2026-08-16 [remote-ssh-and-marketplace] [DONE] Added marketplace: true to interface: section of ~/LibreChat/librechat.yaml via sed — evidence: user terminal output (sed -n '50,68p' showed "marketplace: true" present)
+- 2026-08-16 [remote-ssh-and-marketplace] [DISCUSSED] api container restart to apply marketplace config — command given (docker compose up -d --force-recreate api), not confirmed run — evidence: none yet. Verify: restart run, marketplace icon visible in LibreChat sidebar
+- 2026-08-16 [remote-ssh-and-marketplace] [PLANNED] Add Windows OpenSSH admin key gotcha to docs/GOTCHAS.md — evidence: none yet. Verify: GOTCHAS.md contains section 11 Windows OpenSSH entry after Goose applies GOTCHAS_UPDATE
 ## 2026-08-16 — GOTCHAS.md recovery & architecture review (this session)
 
 ### What happened
@@ -190,21 +194,18 @@ See git history for full detail.
 
 ## NEXT STEP
 
-**Immediate (Goose): Run the BUILD_STATE_EDIT_SCRIPT first, then the commit task.**
+**Immediate (Michael): Confirm the marketplace config is live.**
 
-1. Goose reads `~/agent-workdir/BUILD_STATE_EDIT_SCRIPT.md` and applies each edit to the live `~/ai-context/BUILD_STATE.md` (find-replace validation — STOP if any `old` text doesn't match).
-2. Goose reads `~/agent-workdir/tasks/GOOSE_TASK_COMMIT_SESSION10.md` and executes it end-to-end:
-   - Parity check (local HEAD == origin/master, clean working tree) — STOP if not identical.
-   - Copy `docs/results/GOOSE_RESULT_TIER1_INVENTORY.md` from staging to `~/ai-context/docs/results/`.
-   - `git add` BUILD_STATE.md + docs/results/GOOSE_RESULT_TIER1_INVENTORY.md + docs/results/ path.
-   - `git commit` (gitleaks hook active — do NOT disable).
-   - `git push origin master`.
-   - Post-commit parity re-verify (local == origin/master at new SHA).
-   - Write `GOOSE_RESULT_COMMIT_SESSION10.md` to `~/agent-workdir/outputs/`.
-3. If commit succeeds AND parity is confirmed: also execute `GOOSE_TASK_GOTCHAS_RECOVERY.md` (restore `docs/GOTCHAS.md` from HEAD, delete polluted `GOTCHAS_UPDATE.md`).
+1. **Restart the api container** to apply the `marketplace: true` change in `~/LibreChat/librechat.yaml`:
+   ```bash
+   cd ~/LibreChat && docker compose up -d --force-recreate api
+   ```
+2. **Verify the Agent Marketplace** appears in the LibreChat left sidebar (or via the Agents endpoint dropdown). If it does not appear, check the `api` logs and confirm the `interface.marketplace` key is set.
+3. **Confirm the Windows OpenSSH GOTCHAS entry** landed in `docs/GOTCHAS.md` (section 11) after Goose applies this edit script + GOTCHAS_UPDATE.
 
-**After commit + recovery:**
-Resolve open decisions (ai-workspace root path, H4 Sarah's access), then Session 10 item 3 Stage 2 (**Michael-manual Bitwarden transfer** — Chrome password exports → CSV import → verify → delete cleartext files, now unblocked by H3=Bitwarden).
+**Then resume Session 10:**
+- Session 10 item 3 Stage 2 (**Michael-manual Bitwarden transfer** — Chrome password exports → CSV import → verify → delete cleartext files, unblocked by H3=Bitwarden).
+- Session 10 item 3 Stage 3 (Goose verify pass).
 
 **Session 10 remaining items (in order):** Item 3 Stage 2 (Michael-manual tier-1 quarantine) → Item 3 Stage 3 (Goose verify pass) → Item 4 (legacy pipeline audit) → Item 5 (workspace consolidation — gated on ai-workspace path) → Item 6 (C: drive migration) → Item 7 (credential sweep).
 
