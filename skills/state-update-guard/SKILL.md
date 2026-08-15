@@ -10,8 +10,8 @@ description: Use when writing or updating BUILD_STATE.md, GOTCHAS.md, or any bui
 - "Session close" / "wrap up" / "what did we accomplish"
 - "Write me a handover" / "summarize progress"
 - Any request to record what happened in a build session
-- Before writing `BUILD_STATE_UPDATE.md` or `GOTCHAS_UPDATE.md` to `agent-workdir/`
-- Whenever the build-session-close skill is active and you are about to produce the replacement file
+- Before writing `BUILD_STATE_EDIT_SCRIPT.md` or `GOTCHAS_UPDATE.md` to `agent-workdir/`
+- Whenever the build-session-close skill is active and you are about to produce the update
 
 ## Hard rules
 
@@ -29,9 +29,9 @@ description: Use when writing or updating BUILD_STATE.md, GOTCHAS.md, or any bui
 
 - **Distinguish user action from system state.** "Michael copied the recipe" is a user action ([DISCUSSED] unless you read the destination file and confirmed it). "The recipe is installed in Goose" is a system state that requires file verification. These are different claims — do not collapse them.
 
-- **Ground against the live source.** Read `BUILD_STATE.md` fresh via `read_text_file_mcp_filesystem` before drafting the replacement. Never update from memory. Verify every [DONE] claim against the current file state: does the file exist? does it contain what we claim? does the commit SHA appear in the log?
+- **Ground against the live source.** Read `BUILD_STATE.md` fresh via `read_text_file_mcp_filesystem` before drafting the edit script. Never update from memory. Verify every [DONE] claim against the current file state: does the file exist? does it contain what we claim? does the commit SHA appear in the log?
 
-- **Minimally destructive.** The `BUILD_STATE_UPDATE.md` replacement preserves ALL existing content — every section, every table row, every event-log entry. You only ADD new event-log entries and UPDATE sections where a verified change occurred. Never delete history. Never rewrite or edit past event-log entries. If a prior entry was wrong, append a correction entry — do not edit the original.
+- **Edit script, not complete replacement.** Write an edit script that specifies surgical changes to the live BUILD_STATE.md — find/replace for header lines, insertions for new table rows, appends for the event log, section replacements for NEXT STEP. Do NOT write a complete replacement file. The edit script is safer because Goose validates each edit against the live file before applying it, and untouched sections are guaranteed to survive.
 
 - **Append-only event log.** Every session appends its events to the `## Session event log (append-only)` section of BUILD_STATE.md. Past entries are immutable. This is the provenance trail — it is what makes the state auditable. See `templates/SESSION_EVENT_LOG_TEMPLATE.md` for the exact format.
 
@@ -41,13 +41,13 @@ description: Use when writing or updating BUILD_STATE.md, GOTCHAS.md, or any bui
 
 - **No-gotchas means no file.** If no new environment gotchas were discovered this session, do NOT write `GOTCHAS_UPDATE.md` at all. A missing file is the correct signal to Goose that there is nothing to append. Never write meta-commentary ("No new gotchas this session") as file content — the Goose recipe will append whatever bytes are in the file, including commentary.
 
-- **Large files require multi-read.** `read_text_file_mcp_filesystem` truncates output that exceeds its character limit (~6 KB). If a read returns a `[truncated: ... chars exceeded ... limit]` marker, you have NOT seen the full file. Use the `head` and `tail` parameters across multiple reads to capture every section. Do NOT draft the replacement until you have read and can see every section of the live file. A replacement built from a truncated read will silently destroy unseen sections.
+- **Large files require multi-read.** `read_text_file_mcp_filesystem` truncates output that exceeds its character limit (~6 KB). If a read returns a `[truncated: ... chars exceeded ... limit]` marker, you have NOT seen the full file. Use the `head` and `tail` parameters across multiple reads to capture every section. Do NOT draft the edit script until you have read and can see every section of the live file. An edit script built from a truncated read will reference sections that don't match the live file, and Goose will reject the edits.
 
 ## Standards
 
 - **Tense:** Event-log entries in past tense ("Committed", "Staged", "Discussed"). Next-step in imperative ("Create", "Read", "Run").
 - **Length:** Event-log entries are one line each. BUILD_STATE sections are preserved at their existing length.
-- **Format:** Event log uses the template in `templates/SESSION_EVENT_LOG_TEMPLATE.md`. BUILD_STATE replacement preserves the existing document structure.
+- **Format:** Event log uses the template in `templates/SESSION_EVENT_LOG_TEMPLATE.md`. Edit script uses the format in `templates/BUILD_STATE_EDIT_SCRIPT_TEMPLATE.md`.
 - **Provenance:** Every [DONE] entry ends with `— evidence: <source>`. Every [DISCUSSED] entry ends with `— evidence: user statement (unverified)` or `— evidence: none yet`.
 
 ## Process
@@ -63,21 +63,29 @@ description: Use when writing or updating BUILD_STATE.md, GOTCHAS.md, or any bui
 
 4. **Draft the event-log entries.** Write append-only entries per `templates/SESSION_EVENT_LOG_TEMPLATE.md`. Each entry: date, phase_label, tier tag, claim, evidence pointer.
 
-5. **Draft the BUILD_STATE replacement.** Start from the fresh BUILD_STATE.md content. Preserve every existing section. Append the new event-log entries to the log section. Update only the sections where a verified change occurred (e.g., phase status table, environment facts, next step). See `templates/BUILD_STATE_UPDATE_TEMPLATE.md`.
+5. **Draft the edit script.** Using the live BUILD_STATE.md content as your reference, produce an edit script per `templates/BUILD_STATE_EDIT_SCRIPT_TEMPLATE.md`. Each edit specifies:
+   - `## header` — find/replace for the header line (date, sub-step)
+   - `## table_row` — insert a new table row after a specified line (use the exact existing row as anchor)
+   - `## field_update` — find/replace a specific field value (e.g., H3 status)
+   - `## event_log_append` — lines to append to the "Session event log" section
+   - `## section_replace` — replace an entire section (find the heading, replace everything until the next `## ` heading)
 
-6. **Run the self-audit checklist (validate before write).** Before writing `BUILD_STATE_UPDATE.md`, answer every item below. If any answer is "no" or "unsure", fix the draft before writing:
+   For each edit, the `find` or `after` text MUST be copied from the live file read in step 1 — not from memory. Goose will reject edits where the find text doesn't match the live file.
+
+6. **Run the self-audit checklist (validate before write).** Before writing the edit script, answer every item below. If any answer is "no" or "unsure", fix the draft before writing:
    - [ ] Did I read BUILD_STATE.md fresh (not from memory)?
    - [ ] Is every [DONE] claim backed by a cited tool result, commit SHA, or file read from THIS session?
    - [ ] Did any [DISCUSSED] claim get promoted to [DONE] without new evidence? (If yes → demote it.)
-   - [ ] Does the replacement preserve all existing sections, table rows, and event-log entries?
+   - [ ] Does the edit script preserve all existing sections (no section deletions)?
    - [ ] Are new events appended to the event log (not rewriting or deleting past entries)?
    - [ ] Is the next step specific enough to start cold (a runnable action, not "continue setup")?
    - [ ] Did I distinguish user actions from system state (no collapsing "user did X" into "system is Y")?
    - [ ] Did I distinguish "discussed an improvement" from "implemented an improvement"?
    - [ ] Did I check every read for truncation markers and re-read with head/tail until the full file was captured?
    - [ ] If no new gotchas were found, did I NOT write GOTCHAS_UPDATE.md (rather than writing meta-commentary)?
+   - [ ] Does every `find`/`after` text in the edit script match the live file exactly (copied from the read, not memory)?
 
-7. **Write the files.** Write `BUILD_STATE_UPDATE.md` (the complete replacement) to `/app/agent-workdir/BUILD_STATE_UPDATE.md`. If new environment gotchas were found, write `GOTCHAS_UPDATE.md` to `/app/agent-workdir/GOTCHAS_UPDATE.md` (each entry: Symptom / Root cause / Fix, no secrets). If NO new gotchas were found, do NOT write `GOTCHAS_UPDATE.md` — a missing file is the correct signal to Goose. Never write meta-commentary ("No new gotchas") as file content.
+7. **Write the files.** Write `BUILD_STATE_EDIT_SCRIPT.md` (the edit script) to `/app/agent-workdir/BUILD_STATE_EDIT_SCRIPT.md`. If new environment gotchas were found, write `GOTCHAS_UPDATE.md` to `/app/agent-workdir/GOTCHAS_UPDATE.md` (each entry: Symptom / Root cause / Fix, no secrets). If NO new gotchas were found, do NOT write `GOTCHAS_UPDATE.md` — a missing file is the correct signal. Never write meta-commentary ("No new gotchas") as file content.
 
 8. **State the phase_label.** Give the user the exact `phase_label` string for the Goose `/close` command (e.g., `state-update-guard-skill`, `phase-9-deferred-item-5`).
 
@@ -85,7 +93,7 @@ description: Use when writing or updating BUILD_STATE.md, GOTCHAS.md, or any bui
 
 ## Output format
 
-- **BUILD_STATE_UPDATE.md** — the complete replacement BUILD_STATE.md, written to `/app/agent-workdir/BUILD_STATE_UPDATE.md`. Must contain the append-only event log with this session's entries.
+- **BUILD_STATE_EDIT_SCRIPT.md** — the edit script, written to `/app/agent-workdir/BUILD_STATE_EDIT_SCRIPT.md`. Contains structured find/replace/append operations that Goose applies to the live BUILD_STATE.md.
 - **GOTCHAS_UPDATE.md** (optional) — new GOTCHAS entries, written to `/app/agent-workdir/GOTCHAS_UPDATE.md`.
 - **phase_label** — the string for Goose's `/close <phase_label>` commit message.
 - **Handoff line** — one line stating what to paste into project knowledge and what Goose commits.
@@ -100,10 +108,10 @@ description: Use when writing or updating BUILD_STATE.md, GOTCHAS.md, or any bui
 
 ## Integration with the Goose session-close recipe
 
-This skill produces the two files the Goose recipe expects:
-- `~/agent-workdir/BUILD_STATE_UPDATE.md` → Goose does `cp` to `~/ai-context/BUILD_STATE.md`, commits, pushes.
+This skill produces the files the Goose recipe expects:
+- `~/agent-workdir/BUILD_STATE_EDIT_SCRIPT.md` → Goose reads it, applies each edit to the live BUILD_STATE.md using find-and-replace, validates each edit landed, commits, pushes.
 - `~/agent-workdir/GOTCHAS_UPDATE.md` → Goose does `cat >>` to `~/ai-context/docs/GOTCHAS.md` (if it exists and is non-empty).
 
-The `phase_label` this skill outputs is the `{{phase_label}}` parameter Goose's recipe requires. Do NOT change the Goose recipe — this skill works within its existing two-file contract.
+The `phase_label` this skill outputs is the `{{phase_label}}` parameter Goose's recipe requires. Do NOT change the Goose recipe — this skill works within its existing contract.
 
 For the full Goose recipe flow, see `references/GOOSE_RECIPE_CONTRACT.md`.
