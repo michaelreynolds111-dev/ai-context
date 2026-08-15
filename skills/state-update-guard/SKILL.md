@@ -39,6 +39,10 @@ description: Use when writing or updating BUILD_STATE.md, GOTCHAS.md, or any bui
 
 - **Say "not verified" rather than guess.** When you are unsure whether something completed, label it [DISCUSSED] and state the verification step that would resolve it. Never round up to [DONE] to make the session look productive.
 
+- **No-gotchas means no file.** If no new environment gotchas were discovered this session, do NOT write `GOTCHAS_UPDATE.md` at all. A missing file is the correct signal to Goose that there is nothing to append. Never write meta-commentary ("No new gotchas this session") as file content — the Goose recipe will append whatever bytes are in the file, including commentary.
+
+- **Large files require multi-read.** `read_text_file_mcp_filesystem` truncates output that exceeds its character limit (~6 KB). If a read returns a `[truncated: ... chars exceeded ... limit]` marker, you have NOT seen the full file. Use the `head` and `tail` parameters across multiple reads to capture every section. Do NOT draft the replacement until you have read and can see every section of the live file. A replacement built from a truncated read will silently destroy unseen sections.
+
 ## Standards
 
 - **Tense:** Event-log entries in past tense ("Committed", "Staged", "Discussed"). Next-step in imperative ("Create", "Read", "Run").
@@ -48,7 +52,7 @@ description: Use when writing or updating BUILD_STATE.md, GOTCHAS.md, or any bui
 
 ## Process
 
-1. **Read fresh.** Read `/app/ai-context/BUILD_STATE.md` via `read_text_file_mcp_filesystem`. State the current phase and sub-step aloud. Do NOT proceed from memory.
+1. **Read fresh — capture the FULL file.** Read `/app/ai-context/BUILD_STATE.md` via `read_text_file_mcp_filesystem`. State the current phase and sub-step aloud. Do NOT proceed from memory. If the output contains a `[truncated: ... chars exceeded ... limit]` marker, you have NOT seen the full file — use the `head` and `tail` parameters across multiple reads to capture every section before drafting. Do NOT proceed to step 2 until you can see the full file.
 
 2. **Inventory session claims.** List everything that happened or was discussed this session. For each item, ask: *Is this DONE, DISCUSSED, or PLANNED?* Be honest — if the user said "I did X" but you did not verify X, it is DISCUSSED.
 
@@ -70,8 +74,10 @@ description: Use when writing or updating BUILD_STATE.md, GOTCHAS.md, or any bui
    - [ ] Is the next step specific enough to start cold (a runnable action, not "continue setup")?
    - [ ] Did I distinguish user actions from system state (no collapsing "user did X" into "system is Y")?
    - [ ] Did I distinguish "discussed an improvement" from "implemented an improvement"?
+   - [ ] Did I check every read for truncation markers and re-read with head/tail until the full file was captured?
+   - [ ] If no new gotchas were found, did I NOT write GOTCHAS_UPDATE.md (rather than writing meta-commentary)?
 
-7. **Write the files.** Write `BUILD_STATE_UPDATE.md` (the complete replacement) to `/app/agent-workdir/BUILD_STATE_UPDATE.md`. If new environment gotchas were found, write `GOTCHAS_UPDATE.md` to `/app/agent-workdir/GOTCHAS_UPDATE.md` (each entry: Symptom / Root cause / Fix, no secrets).
+7. **Write the files.** Write `BUILD_STATE_UPDATE.md` (the complete replacement) to `/app/agent-workdir/BUILD_STATE_UPDATE.md`. If new environment gotchas were found, write `GOTCHAS_UPDATE.md` to `/app/agent-workdir/GOTCHAS_UPDATE.md` (each entry: Symptom / Root cause / Fix, no secrets). If NO new gotchas were found, do NOT write `GOTCHAS_UPDATE.md` — a missing file is the correct signal to Goose. Never write meta-commentary ("No new gotchas") as file content.
 
 8. **State the phase_label.** Give the user the exact `phase_label` string for the Goose `/close` command (e.g., `state-update-guard-skill`, `phase-9-deferred-item-5`).
 
@@ -96,7 +102,7 @@ description: Use when writing or updating BUILD_STATE.md, GOTCHAS.md, or any bui
 
 This skill produces the two files the Goose recipe expects:
 - `~/agent-workdir/BUILD_STATE_UPDATE.md` → Goose does `cp` to `~/ai-context/BUILD_STATE.md`, commits, pushes.
-- `~/agent-workdir/GOTCHAS_UPDATE.md` → Goose does `cat >>` to `~/ai-context/docs/GOTCHAS.md` (if it exists).
+- `~/agent-workdir/GOTCHAS_UPDATE.md` → Goose does `cat >>` to `~/ai-context/docs/GOTCHAS.md` (if it exists and is non-empty).
 
 The `phase_label` this skill outputs is the `{{phase_label}}` parameter Goose's recipe requires. Do NOT change the Goose recipe — this skill works within its existing two-file contract.
 

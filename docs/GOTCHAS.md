@@ -858,3 +858,31 @@ the bridge is still coming up. This is a create-time OCI failure, which no
 `docker compose up -d` on a warm system (see the boot orchestrator above), not
 around `restart: always`. `up -d` recreates the container from the current
 override file once mounts are live; `restart` cannot.
+
+## Goose sync_skills.ps1 uses a HARDCODED skill list — new skills are silently omitted
+
+**Symptom:** After committing a brand-new skill to `~/ai-context/skills/` and
+running `& "C:\Users\micha\AppData\Roaming\Block\goose\sync_skills.ps1"`, the
+new skill does NOT appear in the output or in
+`C:\Users\micha\.config\agents\skills\`. The script only copies the skills
+already in its list — it does NOT scan the directory.
+
+**Root cause:** `sync_skills.ps1` (at
+`C:\Users\micha\AppData\Roaming\Block\goose\sync_skills.ps1`) enumerates an
+explicit, hardcoded array of skill names rather than auto-discovering the
+`~/ai-context/skills/` directory. A newly committed skill is silently skipped
+until its name is manually added to that array.
+
+**Fix:** Before running the sync, edit `sync_skills.ps1` (e.g. in notepad) and
+add the new skill's directory name to the `$skills` array, then save and re-run
+the sync. Confirmed 15 Aug 2026 with the `state-update-guard` skill — after
+adding it to the list, `Copied: state-update-guard\SKILL.md` appeared and the
+skill showed up in the final list.
+
+**General lesson:** "commit the skill" and "sync the skill" are two separate
+steps, and the sync step has a manual list you must maintain. When adding a
+new skill: (1) `cp` it into `~/ai-context/skills/`, (2) git add/commit/push,
+(3) add its name to the `sync_skills.ps1` list, (4) run the sync. The script
+also only copies `SKILL.md` by default — skills with `references/`/`templates/`
+subdirectories (agent-builder, plan-executor, state-update-guard) need the
+script to copy whole directories, so verify the subdirs landed after syncing.
