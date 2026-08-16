@@ -1,8 +1,8 @@
 # BUILD STATE
 
-**Last updated:** 16 August 2026 (Build Coordinator re-audit session; no new actions; session closed)
+**Last updated:** 16 August 2026 (Goose session: plan-executor v2 promoted, committed, pushed, synced)
 **Current phase:** Phase 9 — Cutover (§13)
-**Current sub-step:** plan-executor skill v2 staged (H3=Bitwarden, GOTCHAS integrity guard, state-update-guard delegation); GOOSE_TASK_UPDATE_PLAN_EXECUTOR_SKILL queued; Session 10 items 2+3 Stage 1 complete; HANDOFF.md written for Deferred item 4 Step 5 resume
+**Current sub-step:** plan-executor skill v2 LIVE (commit 7f9a10b) — H3=Bitwarden, GOTCHAS integrity guard, state-update-guard delegation; GOOSE_TASK_UPDATE_PLAN_EXECUTOR_SKILL DONE; Session 10 items 2+3 Stage 1 complete
 
 ## Phase status
 | Phase | Status | Exit test | Date |
@@ -213,6 +213,9 @@ See git history for full detail.
 - 2026-08-16 [plan-executor-audit-and-update] [DISCUSSED] Goose executes GOOSE_TASK_UPDATE_PLAN_EXECUTOR_SKILL.md — instructions given to Michael. Verify: GOOSE_RESULT_UPDATE_PLAN_EXECUTOR_SKILL.md appears in agent-workdir/outputs/ with commit SHA, grep counts (Bitwarden >= 2, 0 bytes >= 1, state-update-guard >= 2), and sync confirmation
 - 2026-08-16 [plan-executor-audit-and-update] [DONE] Session close via state-update-guard + build-session-close — evidence: state-update-guard SKILL.md + templates read fresh; BUILD_STATE.md full read (2 calls); self-audit checklist passed; BUILD_STATE_EDIT_SCRIPT.md written; GOTCHAS_UPDATE.md not written (no new gotchas)
 - 2026-08-16 [plan-executor-audit-and-update] [PLANNED] Build Coordinator reads GOOSE_RESULT_UPDATE_PLAN_EXECUTOR_SKILL
+- 2026-08-16 [plan-executor-audit-and-update] [DONE] Goose executed GOOSE_TASK_UPDATE_PLAN_EXECUTOR_SKILL — 3 files promoted from staging to live ~/ai-context/skills/plan-executor/, committed (7f9a10b), pushed, synced to Goose (v2.0 auto-discover); diff + grep checks passed (Bitwarden=3, 0bytes=2, state-update-guard=4); result written to ~/agent-workdir/outputs/GOOSE_RESULT_UPDATE_PLAN_EXECUTOR_SKILL.md — evidence: commit 7f9a10b in git log, sync_skills.ps1 output
+- 2026-08-16 [plan-executor-audit-and-update] [DONE] Confirmed GOOSE_TASK_COMMIT_SESSION10 (commit 3a12480) and GOOSE_TASK_GOTCHAS_RECOVERY (GOTCHAS.md 924 lines, GOTCHAS_UPDATE.md deleted, recipe v1.0.1 guards present) were already completed in prior sessions — evidence: GOOSE_RESULT_COMMIT_SESSION10.md, session-close recipe read fresh
+- 2026-08-16 [plan-executor-audit-and-update] [DISCUSSED] GOTCHAS.md §10 entry (sync_skills.ps1 HARDCODED skill list) is STALE — current sync_skills.ps1 is v2.0 which auto-discovers all skills and copies whole trees. Verify: plan-executor+state-update-guard subdirs confirmed synced by v2.0 this session. A future session should correct the §10 entry — evidence: sync_skills.ps1 v2.0 source read fresh this session
 
 - 2026-08-16 [session-close-context-management] [DONE] Wrote HANDOFF.md to agent-workdir with full Deferred item 4 checkpoint for resuming in a fresh conversation -- evidence: write_file_mcp_filesystem confirmed successful this session
 - 2026-08-16 [session-close-context-management] [DONE] Session close via state-update-guard + build-session-close skills -- evidence: read SKILL.md files fresh; read BUILD_STATE.md full; self-audit passed; BUILD_STATE_EDIT_SCRIPT.md written
@@ -221,17 +224,12 @@ See git history for full detail.
 
 ## NEXT STEP
 
-  **Immediate (Goose): Execute the plan-executor update task.**
+  **All 3 queued Goose tasks are now COMPLETE** (verified this session):
+  - GOOSE_TASK_UPDATE_PLAN_EXECUTOR_SKILL — ✅ DONE (commit `7f9a10b`, synced to Goose)
+  - GOOSE_TASK_GOTCHAS_RECOVERY — ✅ DONE (GOTCHAS.md restored, GOTCHAS_UPDATE.md deleted, recipe guards present)
+  - GOOSE_TASK_COMMIT_SESSION10 — ✅ DONE (commit `3a12480`)
 
-  1. In Goose: `Read ~/agent-workdir/tasks/GOOSE_TASK_UPDATE_PLAN_EXECUTOR_SKILL.md and execute it. Write your result to ~/agent-workdir/outputs/GOOSE_RESULT_UPDATE_PLAN_EXECUTOR_SKILL.md.`
-
-  2. The task copies 3 updated files from `staging-ai-context/skills/plan-executor/` into `~/ai-context/skills/plan-executor/`, commits + pushes, and syncs to Goose.
-
-  **After Goose finishes:** Tell the Build Coordinator (back here) that the result file is written. The Build Coordinator will read it and verify the exit test.
-
-  **Also pending from prior sessions (queued, not urgent):**
-  - GOOSE_TASK_GOTCHAS_RECOVERY.md (restore GOTCHAS.md from HEAD + delete polluted GOTCHAS_UPDATE.md)
-  - GOOSE_TASK_COMMIT_SESSION10.md (commit prior session work)
+  **Next LibreChat conversation:** Tell the Build Coordinator that `GOOSE_RESULT_UPDATE_PLAN_EXECUTOR_SKILL.md` is written in `~/agent-workdir/outputs/`. The Build Coordinator should verify the exit test and mark the NEXT STEP as cleared.
 
   **Then resume Session 10:**
   - Session 10 item 3 Stage 2 (Michael-manual Bitwarden transfer — Chrome password CSV → import into Bitwarden, verify, delete cleartext)
@@ -239,7 +237,7 @@ See git history for full detail.
 
   **Open decisions blocking items:** ai-workspace root path (gates item 5), H4 Sarah's access (design only).
 
-  **Next LibreChat conversation:** Start a new chat with the Build Coordinator agent. First message: `Read BUILD_STATE.md and continue with the NEXT STEP.`
+  **GOTCHAS note (stale entry):** GOTCHAS.md §10's entry describing sync_skills.ps1 as using a HARDCODED skill list is outdated — the current script is v2.0 which auto-discovers all skills and copies whole trees. A future session should correct that entry.
 
 
 ## Historical ops log (unchanged from prior state)
