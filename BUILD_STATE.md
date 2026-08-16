@@ -1,8 +1,8 @@
 # BUILD STATE
 
-**Last updated:** 16 August 2026 (plan-executor audited — 3 gaps found and staged for Goose promotion; GOOSE_TASK_UPDATE_PLAN_EXECUTOR_SKILL queued; session closed)
+**Last updated:** 16 August 2026 (context-management handoff; HANDOFF.md staged for resume; session closed)
 **Current phase:** Phase 9 — Cutover (§13)
-**Current sub-step:** plan-executor skill v2 staged (H3=Bitwarden, GOTCHAS integrity guard, state-update-guard delegation); GOOSE_TASK_UPDATE_PLAN_EXECUTOR_SKILL queued for Goose execution; Session 10 items 2+3 Stage 1 complete; H3 resolved=Bitwarden; H4 + ai-workspace path open; §13b staged-pending-review; marketplace config applied
+**Current sub-step:** plan-executor skill v2 staged (H3=Bitwarden, GOTCHAS integrity guard, state-update-guard delegation); GOOSE_TASK_UPDATE_PLAN_EXECUTOR_SKILL queued; Session 10 items 2+3 Stage 1 complete; HANDOFF.md written for Deferred item 4 Step 5 resume
 
 ## Phase status
 | Phase | Status | Exit test | Date |
@@ -210,7 +210,12 @@ See git history for full detail.
 - 2026-08-16 [plan-executor-audit-and-update] [DONE] Wrote GOOSE_TASK_UPDATE_PLAN_EXECUTOR_SKILL.md — 7-phase promotion task (verify, copy, diff, grep checks, commit, sync, report) to agents-workdir/tasks/ — evidence: write_file_mcp_filesystem on /app/agent-workdir/tasks/GOOSE_TASK_UPDATE_PLAN_EXECUTOR_SKILL.md
 - 2026-08-16 [plan-executor-audit-and-update] [DISCUSSED] Goose executes GOOSE_TASK_UPDATE_PLAN_EXECUTOR_SKILL.md — instructions given to Michael. Verify: GOOSE_RESULT_UPDATE_PLAN_EXECUTOR_SKILL.md appears in agent-workdir/outputs/ with commit SHA, grep counts (Bitwarden >= 2, 0 bytes >= 1, state-update-guard >= 2), and sync confirmation
 - 2026-08-16 [plan-executor-audit-and-update] [DONE] Session close via state-update-guard + build-session-close — evidence: state-update-guard SKILL.md + templates read fresh; BUILD_STATE.md full read (2 calls); self-audit checklist passed; BUILD_STATE_EDIT_SCRIPT.md written; GOTCHAS_UPDATE.md not written (no new gotchas)
-- 2026-08-16 [plan-executor-audit-and-update] [PLANNED] Build Coordinator reads GOOSE_RESULT_UPDATE_PLAN_EXECUTOR_SKILL.md and verifies exit test — evidence: none yet. Verify: commit SHA confirms 3 fixes landed; plan-executor agent picks up updated SKILL.md on next session
+- 2026-08-16 [plan-executor-audit-and-update] [PLANNED] Build Coordinator reads GOOSE_RESULT_UPDATE_PLAN_EXECUTOR_SKILL
+
+- 2026-08-16 [session-close-context-management] [DONE] Wrote HANDOFF.md to agent-workdir with full Deferred item 4 checkpoint for resuming in a fresh conversation -- evidence: write_file_mcp_filesystem confirmed successful this session
+- 2026-08-16 [session-close-context-management] [DONE] Session close via state-update-guard + build-session-close skills -- evidence: read SKILL.md files fresh; read BUILD_STATE.md full; self-audit passed; BUILD_STATE_EDIT_SCRIPT.md written
+- 2026-08-16 [session-close-context-management] [PLANNED] Next session: resume Deferred item 4 Step 5 by reading HANDOFF.md and executing mongosh append of skill-index block to Paperwork agent -- evidence: none yet
+.md and verifies exit test — evidence: none yet. Verify: commit SHA confirms 3 fixes landed; plan-executor agent picks up updated SKILL.md on next session
 
 ## NEXT STEP
 
@@ -227,10 +232,13 @@ See git history for full detail.
   - GOOSE_TASK_COMMIT_SESSION10.md (commit prior session work)
 
   **Then resume Session 10:**
-  - Session 10 item 3 Stage 2 (Michael-manual Bitwarden transfer — Chrome password CSV → import → verify → delete cleartext)
+  - Session 10 item 3 Stage 2 (Michael-manual Bitwarden transfer -- Chrome password CSV to import to verify to delete cleartext)
   - Session 10 items 4-7 in document order
 
   **Open decisions blocking items:** ai-workspace root path (gates item 5), H4 Sarah's access (design only).
+
+  **Next LibreChat conversation:** Start a new chat with the Build Coordinator agent. First message: `Read /app/agent-workdir/HANDOFF.md and continue with Deferred item 4 Step 5 -- append skill-index block to Paperwork agent via mongosh.`
+
 
 ## Historical ops log (unchanged from prior state)
 The following incident/handling sections are preserved in full from the prior
