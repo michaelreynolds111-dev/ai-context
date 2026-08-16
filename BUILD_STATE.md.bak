@@ -1,8 +1,8 @@
 # BUILD STATE
 
-**Last updated:** 16 August 2026 (plan-executor audited — 3 gaps found and staged for Goose promotion; GOOSE_TASK_UPDATE_PLAN_EXECUTOR_SKILL queued; session closed)
+**Last updated:** 16 August 2026 (master plan §13b staged for review — Remote Goose execution via SSH + Termius + tmux; session closed)
 **Current phase:** Phase 9 — Cutover (§13)
-**Current sub-step:** plan-executor skill v2 staged (H3=Bitwarden, GOTCHAS integrity guard, state-update-guard delegation); GOOSE_TASK_UPDATE_PLAN_EXECUTOR_SKILL queued for Goose execution; Session 10 items 2+3 Stage 1 complete; H3 resolved=Bitwarden; H4 + ai-workspace path open; §13b staged-pending-review; marketplace config applied
+**Current sub-step:** Master plan §13b (Phase 9b — Remote Goose execution via SSH + Termius + tmux) drafted and staged for review in agent-workdir/staging-ai-context/; not yet promoted to live master plan; Session 10 items 2+3 Stage 1 complete; H3 resolved=Bitwarden; H4 + ai-workspace path open; remote-ssh-and-marketplace session closed
 
 ## Phase status
 | Phase | Status | Exit test | Date |
@@ -38,8 +38,7 @@
 - **Tailscale 1.102.2** installed; Tailnet `tailcad985.ts.net`; Serve persisted; mobile HTTPS live at `https://michael-pc.tailcad985.ts.net`
 - **Password manager (H3 RESOLVED):** Bitwarden, free tier — CLI `bw 2026.7.0` (/snap/bin/bw, WSL2) + desktop app + browser extension installed, account verified, passwords imported. Decision folded into BUILD_STATE per Option A — no standalone decision file.
 - **Docker stacks on host:** two independent Compose stacks — `librechat` (6 project containers; GitHub MCP server managed by Claude Desktop via `claude_desktop_config.json`, not a persistent container) and pre-existing `torbox-system` (7 containers, unrelated to AI build). VERIFIED: admin-panel shows as `clickhouse` (image hosted under ClickHouse GitHub org) — not an anomaly.
-- **Build Coordinator agent:** LibreChat agent configured with `deepseek-ai/DeepSeek-V4-Flash-0731`, 10-skill index in instructions, filesystem MCP tool. Agent created per Michael (manual UI step). Step 5 test PASSED (16 Aug 2026 — Build Coordinator read BUILD_STATE, followed agent-builder process, staged plan-executor v2 update and master plan §13b).
-  - **Plan Executor agent (v2 pending):** 3 gaps identified vs current Build Coordinator state: H3=Bitwarden (was Vaultwarden in map), no GOTCHAS integrity guard, no state-update-guard delegation. Updated SKILL.md, EXIT_TEST.md, REMAINING_BUILD_MAP.md staged at agent-workdir/staging-ai-context/skills/plan-executor/. GOOSE_TASK_UPDATE_PLAN_EXECUTOR_SKILL.md queued for Goose promotion.
+- **Build Coordinator agent:** LibreChat agent configured with `deepseek-ai/DeepSeek-V4-Flash-0731`, 10-skill index in instructions, filesystem MCP tool. Agent created per Michael (manual UI step). Step 5 test PASSED (16 Aug 2026 — Build Coordinator read BUILD_STATE, followed agent-builder process, staged master plan §13b).
 
 ## Build coordinator 5-step checklist status (this workstream)
 | Step | Status |
@@ -203,35 +202,24 @@ verified — the agent used filesystem MCP correctly across 50+ read operations.
 ## Prior phase exit tests
 See git history for full detail.
 
-- 2026-08-16 [plan-executor-audit-and-update] [DONE] Audited plan-executor skill against current BUILD_STATE + Build Coordinator agent — identified 3 gaps: H3=Bitwarden (map said Vaultwarden), no GOTCHAS integrity guard, raw BUILD_STATE writing instead of state-update-guard delegation — evidence: read_text_file_mcp_filesystem on plan-executor SKILL.md, EXIT_TEST.md, REMAINING_BUILD_MAP.md, BUILD_STATE.md (full read across 2 calls) this session
-- 2026-08-16 [plan-executor-audit-and-update] [DONE] Staged updated plan-executor SKILL.md — added GOTCHAS integrity guard (Step 1), delegated BUILD_STATE updates to state-update-guard (Step 4), added Related skills section, updated output format to reference edit-scripts — evidence: write_file_mcp_filesystem on /app/agent-workdir/staging-ai-context/skills/plan-executor/SKILL.md
-- 2026-08-16 [plan-executor-audit-and-update] [DONE] Staged updated REMAINING_BUILD_MAP.md — re-derived from current BUILD_STATE: H3=Bitwarden (resolved), 16 Aug session outcomes, GOTCHAS recovery + commit as items 2-3, H3 listed as RESOLVED not UNDECIDED — evidence: write_file_mcp_filesystem on references/REMAINING_BUILD_MAP.md
-- 2026-08-16 [plan-executor-audit-and-update] [DONE] Staged updated EXIT_TEST.md — added GOTCHAS integrity guard test, state-update-guard delegation test, current-state accuracy test (H3=Bitwarden) — evidence: write_file_mcp_filesystem on EXIT_TEST.md
-- 2026-08-16 [plan-executor-audit-and-update] [DONE] Wrote GOOSE_TASK_UPDATE_PLAN_EXECUTOR_SKILL.md — 7-phase promotion task (verify, copy, diff, grep checks, commit, sync, report) to agents-workdir/tasks/ — evidence: write_file_mcp_filesystem on /app/agent-workdir/tasks/GOOSE_TASK_UPDATE_PLAN_EXECUTOR_SKILL.md
-- 2026-08-16 [plan-executor-audit-and-update] [DISCUSSED] Goose executes GOOSE_TASK_UPDATE_PLAN_EXECUTOR_SKILL.md — instructions given to Michael. Verify: GOOSE_RESULT_UPDATE_PLAN_EXECUTOR_SKILL.md appears in agent-workdir/outputs/ with commit SHA, grep counts (Bitwarden >= 2, 0 bytes >= 1, state-update-guard >= 2), and sync confirmation
-- 2026-08-16 [plan-executor-audit-and-update] [DONE] Session close via state-update-guard + build-session-close — evidence: state-update-guard SKILL.md + templates read fresh; BUILD_STATE.md full read (2 calls); self-audit checklist passed; BUILD_STATE_EDIT_SCRIPT.md written; GOTCHAS_UPDATE.md not written (no new gotchas)
-- 2026-08-16 [plan-executor-audit-and-update] [PLANNED] Build Coordinator reads GOOSE_RESULT_UPDATE_PLAN_EXECUTOR_SKILL.md and verifies exit test — evidence: none yet. Verify: commit SHA confirms 3 fixes landed; plan-executor agent picks up updated SKILL.md on next session
-
 ## NEXT STEP
 
-  **Immediate (Goose): Execute the plan-executor update task.**
+**Immediate (Michael): Confirm the marketplace config is live.**
 
-  1. In Goose: `Read ~/agent-workdir/tasks/GOOSE_TASK_UPDATE_PLAN_EXECUTOR_SKILL.md and execute it. Write your result to ~/agent-workdir/outputs/GOOSE_RESULT_UPDATE_PLAN_EXECUTOR_SKILL.md.`
+1. **Restart the api container** to apply the `marketplace: true` change in `~/LibreChat/librechat.yaml`:
+   ```bash
+   cd ~/LibreChat && docker compose up -d --force-recreate api
+   ```
+2. **Verify the Agent Marketplace** appears in the LibreChat left sidebar (or via the Agents endpoint dropdown). If it does not appear, check the `api` logs and confirm the `interface.marketplace` key is set.
+3. **Confirm the Windows OpenSSH GOTCHAS entry** landed in `docs/GOTCHAS.md` (section 11) after Goose applies this edit script + GOTCHAS_UPDATE.
 
-  2. The task copies 3 updated files from `staging-ai-context/skills/plan-executor/` into `~/ai-context/skills/plan-executor/`, commits + pushes, and syncs to Goose.
+**Then resume Session 10:**
+- Session 10 item 3 Stage 2 (**Michael-manual Bitwarden transfer** — Chrome password exports → CSV import → verify → delete cleartext files, unblocked by H3=Bitwarden).
+- Session 10 item 3 Stage 3 (Goose verify pass).
 
-  **After Goose finishes:** Tell the Build Coordinator (back here) that the result file is written. The Build Coordinator will read it and verify the exit test.
+**Session 10 remaining items (in order):** Item 3 Stage 2 (Michael-manual tier-1 quarantine) → Item 3 Stage 3 (Goose verify pass) → Item 4 (legacy pipeline audit) → Item 5 (workspace consolidation — gated on ai-workspace path) → Item 6 (C: drive migration) → Item 7 (credential sweep).
 
-  **Also pending from prior sessions (queued, not urgent):**
-  - GOOSE_TASK_GOTCHAS_RECOVERY.md (restore GOTCHAS.md from HEAD + delete polluted GOTCHAS_UPDATE.md)
-  - GOOSE_TASK_COMMIT_SESSION10.md (commit prior session work)
-
-  **Then resume Session 10:**
-  - Session 10 item 3 Stage 2 (Michael-manual Bitwarden transfer — Chrome password CSV → import → verify → delete cleartext)
-  - Session 10 items 4-7 in document order
-
-  **Open decisions blocking items:** ai-workspace root path (gates item 5), H4 Sarah's access (design only).
-
+**Open decisions blocking items:** ai-workspace root path (gates item 5), H4 Sarah's access (design only, not build-blocking).
 ## Historical ops log (unchanged from prior state)
 The following incident/handling sections are preserved in full from the prior
 BUILD_STATE and remain accurate:
