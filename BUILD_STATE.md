@@ -1,8 +1,8 @@
 # BUILD STATE
 
-**Last updated:** 16 August 2026 (Termius SSH to michael-pc from phone confirmed working; Agent Marketplace enabled in librechat.yaml; GOTCHAS.md Windows OpenSSH entry added; edit-script model in use for this close)
+**Last updated:** 16 August 2026 (master plan §13b staged for review — Remote Goose execution via SSH + Termius + tmux; session closed)
 **Current phase:** Phase 9 — Cutover (§13)
-**Current sub-step:** Termius SSH access to michael-pc confirmed from phone (Windows OpenSSH admin key gotcha resolved); Agent Marketplace enabled (marketplace: true) in librechat.yaml; Session 10 items 2+3 Stage 1 complete; H3 resolved=Bitwarden; H4 + ai-workspace path open
+**Current sub-step:** Master plan §13b (Phase 9b — Remote Goose execution via SSH + Termius + tmux) drafted and staged for review in agent-workdir/staging-ai-context/; not yet promoted to live master plan; Session 10 items 2+3 Stage 1 complete; H3 resolved=Bitwarden; H4 + ai-workspace path open; remote-ssh-and-marketplace session closed
 
 ## Phase status
 | Phase | Status | Exit test | Date |
@@ -38,7 +38,7 @@
 - **Tailscale 1.102.2** installed; Tailnet `tailcad985.ts.net`; Serve persisted; mobile HTTPS live at `https://michael-pc.tailcad985.ts.net`
 - **Password manager (H3 RESOLVED):** Bitwarden, free tier — CLI `bw 2026.7.0` (/snap/bin/bw, WSL2) + desktop app + browser extension installed, account verified, passwords imported. Decision folded into BUILD_STATE per Option A — no standalone decision file.
 - **Docker stacks on host:** two independent Compose stacks — `librechat` (6 project containers; GitHub MCP server managed by Claude Desktop via `claude_desktop_config.json`, not a persistent container) and pre-existing `torbox-system` (7 containers, unrelated to AI build). VERIFIED: admin-panel shows as `clickhouse` (image hosted under ClickHouse GitHub org) — not an anomaly.
-- **Build Coordinator agent:** LibreChat agent configured with `deepseek-ai/DeepSeek-V4-Flash-0731`, 10-skill index in instructions, filesystem MCP tool. Agent created per Michael (manual UI step). Step 5 test pending.
+- **Build Coordinator agent:** LibreChat agent configured with `deepseek-ai/DeepSeek-V4-Flash-0731`, 10-skill index in instructions, filesystem MCP tool. Agent created per Michael (manual UI step). Step 5 test PASSED (16 Aug 2026 — Build Coordinator read BUILD_STATE, followed agent-builder process, staged master plan §13b).
 
 ## Build coordinator 5-step checklist status (this workstream)
 | Step | Status |
@@ -47,7 +47,7 @@
 | 2. Build Coordinator setup doc corrected (plan-executor in index, DeepSeek V4 Flash model) | ✅ DONE (in `1e8f27a`) |
 | 3. Overwrite Goose session-close recipe (corrected, `phase_label` required) + relaunch Goose | ✅ DONE (15 Aug 2026) |
 | 4. Create Build Coordinator agent in LibreChat | ✅ DONE per Michael (manual UI step, 16 Aug 2026) |
-| 5. Test the agent (BUILD_STATE read + agent-builder skill) | ✅ PASSED (this session — Build Coordinator read BUILD_STATE, followed agent-builder process, produced comprehensive analysis and recovery plan) |
+| 5. Test the agent (BUILD_STATE read + agent-builder skill) | ✅ PASSED (16 Aug 2026 — Build Coordinator read BUILD_STATE, staged master plan §13b, ran full session-close via state-update-guard) |
 
 ## Session event log (append-only)
 
@@ -92,6 +92,16 @@
 - 2026-08-16 [session-10-commit-prep] [DISCUSSED] Staged BUILD_STATE_SESSION10_PROGRESS_2026-08-15.md still in staging-ai-context/ — not yet promoted to live BUILD_STATE.md — evidence: list_directory_mcp_filesystem on staging-ai-context/ confirmed file present; live BUILD_STATE.md does not contain 2026-08-14/15 session block. Verify: Goose applies this edit script (which folds the equivalent into BUILD_STATE)
 - 2026-08-16 [session-10-commit-prep] [PLANNED] Goose executes commit + push after applying BUILD_STATE_EDIT_SCRIPT — evidence: none yet. Verify: GOOSE_RESULT_COMMIT_SESSION10.md written with commit SHA and parity confirmation
 - 2026-08-16 [session-10-commit-prep] [PLANNED] Next session resumes with Session 10 item 3 Stage 2 — Michael-manual Bitwarden transfer (Priority 2: Chrome password CSV → import into Bitwarden, verify, delete cleartext) — evidence: none yet
+- 2026-08-16 [plan-13b-staged] [DONE] Confirmed Termius/Goose-from-phone workflow NOT in existing build plan
+- 2026-08-16 [plan-13b-staged] [DONE] Staged master plan §13b section to agent-workdir/staging-ai-context/PLAN_13b_GOOSE_REMOTE_EXECUTION.md (11.8 KB)
+- 2026-08-16 [plan-13b-staged] [DONE] Staged revision-history v1.7 entry to agent-workdir/staging-ai-context/REVISION_HISTORY_V17.md
+- 2026-08-16 [plan-13b-staged] [DONE] Staged BUILD_STATE addition block to agent-workdir/staging-ai-context/BUILD_STATE_9B_ADDITION.md
+- 2026-08-16 [plan-13b-staged] [DONE] Added naming-collision note to PLAN_13b_GOOSE_REMOTE_EXECUTION.md
+- 2026-08-16 [plan-13b-staged] [DONE] Session close via state-update-guard + build-session-close skills read fresh
+- 2026-08-16 [plan-13b-staged] [DONE] Wrote BUILD_STATE_EDIT_SCRIPT.md to agent-workdir/BUILD_STATE_EDIT_SCRIPT.md
+- 2026-08-16 [plan-13b-staged] [PLANNED] Goose applies BUILD_STATE_EDIT_SCRIPT.md via session-close recipe
+- 2026-08-16 [plan-13b-staged] [PLANNED] Master plan §13b promoted from staging-ai-context/ to live BACKUP_AI_MASTER_BUILD_PLAN.md
+- 2026-08-16 [plan-13b-staged] [PLANNED] Next session: Michael reviews staged §13b; if approved, Goose promotes to live plan v1.7
 - 2026-08-16 [remote-ssh-and-marketplace] [DONE] Termius SSH access to michael-pc confirmed working from phone — Windows OpenSSH admin key placed in C:\ProgramData\ssh\administrators_authorized_keys with Administrators+SYSTEM perms — evidence: user statement (explicit named deliverable "confirmed working on my phone")
 - 2026-08-16 [remote-ssh-and-marketplace] [DONE] Added marketplace: true to interface: section of ~/LibreChat/librechat.yaml via sed — evidence: user terminal output (sed -n '50,68p' showed "marketplace: true" present)
 - 2026-08-16 [remote-ssh-and-marketplace] [DISCUSSED] api container restart to apply marketplace config — command given (docker compose up -d --force-recreate api), not confirmed run — evidence: none yet. Verify: restart run, marketplace icon visible in LibreChat sidebar
