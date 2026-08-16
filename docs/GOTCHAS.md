@@ -979,3 +979,22 @@ D: original is authoritative.
 As of 2026-08-18 this was resolved (Michael deleted the D: token and the whole
 `gateway_old/` directory). For future cleanups, enumerate a component on BOTH
 drives before declaring it removed.
+# 12. ai-workspace + Claude / GitHub MCP
+
+## Claude Desktop deletion makes claude_desktop_config.json stale
+
+**Symptom:** After Michael deleted Claude Desktop (18 Aug 2026), the
+`live-systems/claude-desktop-mcp` path pointer in `C:\Users\micha\ai-workspace\`
+points to a config file for an application that no longer runs. The path pointer
+is harmless but stale — it adds no value to the single bounded root.
+
+**Root cause:** The workspace consolidation task (Session 10 item 5) was designed
+before Claude was removed from the stack. The `claude-desktop-mcp` path pointer
+was created as a read-only awareness junction, but with Claude gone, GitHub MCP
+is now LibreChat-managed only.
+
+**Fix:** On the next workspace sweep, remove the stale `live-systems/claude-desktop-mcp`
+path pointer (and its `docs/readmes/claude-desktop-mcp.md` README). The
+claude_desktop_config.json file itself can remain on disk or be deleted — it's
+out of scope for the AI stack now. Update the BUILD_STATE environment facts to
+remove stale Claude references.

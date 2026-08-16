@@ -1,8 +1,8 @@
 # BUILD STATE
 
-**Last updated:** 18 August 2026 (Session 10 item 4 legacy-pipeline audit PASSED + Phase 1 decommission DONE; ai-workspace root path DECIDED; Session 10 item 5 workspace consolidation staged and unblocked)
+**Last updated:** 18 August 2026 (Session 10 items 4-6 COMPLETE; Cluster 6 UNBLOCKED)
 **Current phase:** Phase 9 — Cutover (§13)
-**Current sub-step:** Session 10 item 4 (§10.4.4) COMPLETE (21 components classified PORT/REDESIGN/RETIRE, 3-phase decommission plan; D: .gateway_token resolved). Phase 1 decommission DONE (scanners deleted, profile facts extracted to vault, C: .lancedb gone). Next: Session 10 item 5 workspace consolidation (staged, unblocked). Cluster 6 unblocked. ai-workspace root: C:\Users\micha\ai-workspace\ (decided 18 Aug).
+**Current sub-step:** Session 10 items 4-6 COMPLETE. Item 4 legacy-pipeline audit PASSED (21 components classified, 3-phase decommission plan). Phase 1 decommission DONE. Item 5 workspace consolidation PASSED (4 NTFS junctions + 3 path pointers, 5 items moved, secrets audit clean, Goose MCP +ai-workspace). Item 6 C: migration from D:\Data SUBSUMED by items 4+5 (all Phase 1 deletions done, Phase 2 gated on Cluster 6). Next: Cluster 6 household DB build (UNBLOCKED). ai-workspace root: C:\Users\micha\ai-workspace\ (activated).
 
 ## Phase status
 | Phase | Status | Exit test | Date |
@@ -39,6 +39,8 @@
 - **Password manager (H3 RESOLVED):** Bitwarden, free tier — CLI `bw 2026.7.0` (/snap/bin/bw, WSL2) + desktop app + browser extension installed, account verified, passwords imported. Decision folded into BUILD_STATE per Option A — no standalone decision file.
 - **Docker stacks on host:** two independent Compose stacks — `librechat` (6 project containers; GitHub MCP server managed by Claude Desktop via `claude_desktop_config.json`, not a persistent container) and pre-existing `torbox-system` (7 containers, unrelated to AI build). VERIFIED: admin-panel shows as `clickhouse` (image hosted under ClickHouse GitHub org) — not an anomaly.
 - **Build Coordinator agent:** LibreChat agent configured with `deepseek-ai/DeepSeek-V4-Flash-0731`, 10-skill index in instructions, filesystem MCP tool. Agent created per Michael (manual UI step). Step 5 test PASSED (16 Aug 2026 — Build Coordinator read BUILD_STATE, followed agent-builder process, staged plan-executor v2 update and master plan §13b).
+  - **Claude Desktop:** DELETED by Michael (18 Aug 2026). GitHub MCP is now LibreChat-managed only. `claude_desktop_config.json` path pointer in ai-workspace is stale — consider removing on next sweep.
+  - **ai-workspace:** Created 18 Aug 2026 at `C:\Users\micha\ai-workspace\`. Contains: 4 NTFS junctions (torbox-system, stash, rdtclient, downloads-scanner), 3 path pointers (librechat WSL path, watchdog scoped to D:\Data\resource_watchdog.ps1+.txt, claude-desktop-mcp), 5 moved standalone items (spotify scripts, deepinfra-model-fetcher, RYM extension), per-item READMEs, secrets inventory, stash backup plan. Goose restart completed; ai-workspace root active in Goose filesystem MCP. LibreChat MCP NOT updated (requires Docker bind-mount — follow-up). Workspace follow-ups resolved: Goose restart ✅, Chrome RYM reload ✅, Bendigo skip (not in Tampermonkey) ✅, Claude deleted ✅.
   - **Plan Executor agent (v2 pending):** 3 gaps identified vs current Build Coordinator state: H3=Bitwarden (was Vaultwarden in map), no GOTCHAS integrity guard, no state-update-guard delegation. Updated SKILL.md, EXIT_TEST.md, REMAINING_BUILD_MAP.md staged at agent-workdir/staging-ai-context/skills/plan-executor/. GOOSE_TASK_UPDATE_PLAN_EXECUTOR_SKILL.md queued for Goose promotion.
 
 ## Build coordinator 5-step checklist status (this workstream)
@@ -54,6 +56,11 @@
 
 <!-- Past entries are immutable. Append new entries below. Never edit or delete. -->
 
+- 2026-08-18 [session-10-item5-workspace] [DONE] Session 10 item 5 workspace consolidation PASSED — 4 NTFS junctions + 3 scoped path pointers created; 5 standalone items moved; LibreChat exposed as WSL path pointer (NTFS junctions cannot cross WSL UNC boundary, GOTCHAS §10); LibreChat MCP NOT updated (requires Docker bind-mount, out of scope); secrets audit clean (no Tier-1 accessed); Goose MCP +ai-workspace additive; verification pass: all 7 checks green — evidence: GOOSE_RESULT_WORKSPACE_CONSOLIDATION.md in outputs/ (read and exit-test-verified by Build Coordinator this session)
+- 2026-08-18 [session-10-item5-workspace] [DISCUSSED] Michael completed Goose restart + Chrome RYM reload follow-ups — evidence: user statement "Done" (unverified system state)
+- 2026-08-18 [session-10-item5-workspace] [DISCUSSED] Claude Desktop deleted by Michael — Claude-related config references (claude_desktop_config.json, GitHub MCP) are now stale — evidence: user statement "I've deleted Claude, I'm not using it"
+- 2026-08-18 [session-10-item5-workspace] [DONE] Session 10 item 6 (C: drive migration from D:\Data) determined subsumed by items 4+5: all Phase 1 deletions done, all Phase 2 items gated on Cluster 6, surviving components already in ai-workspace or cloud-hosted — evidence: cross-read of GOOSE_RESULT_LEGACY_PIPELINE_AUDIT.md, GOOSE_RESULT_PHASE1_DECOMMISSION.md, QUARANTINE_TRANSFER_CHECKLIST.md this session
+- 2026-08-18 [session-10-item5-workspace] [PLANNED] Next: Cluster 6 household DB build — UNBLOCKED and eligible. Session 10 item 7 credential quarantine sweep (P5 .eml parked, Sarah deferred) also eligible — evidence: none yet
 - 2026-08-12 [deferred-item-4] [DONE] Committed USAGE_PATTERNS.md + prompts/ library — evidence: commit log (origin/master)
 - 2026-08-12 [deferred-item-4] [DONE] goose-task alias installed in WSL2 — evidence: user manual step (named deliverable)
 - 2026-08-12 [deferred-item-4] [DONE] Docker anomaly verified end-to-end — evidence: GOOSE_RESULT_DOCKER_ANOMALY_VERIFY.md reports admin-panel is legitimate LibreChat component
@@ -184,9 +191,9 @@ verified — the agent used filesystem MCP correctly across 50+ read operations.
 | 2 | Locate LibreChat's real filesystem location | Goose | none | ✅ COMPLETE, PASSED (authoritative dir `/home/michael/LibreChat`) |
 | 3 | **Tier-1 quarantine** (Stage 1 inventory) | Michael-manual + Goose | H3 password manager | ✅ Stage 1 inventory COMPLETE; **Stage 2 (Bitwarden transfer) COMPLETE (2026-08-17)** — P1-P4, P6 done; P5 .eml parked; Sarah deferred |
 | 4 | Legacy pipeline audit + decommission | Goose | none @ 18 Aug (item 2 done) | ✅ COMPLETE, PASSED (18 Aug 2026) — 21 components classified PORT/REDESIGN/RETIRE; 3-phase decommission plan; critical D: .gateway_token finding resolved; Phase 1 DONE |
-| 5 | Workspace consolidation via NTFS junctions | Goose | none (ai-workspace root DECIDED 18 Aug; item 2 done) | ⏳ STAGED — GOOSE_TASK_WORKSPACE_CONSOLIDATION.md in tasks/, ready for Goose dispatch |
-| 6 | Encrypted C: drive migration from `D:\Data` | Goose | items 3 + 4 complete | ⏳ PENDING |
-| 7 | Credential quarantine sweep | Michael-manual + Goose | items 3/4 | ⏳ PENDING |
+| 5 | Workspace consolidation via NTFS junctions | Goose | none | ✅ COMPLETE, PASSED (18 Aug 2026) — 4 junctions + 3 path pointers; LibreChat WSL path pointer (junction not possible); secrets audit clean; Goose MCP +ai-workspace; verification all green; GOOSE_RESULT_WORKSPACE_CONSOLIDATION.md |
+| 6 | Encrypted C: drive migration from `D:\Data` | — | items 3 + 4 complete | ✅ SUBSUMED by items 4+5 (18 Aug 2026) — all Phase 1 deletions done; Phase 2 gated on Cluster 6; surviving components already in ai-workspace or cloud-hosted |
+| 7 | Credential quarantine sweep | Michael-manual + Goose | items 3/4 | ⏳ PENDING — P5 .eml parked; Sarah deferred |
 
 ## Deferred items & open decisions
 - **Deferred 1 (Drive MCP):** preview program vs self-hosted — UNDECIDED
@@ -194,7 +201,7 @@ verified — the agent used filesystem MCP correctly across 50+ read operations.
 - **Deferred 3 (housekeeping):** COMPLETE
 - **Deferred 4 (Goose+LibreChat polish):** COMPLETE (13 Aug)
 - **Deferred 6 (Claude Projects migration):** ongoing, parallel-run validation
-- **Deferred 7 (Cluster 6 household DB):** UNBLOCKED (H3 + Session 10 item 3 Stage 2 complete, 2026-08-17) — next eligible deferred item to build
+- **Deferred 7 (Cluster 6 household DB):** UNBLOCKED (H3 + Session 10 items 3-6 complete, 2026-08-18) — NEXT ITEM to build
 - **H4 — Sarah's access:** UNDECIDED (design decision, not build-blocking)
 - **ai-workspace root path:** DECIDED (18 Aug 2026) — `C:\Users\micha\ai-workspace\` (Option A, encrypted C:, inside user profile). Session 10 item 5 now UNBLOCKED. GOOSE_TASK_WORKSPACE_CONSOLIDATION.md staged.
 
@@ -244,17 +251,15 @@ See git history for full detail.
 
 ## NEXT STEP
 
-**Session 10 item 4 (legacy-pipeline audit, §10.4.4) is COMPLETE** (18 Aug 2026, exit test PASSED). 21 components classified PORT / REDESIGN / RETIRE. Phase 1 decommission DONE — critical D: .gateway_token deleted, credential scanners deleted from both C: and D:, 8 profile facts extracted to ~/household-vault/, C: staging .lancedb/ (717 MB) deleted. A 3-phase decommission plan is written: Phase 1 (COMPLETE), Phase 2 (after Cluster 6 replacement), Phase 3 (retained components: resource_watchdog, gmail_forward_sync.gs, calendar_sync.gs, rclone_sync.ps1, briefing_builder.py, profile_store.py).
+**Session 10 items 4-6 are COMPLETE (18 Aug 2026).** Item 4 legacy-pipeline audit PASSED (21 components, 3-phase decommission, Phase 1 DONE). Item 5 workspace consolidation PASSED (`ai-workspace\` created with 4 NTFS junctions + 3 path pointers, secrets audit clean, Goose MCP +ai-workspace, verification all green). Item 6 C: migration SUBSUMED by items 4+5.
 
-**⚠️ IMPORTANT — one decision now locked:** ai-workspace root path DECIDED as `C:\Users\micha\ai-workspace\` (Option A). This unblocks Session 10 item 5.
-
-**Next in document order — Session 10 item 5: Workspace consolidation via NTFS junctions** (STAGED and UNBLOCKED). GOOSE_TASK_WORKSPACE_CONSOLIDATION.md is in tasks/ — dispatch to Goose. Task creates the bounded root, junctions in-place systems, moves standalone scripts/browser extensions, runs secrets audit (.env.example scaffolds), updates MCP/Goose allowed-directories, and runs verification pass (7 checks). Watchdog junction is scoped to only surviving resource_watchdog.ps1 + log — does NOT re-expose RETIRE'd D:\Data components.
-
-**After item 5 completes:** Session 10 item 6 (C: drive migration from D:\Data — gated on items 3+4, both done) is next. Cluster 6 household DB build (deferred item 7) is UNBLOCKED and eligible.
+**NEXT IN DOCUMENT ORDER: Cluster 6 household DB build (Deferred item 7 — UNBLOCKED).** All blockers resolved: Bitwarden (H3), Tier-1 quarantine (Session 10 item 3 Stage 2 complete except parked P5 .eml), workspace consolidation (item 5), C: migration (item 6). Also eligible: Session 10 item 7 (credential quarantine sweep — P5 .eml parked, Sarah deferred).
 
 **Phase 2 decommission (after Cluster 6 replacement is verified):** retire archive_gateway.py, D: .lancedb/ (962 MB), profile.db, seed_profile.py, orchestrator scripts; disable "ArchiveDailySync" scheduled task.
 
-**Open decisions still blocking:** H4 Sarah's access (design only — not build-blocking).
+**Claude Desktop deleted by Michael (18 Aug 2026).** `claude_desktop_config.json` reference in ai-workspace is stale. GitHub MCP is now LibreChat-managed only. Consider removing the stale path pointer on next sweep.
+
+**Open decisions:** H4 Sarah's access (design only — not build-blocking).
 
 ## Historical ops log (unchanged from prior state)
 The following incident/handling sections are preserved in full from the prior
