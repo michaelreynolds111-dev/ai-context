@@ -43,6 +43,8 @@ description: Use when writing or updating BUILD_STATE.md, GOTCHAS.md, or any bui
 
 - **Large files require multi-read.** `read_text_file_mcp_filesystem` truncates output that exceeds its character limit (~6 KB). If a read returns a `[truncated: ... chars exceeded ... limit]` marker, you have NOT seen the full file. Use the `head` and `tail` parameters across multiple reads to capture every section. Do NOT draft the edit script until you have read and can see every section of the live file. An edit script built from a truncated read will reference sections that don't match the live file, and Goose will reject the edits.
 
+- **Lean writes — avoid output-token truncation.** When writing files via `write_file_mcp_filesystem`, keep each file write under ~3000 tokens of content. If a file would exceed that, split it: write a lean main file containing only the essential structure, and move bulky content into a separate companion file written in a second tool call. For `BUILD_STATE_EDIT_SCRIPT.md` specifically: keep `event_log_append` entries concise (one line each, per the template), and use `section_replace` only when the replacement content is under ~2000 tokens. If a section replacement would be large, break it into multiple smaller `field_update` edits instead.
+
 ## Standards
 
 - **Tense:** Event-log entries in past tense ("Committed", "Staged", "Discussed"). Next-step in imperative ("Create", "Read", "Run").

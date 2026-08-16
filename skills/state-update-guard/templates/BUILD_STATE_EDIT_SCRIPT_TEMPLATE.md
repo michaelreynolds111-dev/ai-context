@@ -14,6 +14,9 @@
     entries, section_replace for entire sections).
   - Do NOT include the full file — only the edits.
   - Omit any edit type that has no changes this session.
+  - Keep the total edit script under ~3000 tokens. If it would exceed that,
+    split: write a lean main script and move bulky section_replace content
+    into a companion file (e.g., BUILD_STATE_EDIT_SCRIPT_SUPPLEMENT.md).
 -->
 
 # BUILD_STATE_EDIT_SCRIPT
@@ -56,6 +59,8 @@ new: |
 <!-- Replace an entire section (from the heading to the next ## heading). -->
 <!-- Use for NEXT STEP updates and similar wholesale section changes. -->
 <!-- Omit this section if no section replacements are needed. -->
+<!-- Keep replacement content under ~2000 tokens. If larger, break into -->
+<!-- multiple field_update edits instead. -->
 section: |
   ## NEXT STEP
 content: |
