@@ -1,6 +1,6 @@
 # BUILD STATE
 
-**Last updated:** 16 August 2026 (context-management handoff; HANDOFF.md staged for resume; session closed)
+**Last updated:** 16 August 2026 (Build Coordinator re-audit session; no new actions; session closed)
 **Current phase:** Phase 9 — Cutover (§13)
 **Current sub-step:** plan-executor skill v2 staged (H3=Bitwarden, GOTCHAS integrity guard, state-update-guard delegation); GOOSE_TASK_UPDATE_PLAN_EXECUTOR_SKILL queued; Session 10 items 2+3 Stage 1 complete; HANDOFF.md written for Deferred item 4 Step 5 resume
 
@@ -107,6 +107,8 @@
 - 2026-08-16 [remote-ssh-and-marketplace] [DONE] Added marketplace: true to interface: section of ~/LibreChat/librechat.yaml via sed — evidence: user terminal output (sed -n '50,68p' showed "marketplace: true" present)
 - 2026-08-16 [remote-ssh-and-marketplace] [DISCUSSED] api container restart to apply marketplace config — command given (docker compose up -d --force-recreate api), not confirmed run — evidence: none yet. Verify: restart run, marketplace icon visible in LibreChat sidebar
 - 2026-08-16 [remote-ssh-and-marketplace] [PLANNED] Add Windows OpenSSH admin key gotcha to docs/GOTCHAS.md — evidence: none yet. Verify: GOTCHAS.md contains section 11 Windows OpenSSH entry after Goose applies GOTCHAS_UPDATE
+- 2026-08-16 [session-reconnect-audit] [DONE] Build Coordinator resumed — re-read BUILD_STATE.md, AGENT_BOOTSTRAP.md, GOTCHAS.md, full agent-workdir directory tree, mcp-servers.json — evidence: this session's tool calls (read_text_file × 4, directory_tree × 1). Confirmed no state drift from prior session close. HANDOFF.md no longer present in agent-workdir (consumed in prior session). All pending tasks still queued (GOOSE_TASK_UPDATE_PLAN_EXECUTOR_SKILL.md, GOOSE_TASK_GOTCHAS_RECOVERY.md, GOOSE_TASK_COMMIT_SESSION10.md). No new files created, no decisions made. Session close via state-update-guard.
+
 ## 2026-08-16 — GOTCHAS.md recovery & architecture review (this session)
 
 ### What happened
@@ -232,12 +234,12 @@ See git history for full detail.
   - GOOSE_TASK_COMMIT_SESSION10.md (commit prior session work)
 
   **Then resume Session 10:**
-  - Session 10 item 3 Stage 2 (Michael-manual Bitwarden transfer -- Chrome password CSV to import to verify to delete cleartext)
+  - Session 10 item 3 Stage 2 (Michael-manual Bitwarden transfer — Chrome password CSV → import into Bitwarden, verify, delete cleartext)
   - Session 10 items 4-7 in document order
 
   **Open decisions blocking items:** ai-workspace root path (gates item 5), H4 Sarah's access (design only).
 
-  **Next LibreChat conversation:** Start a new chat with the Build Coordinator agent. First message: `Read /app/agent-workdir/HANDOFF.md and continue with Deferred item 4 Step 5 -- append skill-index block to Paperwork agent via mongosh.`
+  **Next LibreChat conversation:** Start a new chat with the Build Coordinator agent. First message: `Read BUILD_STATE.md and continue with the NEXT STEP.`
 
 
 ## Historical ops log (unchanged from prior state)
