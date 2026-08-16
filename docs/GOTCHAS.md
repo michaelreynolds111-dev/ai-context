@@ -922,3 +922,28 @@ icacls C:\ProgramData\ssh\administrators_authorized_keys /grant:r "Administrator
 **Context:** Discovered when setting up Termius SSH access to `michael-pc`
 (Windows) from Michael's phone. Standard `authorized_keys` placement failed;
 this was the fix. Confirmed working 14 Aug 2026.
+
+## Goose `write` tool silently writes to Windows paths, not WSL2
+
+**Problem:** Goose's built-in `write` tool (and `filesystem-mcp__write_file`) resolve
+`/home/michael/...` as a Windows path (`C:\home\michael\...`), not the WSL2
+filesystem root. WSL2 files live under `\\wsl.localhost\Ubuntu-24.04\home\michael\...`.
+The tools report success because they correctly wrote to `C:\home\michael\...` — it's
+just not the right location. There is **no error or warning** — the file silently
+goes to the wrong place.
+
+**Fix:** For any file that must land in a WSL2 path, use a two-step bridge:
+1. Write to `C:\tmp\goose_bridge_<name>.md` via `filesystem-mcp__write_file`
+2. `wsl -d Ubuntu-24.04 -- bash -lc "cp /mnt/c/tmp/goose_bridge_<name>.md ~/agent-workdir/outputs/GOOSE_RESULT_<name>.md"`
+3. Verify with `ls -la` via shell
+
+**For short files (<2KB):** A shell `cat << 'EOF'` heredoc also works, but
+command-line length limits apply through the Windows→WSL2 pipe.
+
+**Verified pattern (16 Aug 2026):** `filesystem-mcp__write_file` → `C:\tmp\...`
+then `cp` through `wsl` shell. The `/mnt/c/` mount is always available in WSL2.
+
+**Context:** Discovered during Session 10 item 4 (legacy pipeline audit) when the
+`write` tool reported success but the file was invisible to both WSL2 `ls` and
+the `filesystem-mcp__read_text_file` on the WSL2 path. File was found at
+`C:\home\michael\agent-workdir\outputs\` on the Windows side.
