@@ -1,8 +1,8 @@
 # BUILD STATE
 
-**Last updated:** 16 August 2026 (Goose session: plan-executor v2 promoted, committed, pushed, synced)
+**Last updated:** 17 August 2026 (Session 10 item 3 Stage 2 Tier-1 quarantine transfer — P1-P4, P6 complete, deletions confirmed by Michael personally)
 **Current phase:** Phase 9 — Cutover (§13)
-**Current sub-step:** plan-executor skill v2 LIVE (commit 7f9a10b) — H3=Bitwarden, GOTCHAS integrity guard, state-update-guard delegation; GOOSE_TASK_UPDATE_PLAN_EXECUTOR_SKILL DONE; Session 10 items 2+3 Stage 1 complete
+**Current sub-step:** Session 10 item 3 Stage 2 DONE (P1 archived, P2 Chrome, P3 docx, P4 Keep, P6 token — all cleartext deleted, confirmed 2026-08-17); P5 .eml parked (non-blocking); Sarah/Keep deferred. Next: Session 10 item 4 legacy-pipeline audit (§10.4.4). Cluster 6 unblocked.
 
 ## Phase status
 | Phase | Status | Exit test | Date |
@@ -182,7 +182,7 @@ verified — the agent used filesystem MCP correctly across 50+ read operations.
 |---|---|---|---|---|
 | 1 | Verify Docker `admin-panel`/`clickhouse` display anomaly | Goose | none | ✅ VERIFIED 13 Aug |
 | 2 | Locate LibreChat's real filesystem location | Goose | none | ✅ COMPLETE, PASSED (authoritative dir `/home/michael/LibreChat`) |
-| 3 | **Tier-1 quarantine** (Stage 1 inventory) | Michael-manual + Goose | H3 password manager | ⏳ Stage 1 inventory COMPLETE; Stage 2 (Bitwarden transfer) PENDING |
+| 3 | **Tier-1 quarantine** (Stage 1 inventory) | Michael-manual + Goose | H3 password manager | ✅ Stage 1 inventory COMPLETE; **Stage 2 (Bitwarden transfer) COMPLETE (2026-08-17)** — P1-P4, P6 done; P5 .eml parked; Sarah deferred |
 | 4 | Legacy pipeline audit + decommission | Goose | Session 10 item 2 | ⏳ PENDING |
 | 5 | Workspace consolidation via NTFS junctions | Goose | **ai-workspace root path decision**; item 2 | ⏳ PENDING |
 | 6 | Encrypted C: drive migration from `D:\Data` | Goose | items 3 + 4 complete | ⏳ PENDING |
@@ -194,7 +194,7 @@ verified — the agent used filesystem MCP correctly across 50+ read operations.
 - **Deferred 3 (housekeeping):** COMPLETE
 - **Deferred 4 (Goose+LibreChat polish):** COMPLETE (13 Aug)
 - **Deferred 6 (Claude Projects migration):** ongoing, parallel-run validation
-- **Deferred 7 (Cluster 6 household DB):** DO NOT PULL FORWARD — needs H3 + Session 10 item 3
+- **Deferred 7 (Cluster 6 household DB):** UNBLOCKED (H3 + Session 10 item 3 Stage 2 complete, 2026-08-17) — next eligible deferred item to build
 - **H4 — Sarah's access:** UNDECIDED (design decision, not build-blocking)
 - **ai-workspace root path:** UNDECIDED (gates Session 10 item 5)
 
@@ -222,23 +222,32 @@ See git history for full detail.
 - 2026-08-16 [session-close-context-management] [PLANNED] Next session: resume Deferred item 4 Step 5 by reading HANDOFF.md and executing mongosh append of skill-index block to Paperwork agent -- evidence: none yet
 .md and verifies exit test — evidence: none yet. Verify: commit SHA confirms 3 fixes landed; plan-executor agent picks up updated SKILL.md on next session
 
+- 2026-08-17 [quarantine-transfer-close] [DONE] P2 Chrome passwords imported to Bitwarden; 3 cleartext files deleted (Chrome Passwords.csv, .xlsx, Master Vault/05_Discovery_Raw/Chrome Passwords.csv) — evidence: user confirmed deletion personally (2026-08-17); QUARANTINE_TRANSFER_CHECKLIST.md ticked
+- 2026-08-17 [quarantine-transfer-close] [DONE] P1 reclassified: Google Authenticator Screenshot.jpg is a family document (mother-in-law) NOT a Tier-1 credential; moved (not deleted) to Archive/Family/, pointer note written, transfer to ~/household-vault/ at Cluster 6 — evidence: user statement; PARKED_MOTHER_IN_LAW_SCREENSHOT_POINTER.md written this session
+- 2026-08-17 [quarantine-transfer-close] [DONE] P3 Password docx cluster (6 files) + 2 duplicates entered into Bitwarden + deleted — evidence: user confirmed deletion personally; checklist ticked
+- 2026-08-17 [quarantine-transfer-close] [DONE] P4 Keep-note triplets + CogLab Login.docx + Ahpra login.docx entered into Bitwarden + deleted — evidence: user confirmed deletion personally; checklist ticked
+- 2026-08-17 [quarantine-transfer-close] [DONE] P6 .gateway_token resolved — Michael confirmed old gateway retired and deleted the token; gateway_old/ folder retained for §10.4.4 legacy-pipeline audit — evidence: user statement (explicit named deliverable); checklist reflects RESOLVED
+- 2026-08-17 [quarantine-transfer-close] [DONE] QUARANTINE_TRANSFER_CHECKLIST.md updated to completion trigger (P1-P4, P6 done; P5 parked; Sarah deferred) — evidence: write_file_mcp_filesystem confirms this session
+- 2026-08-17 [quarantine-transfer-close] [DISCUSSED] Deletions verified by Michael personal confirmation; no separate Goose metadata-only verify run performed — evidence: user stated files are definitely deleted, i did it personally (explicit named deliverable). Verify: optional, only if a future audit wants an independent metadata-only file-absence check
+- 2026-08-17 [quarantine-transfer-close] [PLANNED] Session 10 item 4 legacy-pipeline audit (§10.4.4) — next task in document order — evidence: none yet. Verify: GOOSE executes audit of gateway_old/ folder, .lancedb, profile.db, read_password_emails.py, find_pdf_passwords.py
+
+
 ## NEXT STEP
 
-  **All 3 queued Goose tasks are now COMPLETE** (verified this session):
-  - GOOSE_TASK_UPDATE_PLAN_EXECUTOR_SKILL — ✅ DONE (commit `7f9a10b`, synced to Goose)
-  - GOOSE_TASK_GOTCHAS_RECOVERY — ✅ DONE (GOTCHAS.md restored, GOTCHAS_UPDATE.md deleted, recipe guards present)
-  - GOOSE_TASK_COMMIT_SESSION10 — ✅ DONE (commit `3a12480`)
+**Session 10 item 3 Stage 2 (Tier-1 quarantine transfer) is COMPLETE** (2026-08-17). P1 (archived family doc), P2 (Chrome), P3 (docx), P4 (Keep), P6 (gateway token) done, deletions confirmed by Michael personally. P5 (.eml bulk) is parked (non-blocking); Sarah items deferred to her vault.
 
-  **Next LibreChat conversation:** Tell the Build Coordinator that `GOOSE_RESULT_UPDATE_PLAN_EXECUTOR_SKILL.md` is written in `~/agent-workdir/outputs/`. The Build Coordinator should verify the exit test and mark the NEXT STEP as cleared.
+**Next task — Session 10 item 4: Legacy pipeline audit + decommission (§10.4.4, Section C files).**
+Audit the legacy pipeline components for port/redesign/retire:
+- `gateway_old/` folder (retained for this audit — includes old pipeline scripts)
+- `.lancedb` (legacy vector DB)
+- `profile.db`
+- `read_password_emails.py`, `find_pdf_passwords.py` (old email/PDF credential scanners)
+- Determine for each: PORT (keep as-is), REDESIGN (improve), or RETIRE (decommission)
+This is a Goose task (shell/filesystem). Write GOOSE_TASK_LEGACY_PIPELINE_AUDIT.md and dispatch to Goose.
 
-  **Then resume Session 10:**
-  - Session 10 item 3 Stage 2 (Michael-manual Bitwarden transfer — Chrome password CSV → import into Bitwarden, verify, delete cleartext)
-  - Session 10 items 4-7 in document order
+**After this completes:** Session 10 item 5 (workspace consolidation — still gated on the ai-workspace root path decision) and item 6 (C: drive migration, gated on items 3+4, now item 3 is done so item 4 clears the final gate). Cluster 6 household DB build (deferred item 7) is now UNBLOCKED and eligible to build.
 
-  **Open decisions blocking items:** ai-workspace root path (gates item 5), H4 Sarah's access (design only).
-
-  **GOTCHAS note (stale entry):** GOTCHAS.md §10's entry describing sync_skills.ps1 as using a HARDCODED skill list is outdated — the current script is v2.0 which auto-discovers all skills and copies whole trees. A future session should correct that entry.
-
+**Open decisions still blocking:** ai-workspace root path (gates item 5), H4 Sarah access (design only).
 
 ## Historical ops log (unchanged from prior state)
 The following incident/handling sections are preserved in full from the prior
