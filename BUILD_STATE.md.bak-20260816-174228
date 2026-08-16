@@ -1,8 +1,8 @@
 # BUILD STATE
 
-**Last updated:** 18 August 2026 (Session 10 item 4 legacy-pipeline audit PASSED + Phase 1 decommission DONE; ai-workspace root path DECIDED; Session 10 item 5 workspace consolidation staged and unblocked)
+**Last updated:** 17 August 2026 (Session 10 item 3 Stage 2 Tier-1 quarantine transfer — P1-P4, P6 complete, deletions confirmed by Michael personally)
 **Current phase:** Phase 9 — Cutover (§13)
-**Current sub-step:** Session 10 item 4 (§10.4.4) COMPLETE (21 components classified PORT/REDESIGN/RETIRE, 3-phase decommission plan; D: .gateway_token resolved). Phase 1 decommission DONE (scanners deleted, profile facts extracted to vault, C: .lancedb gone). Next: Session 10 item 5 workspace consolidation (staged, unblocked). Cluster 6 unblocked. ai-workspace root: C:\Users\micha\ai-workspace\ (decided 18 Aug).
+**Current sub-step:** Session 10 item 3 Stage 2 DONE (P1 archived, P2 Chrome, P3 docx, P4 Keep, P6 token — all cleartext deleted, confirmed 2026-08-17); P5 .eml parked (non-blocking); Sarah/Keep deferred. Next: Session 10 item 4 legacy-pipeline audit (§10.4.4). Cluster 6 unblocked.
 
 ## Phase status
 | Phase | Status | Exit test | Date |
@@ -183,8 +183,8 @@ verified — the agent used filesystem MCP correctly across 50+ read operations.
 | 1 | Verify Docker `admin-panel`/`clickhouse` display anomaly | Goose | none | ✅ VERIFIED 13 Aug |
 | 2 | Locate LibreChat's real filesystem location | Goose | none | ✅ COMPLETE, PASSED (authoritative dir `/home/michael/LibreChat`) |
 | 3 | **Tier-1 quarantine** (Stage 1 inventory) | Michael-manual + Goose | H3 password manager | ✅ Stage 1 inventory COMPLETE; **Stage 2 (Bitwarden transfer) COMPLETE (2026-08-17)** — P1-P4, P6 done; P5 .eml parked; Sarah deferred |
-| 4 | Legacy pipeline audit + decommission | Goose | none @ 18 Aug (item 2 done) | ✅ COMPLETE, PASSED (18 Aug 2026) — 21 components classified PORT/REDESIGN/RETIRE; 3-phase decommission plan; critical D: .gateway_token finding resolved; Phase 1 DONE |
-| 5 | Workspace consolidation via NTFS junctions | Goose | none (ai-workspace root DECIDED 18 Aug; item 2 done) | ⏳ STAGED — GOOSE_TASK_WORKSPACE_CONSOLIDATION.md in tasks/, ready for Goose dispatch |
+| 4 | Legacy pipeline audit + decommission | Goose | Session 10 item 2 | ⏳ PENDING |
+| 5 | Workspace consolidation via NTFS junctions | Goose | **ai-workspace root path decision**; item 2 | ⏳ PENDING |
 | 6 | Encrypted C: drive migration from `D:\Data` | Goose | items 3 + 4 complete | ⏳ PENDING |
 | 7 | Credential quarantine sweep | Michael-manual + Goose | items 3/4 | ⏳ PENDING |
 
@@ -196,7 +196,7 @@ verified — the agent used filesystem MCP correctly across 50+ read operations.
 - **Deferred 6 (Claude Projects migration):** ongoing, parallel-run validation
 - **Deferred 7 (Cluster 6 household DB):** UNBLOCKED (H3 + Session 10 item 3 Stage 2 complete, 2026-08-17) — next eligible deferred item to build
 - **H4 — Sarah's access:** UNDECIDED (design decision, not build-blocking)
-- **ai-workspace root path:** DECIDED (18 Aug 2026) — `C:\Users\micha\ai-workspace\` (Option A, encrypted C:, inside user profile). Session 10 item 5 now UNBLOCKED. GOOSE_TASK_WORKSPACE_CONSOLIDATION.md staged.
+- **ai-workspace root path:** UNDECIDED (gates Session 10 item 5)
 
 ## Open questions
 - **Deferred Tools verified?** — master plan §7.4 recommends enabling for multi-tool agents. Not confirmed toggled on.
@@ -230,31 +230,24 @@ See git history for full detail.
 - 2026-08-17 [quarantine-transfer-close] [DONE] QUARANTINE_TRANSFER_CHECKLIST.md updated to completion trigger (P1-P4, P6 done; P5 parked; Sarah deferred) — evidence: write_file_mcp_filesystem confirms this session
 - 2026-08-17 [quarantine-transfer-close] [DISCUSSED] Deletions verified by Michael personal confirmation; no separate Goose metadata-only verify run performed — evidence: user stated files are definitely deleted, i did it personally (explicit named deliverable). Verify: optional, only if a future audit wants an independent metadata-only file-absence check
 - 2026-08-17 [quarantine-transfer-close] [PLANNED] Session 10 item 4 legacy-pipeline audit (§10.4.4) — next task in document order — evidence: none yet. Verify: GOOSE executes audit of gateway_old/ folder, .lancedb, profile.db, read_password_emails.py, find_pdf_passwords.py
-- 2026-08-18 [session-10-item4-audit] [DONE] Session 10 item 4 legacy-pipeline audit (§10.4.4) executed by Goose and PASSED exit test — 21 components inventoried; classified PORT/REDESIGN/RETIRE; 3-phase decommission plan written (audit + plan, nothing deleted); zero secrets read; staging tree untouched — evidence: GOOSE_RESULT_LEGACY_PIPELINE_AUDIT.md in outputs/ (7,200 bytes, read and verified by Build Coordinator this session)
-- 2026-08-18 [session-10-item4-audit] [DONE] CRITICAL finding: D:\Data\archive\gateway_old\.gateway_token (64 B, Tier-1) found still on D: decrypted drive — P6 only deleted C: copy; D: original was MISSED — evidence: audit Sections 2.3 + 6. Verify: Michael deleted D: token + entire gateway_old/ directory (confirmed 18 Aug by user statement); Phase 1 Step 1 confirmed absence
-- 2026-08-18 [session-10-item4-audit] [DONE] Michael deleted credential-scanner scripts (find_pdf_passwords.py, read_password_emails.py, keep_convert.py) from both C: and D: — evidence: user statement (explicit named deliverable "ive deleted the passwords"); Phase 1 Step 1 metadata check confirmed absent
-- 2026-08-18 [session-10-item4-audit] [DONE] Phase 1 decommission (Goose portion) PASSED — 8 profile facts extracted to ~/household-vault/identifiers/profile_facts.md; 3 reference files copied to ~/household-vault/reference/; C: staging .lancedb/ (717 MB) deleted; D: .lancedb/ (962 MB) untouched (Phase 2); vault confirmed NOT a git repo; zero Tier-1 secrets encountered — evidence: GOOSE_RESULT_PHASE1_DECOMMISSION.md in outputs/ (read and verified this session)
-- 2026-08-18 [session-10-item4-audit] [DISCUSSED] Audit discovered C:\HouseholdDataRaw\Data is a STALE one-time quarantine snapshot; live pipeline is D:\Data — decommission must target BOTH locations — evidence: audit Section 6 GOTCHAS
-- 2026-08-18 [session-10-item4-audit] [DISCUSSED] seed_profile.py holds 8 Tier-2 PII facts (property address, purchase price, NMI, etc.) extracted to vault — evidence: profile_facts.md in ~/household-vault/identifiers/. Will retire after Cluster 6 verifies replacement
-- 2026-08-18 [session-10-item4-audit] [DONE] ai-workspace root path DECIDED by Michael — C:\Users\micha\ai-workspace\ (Option A, encrypted C:, inside user profile) — evidence: user statement "yes" to Option A (explicit named deliverable). Unblocks Session 10 item 5
-- 2026-08-18 [session-10-item4-audit] [PLANNED] Session 10 item 5 workspace consolidation via NTFS junctions — staged, unblocked, next in document order; GOOSE_TASK_WORKSPACE_CONSOLIDATION.md in tasks/ — evidence: none yet. Verify: Goose executes task; GOOSE_RESULT_WORKSPACE_CONSOLIDATION.md written to outputs/
-- 2026-08-18 [session-10-item4-audit] [PLANNED] Phase 2 decommission (after Cluster 6): retire archive_gateway.py, D: .lancedb/ (962 MB), profile.db, seed_profile.py, orchestrator scripts; disable ArchiveDailySync task — evidence: none yet
-
 
 
 ## NEXT STEP
 
-**Session 10 item 4 (legacy-pipeline audit, §10.4.4) is COMPLETE** (18 Aug 2026, exit test PASSED). 21 components classified PORT / REDESIGN / RETIRE. Phase 1 decommission DONE — critical D: .gateway_token deleted, credential scanners deleted from both C: and D:, 8 profile facts extracted to ~/household-vault/, C: staging .lancedb/ (717 MB) deleted. A 3-phase decommission plan is written: Phase 1 (COMPLETE), Phase 2 (after Cluster 6 replacement), Phase 3 (retained components: resource_watchdog, gmail_forward_sync.gs, calendar_sync.gs, rclone_sync.ps1, briefing_builder.py, profile_store.py).
+**Session 10 item 3 Stage 2 (Tier-1 quarantine transfer) is COMPLETE** (2026-08-17). P1 (archived family doc), P2 (Chrome), P3 (docx), P4 (Keep), P6 (gateway token) done, deletions confirmed by Michael personally. P5 (.eml bulk) is parked (non-blocking); Sarah items deferred to her vault.
 
-**⚠️ IMPORTANT — one decision now locked:** ai-workspace root path DECIDED as `C:\Users\micha\ai-workspace\` (Option A). This unblocks Session 10 item 5.
+**Next task — Session 10 item 4: Legacy pipeline audit + decommission (§10.4.4, Section C files).**
+Audit the legacy pipeline components for port/redesign/retire:
+- `gateway_old/` folder (retained for this audit — includes old pipeline scripts)
+- `.lancedb` (legacy vector DB)
+- `profile.db`
+- `read_password_emails.py`, `find_pdf_passwords.py` (old email/PDF credential scanners)
+- Determine for each: PORT (keep as-is), REDESIGN (improve), or RETIRE (decommission)
+This is a Goose task (shell/filesystem). Write GOOSE_TASK_LEGACY_PIPELINE_AUDIT.md and dispatch to Goose.
 
-**Next in document order — Session 10 item 5: Workspace consolidation via NTFS junctions** (STAGED and UNBLOCKED). GOOSE_TASK_WORKSPACE_CONSOLIDATION.md is in tasks/ — dispatch to Goose. Task creates the bounded root, junctions in-place systems, moves standalone scripts/browser extensions, runs secrets audit (.env.example scaffolds), updates MCP/Goose allowed-directories, and runs verification pass (7 checks). Watchdog junction is scoped to only surviving resource_watchdog.ps1 + log — does NOT re-expose RETIRE'd D:\Data components.
+**After this completes:** Session 10 item 5 (workspace consolidation — still gated on the ai-workspace root path decision) and item 6 (C: drive migration, gated on items 3+4, now item 3 is done so item 4 clears the final gate). Cluster 6 household DB build (deferred item 7) is now UNBLOCKED and eligible to build.
 
-**After item 5 completes:** Session 10 item 6 (C: drive migration from D:\Data — gated on items 3+4, both done) is next. Cluster 6 household DB build (deferred item 7) is UNBLOCKED and eligible.
-
-**Phase 2 decommission (after Cluster 6 replacement is verified):** retire archive_gateway.py, D: .lancedb/ (962 MB), profile.db, seed_profile.py, orchestrator scripts; disable "ArchiveDailySync" scheduled task.
-
-**Open decisions still blocking:** H4 Sarah's access (design only — not build-blocking).
+**Open decisions still blocking:** ai-workspace root path (gates item 5), H4 Sarah access (design only).
 
 ## Historical ops log (unchanged from prior state)
 The following incident/handling sections are preserved in full from the prior

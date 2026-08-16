@@ -947,3 +947,35 @@ then `cp` through `wsl` shell. The `/mnt/c/` mount is always available in WSL2.
 `write` tool reported success but the file was invisible to both WSL2 `ls` and
 the `filesystem-mcp__read_text_file` on the WSL2 path. File was found at
 `C:\home\michael\agent-workdir\outputs\` on the Windows side.
+## C: HouseholdDataRaw\Data staging tree is a stale one-time snapshot — D:\Data is the live pipeline
+
+**Symptom:** During the §10.4.4 legacy-pipeline audit (Session 10 item 4), a
+Tier-1 credential (`D:\Data\archive\gateway_old\.gateway_token`) was found still
+present on the D: drive even though it had been deleted from C: during P6
+cleanup. Components existed in different states on each drive.
+
+**Root cause:** `C:\HouseholdDataRaw\Data` is a one-time quarantine snapshot
+copied for the Tier-1 inventory (stale). The live pipeline lives at `D:\Data`.
+Deleting/cleanup from C: alone does not touch the live D: copy. Any decommission
+or cleanup must target BOTH drives.
+
+**Fix:** Treat `C:\HouseholdDataRaw\Data` as a stale read-only snapshot and
+`D:\Data` as the live source. Always check both locations before considering a
+component gone. Gateway-adjacent components (`gateway_old/`) existed on D: only,
+not C: — so a C:-only cleanup can miss them.
+
+## gateway_old/ exists on D: but not on C: (P6 only removed the C: copy)
+
+**Symptom:** P6 cleanup deleted the `.gateway_token` from `C:\HouseholdDataRaw\Data`
+but the original remained at `D:\Data\archive\gateway_old\.gateway_token` on the
+decrypted D: drive. Confirmed during the §10.4.4 audit.
+
+**Root cause:** The earlier Tier-1 cleanup operated on the C: staging snapshot and
+did not target `D:\Data\archive\gateway_old/`, which holds the original gateway
+component (RETIRED.md, gateway_audit.log, tokens). The C: copy was a snapshot; the
+D: original is authoritative.
+
+**Fix:** Any credential/gateway cleanup must include `D:\Data\archive\gateway_old/`.
+As of 2026-08-18 this was resolved (Michael deleted the D: token and the whole
+`gateway_old/` directory). For future cleanups, enumerate a component on BOTH
+drives before declaring it removed.
