@@ -1,8 +1,8 @@
 # BUILD STATE
 
-**Last updated:** 18 August 2026 (Session 10 items 4-6 COMPLETE; Cluster 6 UNBLOCKED)
+**Last updated:** 18 August 2026 (Cluster 6 Steps 1-2 COMPLETE; Step 3 troubleshooting in next session)
 **Current phase:** Phase 9 — Cutover (§13)
-**Current sub-step:** Session 10 items 4-6 COMPLETE. Item 4 legacy-pipeline audit PASSED (21 components classified, 3-phase decommission plan). Phase 1 decommission DONE. Item 5 workspace consolidation PASSED (4 NTFS junctions + 3 path pointers, 5 items moved, secrets audit clean, Goose MCP +ai-workspace). Item 6 C: migration from D:\Data SUBSUMED by items 4+5 (all Phase 1 deletions done, Phase 2 gated on Cluster 6). Next: Cluster 6 household DB build (UNBLOCKED). ai-workspace root: C:\Users\micha\ai-workspace\ (activated).
+**Current sub-step:** Cluster 6 Steps 1-2 COMPLETE (classification confirmed, vault populated with 6,077 documents across 12 categories, F1-F4 credential flags cleared, vault NOT a git repo). Step 3 (RAG collection + batch indexing) started but Goose hit issues — troubleshooting in next session. Steps 4-8 planned after Step 3 resolves. ai-workspace root: C:\Users\micha\ai-workspace\ (activated).
 
 ## Phase status
 | Phase | Status | Exit test | Date |
@@ -246,21 +246,41 @@ See git history for full detail.
 - 2026-08-18 [session-10-item4-audit] [DONE] ai-workspace root path DECIDED by Michael — C:\Users\micha\ai-workspace\ (Option A, encrypted C:, inside user profile) — evidence: user statement "yes" to Option A (explicit named deliverable). Unblocks Session 10 item 5
 - 2026-08-18 [session-10-item4-audit] [PLANNED] Session 10 item 5 workspace consolidation via NTFS junctions — staged, unblocked, next in document order; GOOSE_TASK_WORKSPACE_CONSOLIDATION.md in tasks/ — evidence: none yet. Verify: Goose executes task; GOOSE_RESULT_WORKSPACE_CONSOLIDATION.md written to outputs/
 - 2026-08-18 [session-10-item4-audit] [PLANNED] Phase 2 decommission (after Cluster 6): retire archive_gateway.py, D: .lancedb/ (962 MB), profile.db, seed_profile.py, orchestrator scripts; disable ArchiveDailySync task — evidence: none yet
+- 2026-08-18 [cluster6-step1] [DONE] Cluster 6 Step 1 (classification) CONFIRMED by Michael — 5 decisions locked: Seddon EXCLUDED, Sharon estate INCLUDED as Tier 2 own category, photos SKIPPED, Master Vault INGESTED, F1-F3 → Bitwarden, F4 → protected archive (NOT vault). All §3 Tier 2/3 rows confirmed as proposed. Worksheet locked at staging-ai-context/projects/household/HOUSEHOLD_CLASSIFICATION.md — evidence: edit_file_mcp_filesystem confirmed header updated to "CLASSIFICATION CONFIRMED + F1–F3 CLEARED"; Michael explicit statement "seddon out, estate in, photos skip, master vault ingest"
+- 2026-08-18 [cluster6-step1b] [DONE] Cluster 6 Step 1b (metadata-only staging-tree data inventory) Goose PASSED — 15,393 non-.eml files enumerated; 5 new Tier-1 flags surfaced (F1-F5); per-category file-path lists produced; C: vs D: reconciliation note written; 9/9 exit criteria met — evidence: GOOSE_RESULT_CLUSTER6_STEP1B_TREE_INVENTORY.md in outputs/ (read and verified by Build Coordinator)
+- 2026-08-18 [cluster6-step1] [DONE] F1-F3 credential flags cleared by Michael — Passwords.docx, School Pass.docx, MIND Password.docx deleted from both drives; values entered into Bitwarden — evidence: Michael confirmed "I've completed the manual deletions"; F1-F3 marked ✅ in worksheet via edit_file_mcp_filesystem
+- 2026-08-18 [cluster6-step1] [DONE] Remaining D: Passwords.docx (…/Everything else/Passwords/Passwords.docx) deleted by Michael — flagged by Goose Step 2 as credential-shaped; Michael confirmed "the passwords file on D: is deleted"
+- 2026-08-18 [cluster6-step2] [DONE] Cluster 6 Step 2 (vault structure + copy confirmed items) Goose PASSED — 6,346 files copied from D: (authoritative) with C: gap-fill; all §3 categories 3.1-3.9 + 3.11 present; §3.10 Seddon + §3.12 photos excluded; F4 copied to protected archive (C:\HouseholdDataRaw\Data\Michael\Drive\Archive\Family\Chrome Passwords (Mother-in-Law).csv) + POINTER written in vault; renewals.md seeded (structure only); README written; vault confirmed NOT a git repo; 12/12 exit test PASS — evidence: GOOSE_RESULT_CLUSTER6_STEP2_VAULT.md in outputs/ (read and verified by Build Coordinator)
+- 2026-08-18 [cluster6-step3] [DISCUSSED] Cluster 6 Step 3 (RAG collection creation + batch index) — Goose task staged (GOOSE_TASK_CLUSTER6_STEP3_RAG.md in tasks/); Goose ran but hit issues building the embeddings pipeline; no GOOSE_RESULT_CLUSTER6_STEP3_RAG.md produced — evidence: Michael statement "Goose has ran into issues with this step i will have to troubleshoot in a new chat"; file absence confirmed (search returned ENOENT). Verify: troubleshoot RAG collection creation in next session; when PASSED, write GOOSE_RESULT_CLUSTER6_STEP3_RAG.md
+- 2026-08-18 [cluster6-step4] [PLANNED] Cluster 6 Step 4 (Household Admin agent config) — Michael-manual instructions staged at outputs/MICHAEL_MANUAL_CLUSTER6_STEP4_AGENT_CONFIG.md. Gated on Step 3 (collection must exist before agent can be scoped to it). Verify: Michael completes admin panel configuration; agent tools: [file_search] only, scoped to household collection, DeepInfra claude-sonnet-5, memory disabled
+- 2026-08-18 [workspace-followups] [DISCUSSED] Workspace-consolidation 7 follow-up items confirmed done by Michael — evidence: Michael statement "This is already done" (explicit named deliverable). Verify: optional metadata-only check on Chrome RYM extension path, Bendigo export, Goose restart to confirm system state reflects completion
+- 2026-08-18 [cluster6] [PLANNED] Cluster 6 Steps 5-8: Step 5 (Goose MongoDB verification of agent config), Step 6 (behavior verification — 7-check list), Step 7 (Phase 2 pipeline decommission), Step 8 (Cluster 6 exit test). All gated on Step 3 RAG resolution + Step 4 agent config. evidence: none yet
 
 
 
 ## NEXT STEP
 
-**Session 10 items 4-6 are COMPLETE (18 Aug 2026).** Item 4 legacy-pipeline audit PASSED (21 components, 3-phase decommission, Phase 1 DONE). Item 5 workspace consolidation PASSED (`ai-workspace\` created with 4 NTFS junctions + 3 path pointers, secrets audit clean, Goose MCP +ai-workspace, verification all green). Item 6 C: migration SUBSUMED by items 4+5.
+**Cluster 6 Step 3 troubleshooting (next session).** Goose task `GOOSE_TASK_CLUSTER6_STEP3_RAG.md` is staged in tasks/ — creates `household` RAG collection in LibreChat vector DB (pgvector), batch-indexes ~6,077 RAG-compatible vault documents using local embeddings only (mandatory for [IDENTITY] content). Goose ran into issues with the embeddings pipeline and did not complete. No result file produced.
 
-**NEXT IN DOCUMENT ORDER: Cluster 6 household DB build (Deferred item 7 — UNBLOCKED).** All blockers resolved: Bitwarden (H3), Tier-1 quarantine (Session 10 item 3 Stage 2 complete except parked P5 .eml), workspace consolidation (item 5), C: migration (item 6). Also eligible: Session 10 item 7 (credential quarantine sweep — P5 .eml parked, Sarah deferred).
+**Troubleshooting approach for next session:**
+1. Read `GOOSE_TASK_CLUSTER6_STEP3_RAG.md` from tasks/ (contains full RAG API endpoint discovery, health check, collection creation, batch upload script)
+2. Start with health check: RAG API reachable, EMBEDDINGS_PROVIDER confirmed local (not hosted)
+3. Check `docker-compose.override.yml` — rag_api uses the full (non-lite) image for local embeddings
+4. If api endpoints differ from documented ones, discover via `http://localhost:${RAG_PORT}/docs` or `/openapi.json`
+5. Test a single file upload before attempting batch of 6,077
+6. Once collection created + test retrieval works → trigger Step 4 (Michael admin panel agent config) + Step 5 (Goose MongoDB verification)
 
-**Phase 2 decommission (after Cluster 6 replacement is verified):** retire archive_gateway.py, D: .lancedb/ (962 MB), profile.db, seed_profile.py, orchestrator scripts; disable "ArchiveDailySync" scheduled task.
+**After Cluster 6 Steps 3-6 complete:** Phase 2 decommission (retire D: .lancedb (962 MB), profile.db, seed_profile.py, orchestrator scripts; disable ArchiveDailySync scheduled task). Resource watchdog + gmail/calendar sync stay running.
 
-**Claude Desktop deleted by Michael (18 Aug 2026).** `claude_desktop_config.json` reference in ai-workspace is stale. GitHub MCP is now LibreChat-managed only. Consider removing the stale path pointer on next sweep.
+**Open decisions:** H4 Sarah's access (design only — not build-blocking). §13b (Goose remote execution) staged for Michael review — not blocking.
 
-**Open decisions:** H4 Sarah's access (design only — not build-blocking).
-
+**State at session close:**
+- Vault: `~/household-vault/` — 6,077 documents + identifiers + reference (NOT a git repo)
+- Protected archive: F4 mother-in-law credentials at `C:\HouseholdDataRaw\Data\Michael\Drive\Archive\Family\`
+- Staged RAG task: `tasks/GOOSE_TASK_CLUSTER6_STEP3_RAG.md`
+- Staged agent config: `outputs/MICHAEL_MANUAL_CLUSTER6_STEP4_AGENT_CONFIG.md`
+- Classification worksheet: `staging-ai-context/projects/household/HOUSEHOLD_CLASSIFICATION.md` (locked, all confirmed)
+- Cluster 6 build plan: `staging-ai-context/projects/household/CLUSTER6_BUILD_PLAN.md`
 ## Historical ops log (unchanged from prior state)
 The following incident/handling sections are preserved in full from the prior
 BUILD_STATE and remain accurate:
