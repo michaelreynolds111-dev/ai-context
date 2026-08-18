@@ -38,8 +38,6 @@ All in the `ai-context` repo root unless noted:
 | `BACKUP_AI_MASTER_BUILD_PLAN.md` | Spine doc — full architecture, phases, exit tests, hard rules | When working a phase |
 | `docs/GOTCHAS.md` | Permanent environment-specific facts (this machine only) | Before touching Docker, WSL, shell, MCP |
 | `docs/MIGRATION_INVENTORY.md` | Remaining Claude Projects to migrate | During Phase 9 parallel-run |
-| `docs/PLAN_DEVIATIONS_2026-08-05.md` | Logged deviations from the build plan | If questioning why something differs from the plan |
-| `SESSION_10_WORKSPACE_PLAN.md` | Workspace consolidation plan | Before Session 10 work |
 | `README.md` | Repo layout and the household-vault rule | First-time orientation |
 
 ### Handoff docs (in `~/agent-workdir/`, not in git)
