@@ -1,8 +1,8 @@
 # BUILD STATE
 
-**Last updated:** 18 August 2026 (Cluster 6 Steps 1-2 COMPLETE; Step 3 troubleshooting in next session)
+**Last updated:** 22 August 2026 (Cluster 6 Step 3 RAG diagnostic complete; synthetic v1 canary failed safely at POST /embed)
 **Current phase:** Phase 9 — Cutover (§13)
-**Current sub-step:** Cluster 6 Steps 1-2 COMPLETE (classification confirmed, vault populated with 6,077 documents across 12 categories, F1-F4 credential flags cleared, vault NOT a git repo). Step 3 (RAG collection + batch indexing) started but Goose hit issues — troubleshooting in next session. Steps 4-8 planned after Step 3 resolves. ai-workspace root: C:\Users\micha\ai-workspace\ (activated).
+**Current sub-step:** Cluster 6 Steps 1-2 COMPLETE. Step 3 troubleshooting is IN PROGRESS. Read-only diagnostic PASSED: deployed RAG API is healthy, internal-only, v1 contract, and local embeddings are confirmed. Synthetic v1 canary FAILED safely at POST /embed with HTTP 500 because file.filename arrived as None; authentication worked, no embeddings were written, cleanup was verified, and no production residue remains. Pilot and batch indexing are BLOCKED pending a tightly scoped embed-format diagnostic. Steps 4-8 remain gated on Step 3. ai-workspace root: C:\Users\micha\ai-workspace\ (activated).
 
 ## Phase status
 | Phase | Status | Exit test | Date |
@@ -55,6 +55,10 @@
 ## Session event log (append-only)
 
 <!-- Past entries are immutable. Append new entries below. Never edit or delete. -->
+
+- 2026-08-22 [cluster6-rag-diagnostic] [DONE] Completed read-only Cluster 6 RAG diagnostic: services healthy, embeddings LOCAL_CONFIRMED, deployed API is internal-only v1 rather than the v2 contract assumed by the original task, and household collection remains at 0 embeddings — evidence: GOOSE_RESULT_CLUSTER6_RAG_DIAGNOSTIC.md in agent-workdir/outputs/.
+- 2026-08-22 [cluster6-rag-v1-canary] [DONE] Executed one synthetic v1 canary; JWT authentication succeeded, but POST /embed failed deterministically with HTTP 500 because file.filename was None before any vector write; no household data was accessed and no canary residue remained — evidence: GOOSE_RESULT_CLUSTER6_RAG_V1_CANARY.md in agent-workdir/outputs/.
+- 2026-08-22 [cluster6-rag-v1-canary] [PLANNED] Run a read-only embed-format diagnostic comparing the failed multipart request with LibreChat's own successful RAG client request format; do not index household files or change the RAG image/configuration — evidence: none yet. Verify: GOOSE_RESULT_CLUSTER6_RAG_EMBED_DIAG.md identifies an accepted request format or proves a server defect.
 
 - 2026-08-18 [session-10-item5-workspace] [DONE] Session 10 item 5 workspace consolidation PASSED — 4 NTFS junctions + 3 scoped path pointers created; 5 standalone items moved; LibreChat exposed as WSL path pointer (NTFS junctions cannot cross WSL UNC boundary, GOTCHAS §10); LibreChat MCP NOT updated (requires Docker bind-mount, out of scope); secrets audit clean (no Tier-1 accessed); Goose MCP +ai-workspace additive; verification pass: all 7 checks green — evidence: GOOSE_RESULT_WORKSPACE_CONSOLIDATION.md in outputs/ (read and exit-test-verified by Build Coordinator this session)
 - 2026-08-18 [session-10-item5-workspace] [DISCUSSED] Michael completed Goose restart + Chrome RYM reload follow-ups — evidence: user statement "Done" (unverified system state)
@@ -260,27 +264,17 @@ See git history for full detail.
 
 ## NEXT STEP
 
-**Cluster 6 Step 3 troubleshooting (next session).** Goose task `GOOSE_TASK_CLUSTER6_STEP3_RAG.md` is staged in tasks/ — creates `household` RAG collection in LibreChat vector DB (pgvector), batch-indexes ~6,077 RAG-compatible vault documents using local embeddings only (mandatory for [IDENTITY] content). Goose ran into issues with the embeddings pipeline and did not complete. No result file produced.
+**Cluster 6 Step 3 remains BLOCKED at the v1 embed call.**
 
-**Troubleshooting approach for next session:**
-1. Read `GOOSE_TASK_CLUSTER6_STEP3_RAG.md` from tasks/ (contains full RAG API endpoint discovery, health check, collection creation, batch upload script)
-2. Start with health check: RAG API reachable, EMBEDDINGS_PROVIDER confirmed local (not hosted)
-3. Check `docker-compose.override.yml` — rag_api uses the full (non-lite) image for local embeddings
-4. If api endpoints differ from documented ones, discover via `http://localhost:${RAG_PORT}/docs` or `/openapi.json`
-5. Test a single file upload before attempting batch of 6,077
-6. Once collection created + test retrieval works → trigger Step 4 (Michael admin panel agent config) + Step 5 (Goose MongoDB verification)
+Run one tightly scoped, read-only diagnostic: `GOOSE_TASK_CLUSTER6_RAG_EMBED_DIAG.md`.
 
-**After Cluster 6 Steps 3-6 complete:** Phase 2 decommission (retire D: .lancedb (962 MB), profile.db, seed_profile.py, orchestrator scripts; disable ArchiveDailySync scheduled task). Resource watchdog + gmail/calendar sync stay running.
+**Single objective:** determine why `POST /embed` receives `file.filename=None` by comparing the failed synthetic multipart request with LibreChat's own successful RAG client request format.
 
-**Open decisions:** H4 Sarah's access (design only — not build-blocking). §13b (Goose remote execution) staged for Michael review — not blocking.
+**Do not:** index household files, start a batch, patch server code, change images/configuration, restart containers, or proceed to Cluster 6 Step 4.
 
-**State at session close:**
-- Vault: `~/household-vault/` — 6,077 documents + identifiers + reference (NOT a git repo)
-- Protected archive: F4 mother-in-law credentials at `C:\HouseholdDataRaw\Data\Michael\Drive\Archive\Family\`
-- Staged RAG task: `tasks/GOOSE_TASK_CLUSTER6_STEP3_RAG.md`
-- Staged agent config: `outputs/MICHAEL_MANUAL_CLUSTER6_STEP4_AGENT_CONFIG.md`
-- Classification worksheet: `staging-ai-context/projects/household/HOUSEHOLD_CLASSIFICATION.md` (locked, all confirmed)
-- Cluster 6 build plan: `staging-ai-context/projects/household/CLUSTER6_BUILD_PLAN.md`
+**Stop condition:** stop as soon as either (a) one accepted multipart format is identified using synthetic data, or (b) the deployed server endpoint is conclusively shown to be defective. Write `GOOSE_RESULT_CLUSTER6_RAG_EMBED_DIAG.md` for Build Coordinator verification.
+
+
 ## Historical ops log (unchanged from prior state)
 The following incident/handling sections are preserved in full from the prior
 BUILD_STATE and remain accurate:

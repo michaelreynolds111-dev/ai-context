@@ -998,3 +998,13 @@ path pointer (and its `docs/readmes/claude-desktop-mcp.md` README). The
 claude_desktop_config.json file itself can remain on disk or be deleted — it's
 out of scope for the AI stack now. Update the BUILD_STATE environment facts to
 remove stale Claude references.
+
+## 13. RAG diagnostics / secret-safe configuration inspection
+
+### Unfiltered `docker compose config` can expose live secrets in agent output
+
+**Symptom:** During the 22 August 2026 Cluster 6 RAG diagnostic, rendering or inspecting the effective Compose configuration surfaced interpolated live secret values in Goose tool output. The values were not copied into the result file, but they had already entered the execution trace.
+
+**Root cause:** `docker compose config` resolves variables from `.env` and emits the effective configuration. Printing, broadly reading, or returning that render exposes injected API keys, JWT secrets, passwords, tokens, and connection credentials even when the diagnostic only intended to inspect non-secret RAG settings.
+
+**Fix/workaround:** Never print or broadly read a complete interpolated Compose render in an AI/agent session. Extract only an explicit allow-list of non-secret fields (service image, ports, mounts, health checks, dependency names, and named non-secret RAG variables), redact any key whose name suggests secret/token/password/key/credential/URI, and delete temporary renders after use. If a complete render is essential, keep it in a permission-restricted temporary file, process it locally without returning its contents to the agent, output only the allow-listed summary, then delete it.
