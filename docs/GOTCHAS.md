@@ -1026,3 +1026,14 @@ remove stale Claude references.
 **Root cause:** Logging the complete server/database exception serializes failed INSERT payloads, which can include the content and embedding values being written.
 
 **Fix/workaround:** Never persist raw RAG exception bodies. Log only generated `file_id`, extension, timestamp, status, a bounded reason code, and cleanup outcome. Apply owner-only permissions to operational logs and audit them for document text, vectors, metadata payloads, credentials, and identifiers before retaining them.
+
+
+## GOTCHAS correction — 2026-08-23
+
+### sync_skills.ps1 v2.0 auto-discovers complete skill directories
+
+**Correction:** The earlier section titled `Goose sync_skills.ps1 uses a HARDCODED skill list — new skills are silently omitted` is stale and must not be followed for the current script.
+
+**Current behavior:** `C:\Users\micha\AppData\Roaming\Block\goose\sync_skills.ps1` v2.0 auto-discovers skill directories from the canonical skills source and copies complete skill trees, including references and templates. New skills no longer require their names to be added to a hardcoded array.
+
+**Fix/workaround:** After changing a canonical skill, run the current v2.0 sync script and verify the destination contains the complete skill directory, including any `references/`, `templates/`, scripts, and exit-test files. If observed behavior differs, inspect the live script version before changing either the skill list or this documentation.

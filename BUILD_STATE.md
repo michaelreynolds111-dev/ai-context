@@ -1,8 +1,8 @@
 # BUILD STATE
 
-**Last updated:** 22 August 2026 (Cluster 6 Step 3 fully verified and signed off — production index, retrieval quality, reconciliation, cleanup, and log sanitization all passed)
+**Last updated:** 23 August 2026 (Household Administration Platform roadmap promoted; existing Cluster 6 RAG foundation preserved; collection-wide retrieval route is the next build action)
 **Current phase:** Phase 9 — Cutover (§13)
-**Current sub-step:** Cluster 6 Steps 1-2 COMPLETE. Step 3 (RAG) COMPLETE: embed-format diagnostic PASSED (accepted format identified), pilot v2 PASSED (10 files retained), and production index EXECUTED to completion — 1,925 distinct production documents indexed into the `household` collection (27,803 embedding rows incl. 10 pilot) using local embeddings. 132 files unindexable (7 explicit server rejections incl. `\u0000`-metadata PDFs; 125 zero-row/extract-empty files). testcollection unchanged (1,374). No credential leak. Steps 4-8 now UNBLOCKED (household agent config, renewals integration). ai-workspace root: C:\Users\micha\ai-workspace\ (activated).
+**Current sub-step:** Cluster 6 Steps 1-3 COMPLETE and preserved as the document-intelligence foundation: 1,935 household file IDs / 27,803 embedding rows, 1,935 LibreChat file records, local embeddings, sanitized failure records, and all household RAG identity metadata aligned to Michael's LibreChat user scope. Native LibreChat v0.8.7 agent file_search was proven to require explicit per-file IDs and has no collection-wide binding; the 10-file UI limit must not be bypassed by storing 1,935 IDs in one agent. The approved target is now the additive Household Administration Platform defined at projects/household/HOUSEHOLD_ADMIN_PLATFORM_BUILD_PATH.md (commit b1a8a3f): whole-corpus document search first, then Household Admin, structured metadata/ledger, exact cost and renewal queries, controlled ingestion, and approval-gated form preparation. No platform implementation beyond the preserved RAG/file-registry/identity foundation is complete. Immediate next build: fixed-scope read-only /query_collection route only. ai-workspace root: C:\Users\micha\ai-workspace\ (activated).
 
 ## Phase status
 | Phase | Status | Exit test | Date |
@@ -14,7 +14,7 @@
 | 3 — Agents + MCP | **PASSED** | All items complete | 8 Aug 2026 |
 | 4 — Skills sync | **PASSED** | All 4 exit criteria met | 8 Aug 2026 |
 | 5 — Memory | **PASSED** | Native memory cross-conversation verified | 8 Aug 2026 |
-| 6 — Projects/RAG | **PASSED (Cluster 6 Step 3 complete 22 Aug 2026)** | Pattern proven; Cluster 6 Steps 1-3 COMPLETE — 1,935 household IDs / 27,803 rows, local embeddings, 35/35 retrieval sample passed, 132 unindexable reconciled with zero residue, operational log sanitized; Steps 4-8 unblocked | 8 Aug 2026 |
+| 6 — Projects/RAG | **PASSED (Cluster 6 Step 3 complete 22 Aug 2026)** | Cluster 6 Steps 1-3 COMPLETE and preserved — 1,935 household IDs / 27,803 rows, 1,935 LibreChat file records, aligned user scope, verified retrieval and sanitized operations; Household Administration Platform roadmap promoted, with collection-wide retrieval route next | 8 Aug 2026 |
 | 7 — Goose | **PASSED** | All 4 exit criteria met | 8 Aug 2026 |
 | 8 — Validation | **PASSED** | All 6 clusters passed, security audit clean | 9 Aug 2026 |
 | 9 — Cutover | IN PROGRESS | System live; working through deferred items | ongoing |
@@ -55,6 +55,15 @@
 ## Session event log (append-only)
 
 <!-- Past entries are immutable. Append new entries below. Never edit or delete. -->
+
+- 2026-08-23 [cluster6-household-admin-platform-roadmap] [DONE] Promoted the approved Household Administration Platform roadmap verbatim to projects/household/HOUSEHOLD_ADMIN_PLATFORM_BUILD_PATH.md, verified byte parity and secret safety, committed only that file, and pushed commit b1a8a3f with local/remote parity — evidence: GOOSE_RESULT_PROMOTE_HOUSEHOLD_ADMIN_PLATFORM_BUILD_PATH.md in agent-workdir/outputs/ and commit b1a8a3f.
+- 2026-08-23 [cluster6-household-admin-platform-roadmap] [DONE] Completed a metadata-only repository and operational-record inventory; no files or Git state changed. Confirmed current Cluster 6 manifests/checkpoints/rollback artifacts must be retained, the C:\home\michael\agent-workdir mirror is unreferenced stray residue, projects/Power App/ requires separate investigation, and cleanup must be a separately approved archive-first task — evidence: GOOSE_RESULT_REPO_DOCUMENT_INVENTORY.md in agent-workdir/outputs/.
+- 2026-08-23 [cluster6-household-admin-platform-roadmap] [DONE] Completed the collection-wide retrieval architecture investigation with no production mutation: LibreChat v0.8.7 has no native collection binding, agent file_search stores explicit file_ids, and raising the 10-file limit would not provide a safe 1,935-file architecture — evidence: GOOSE_RESULT_CLUSTER6_HOUSEHOLD_RAG_TOOL_ARCHITECTURE.md and ARCHITECTURE_DECISION.md in agent-workdir/outputs/ and cluster6-household-rag-tool/.
+- 2026-08-23 [cluster6-household-admin-platform-roadmap] [DISCUSSED] Michael approved the Household Administration Platform as the main target for today's build, with the explicit requirement to preserve existing work and minimize build drift and disruption — evidence: Michael's explicit direction in the planning conversation. Verify: implemented slices pass their individual Goose exit tests and preserve the existing RAG/file-registry/identity foundation.
+- 2026-08-23 [cluster6-household-admin-platform-roadmap] [PLANNED] Add and live-verify one fixed-scope, read-only POST /query_collection route in the deployed RAG API using the existing loaded embedding model; no data migration, re-embedding, MCP registration, or agent creation — evidence: none yet. Verify: GOOSE_RESULT_CLUSTER6_RAG_QUERY_COLLECTION_ROUTE.md passes regression, authorization, integrity, and rollback gates.
+- 2026-08-23 [cluster6-household-admin-platform-roadmap] [PLANNED] After /query_collection passes, add one internal read-only MCP adapter exposing search_household_documents, then create and verify Household Admin with zero file attachments and memory disabled — evidence: none yet. Verify: separate MCP and agent result files pass structural, retrieval, isolation, and forbidden-tool checks.
+- 2026-08-23 [cluster6-household-admin-platform-roadmap] [PLANNED] Build later platform slices additively: metadata enrichment, verified electricity and lease ledgers, exact cost/renewal queries, reviewed ingestion automation, and approval-gated administrative form preparation; optional Paperless-ngx remains a later decision gate — evidence: projects/household/HOUSEHOLD_ADMIN_PLATFORM_BUILD_PATH.md. Verify: each slice passes its own source-provenance, calculation, approval, and non-destructive exit tests.
+
 
 - 2026-08-22 [cluster6-production-index] [DONE] Cluster 6 Step 3 RAG production index COMPLETE: resumed at Step 2, built Tier-3 manifest (2,057 files: education 1,956 / misc-ref 96 / master-register 5), executed resumable batch indexing via proven /embed client (form-data+createReadStream, in-memory HS256 JWT, stdin streaming from host — no volume mount). 1,925 distinct production files indexed (27,803 household rows incl. 10 pilot); testcollection unchanged (1,374); embeddings LOCAL_CONFIRMED; no credential leak; POINTER_MOTHER not indexed. 132 unindexable (7 explicit `\u0000`-metadata PDF rejections + 125 zero-row/extract-empty). Steps 4-8 UNBLOCKED — evidence: GOOSE_RESULT_CLUSTER6_RAG_PRODUCTION_INDEX.md in agent-workdir/outputs/.
 - 2026-08-22 [cluster6-rag-production-index-exec] [DONE] Executed the 2,057-file production batch index to completion through a resumable orchestrator; uploader (node client in LibreChat api container) streams each file via docker exec -i stdin and uploads to /embed; circuit breaker correctly exercised on a .doc failure cluster then .doc removed from scope (74 + 2 appleDouble = 76 excluded at manifest); final 1,925 indexed / 132 unindexable — evidence: run_index.sh, PRODUCTION_MANIFEST.jsonl, PRODUCTION_CHECKPOINT.json (step=COMPLETE), UNINDEXED_FILES.txt in agent-workdir/cluster6-production-index/.
@@ -273,13 +282,15 @@ See git history for full detail.
 
 ## NEXT STEP
 
-**Cluster 6 Step 4 — configure and structurally verify the Household Admin agent.**
+**Household Administration Platform — Batch A: fixed-scope collection query route.**
 
-Create and run `GOOSE_TASK_CLUSTER6_HOUSEHOLD_ADMIN_AGENT.md` with one objective: configure the agent against the completed `household` collection and verify its live structure and safety boundaries.
+Create and run `GOOSE_TASK_CLUSTER6_RAG_QUERY_COLLECTION_ROUTE.md` with one objective: add and live-verify a read-only `POST /query_collection` route in the deployed RAG API using the already-loaded `sentence-transformers/all-MiniLM-L6-v2` embedding model.
 
-Required boundaries: `file_search` only; household collection only; sensitive/identity-safe direct routing; memory disabled; no browser, web search, shell, code execution, general filesystem, or unrelated MCP tools.
+Required boundaries: collection fixed to `household`; identity derived from JWT only; bounded top-k; no caller-supplied collection/user/SQL/path; no data migration, re-embedding, vector/content/file-record/identity mutation, MCP registration, agent creation, or unrelated service/configuration change.
 
-Stop after structural verification and the required result file. Do not begin legacy-pipeline decommission or unrelated work.
+Required method: stage the exact deployed source/version; add unit, authorization, integrity, and regression tests; build and test a pinned canary image; capture complete image/config rollback; recreate only `rag_api` after every pre-live gate passes; verify existing `/query`, `/query_multiple`, `/ids`, `/embed`, and delete behavior remains compatible; verify household remains 1,935 IDs / 27,803 rows and `testcollection` remains 1,374.
+
+Stop after the route result file. Do not begin the MCP adapter, create Household Admin, run repository cleanup, decommission the legacy pipeline, or start structured-ledger/form work in the same task.
 
 ## Historical ops log (unchanged from prior state)
 The following incident/handling sections are preserved in full from the prior
