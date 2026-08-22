@@ -1,8 +1,8 @@
 # BUILD STATE
 
-**Last updated:** 22 August 2026 (Cluster 6 Step 3 RAG diagnostic complete; synthetic v1 canary failed safely at POST /embed)
+**Last updated:** 22 August 2026 (Cluster 6 Step 3 RAG COMPLETE — production index executed: 1,925 production files indexed, local embeddings; 132 unindexable; Steps 4-8 now unblocked)
 **Current phase:** Phase 9 — Cutover (§13)
-**Current sub-step:** Cluster 6 Steps 1-2 COMPLETE. Step 3 troubleshooting is IN PROGRESS. Read-only diagnostic PASSED: deployed RAG API is healthy, internal-only, v1 contract, and local embeddings are confirmed. Synthetic v1 canary FAILED safely at POST /embed with HTTP 500 because file.filename arrived as None; authentication worked, no embeddings were written, cleanup was verified, and no production residue remains. Pilot and batch indexing are BLOCKED pending a tightly scoped embed-format diagnostic. Steps 4-8 remain gated on Step 3. ai-workspace root: C:\Users\micha\ai-workspace\ (activated).
+**Current sub-step:** Cluster 6 Steps 1-2 COMPLETE. Step 3 (RAG) COMPLETE: embed-format diagnostic PASSED (accepted format identified), pilot v2 PASSED (10 files retained), and production index EXECUTED to completion — 1,925 distinct production documents indexed into the `household` collection (27,803 embedding rows incl. 10 pilot) using local embeddings. 132 files unindexable (7 explicit server rejections incl. `\u0000`-metadata PDFs; 125 zero-row/extract-empty files). testcollection unchanged (1,374). No credential leak. Steps 4-8 now UNBLOCKED (household agent config, renewals integration). ai-workspace root: C:\Users\micha\ai-workspace\ (activated).
 
 ## Phase status
 | Phase | Status | Exit test | Date |
@@ -14,7 +14,7 @@
 | 3 — Agents + MCP | **PASSED** | All items complete | 8 Aug 2026 |
 | 4 — Skills sync | **PASSED** | All 4 exit criteria met | 8 Aug 2026 |
 | 5 — Memory | **PASSED** | Native memory cross-conversation verified | 8 Aug 2026 |
-| 6 — Projects/RAG | **PASSED (pattern only — Cluster 6 build outstanding)** | Pattern proven on New Build; Cluster 6 household DB still to build post-Session 10 | 8 Aug 2026 |
+| 6 — Projects/RAG | **PASSED (Cluster 6 Step 3 complete 22 Aug 2026)** | Pattern proven; Cluster 6 household DB built — Steps 1-2 COMPLETE, Step 3 RAG COMPLETE (1,925 production files indexed, local embeddings); Steps 4-8 unblocked | 8 Aug 2026 |
 | 7 — Goose | **PASSED** | All 4 exit criteria met | 8 Aug 2026 |
 | 8 — Validation | **PASSED** | All 6 clusters passed, security audit clean | 9 Aug 2026 |
 | 9 — Cutover | IN PROGRESS | System live; working through deferred items | ongoing |
@@ -56,6 +56,10 @@
 
 <!-- Past entries are immutable. Append new entries below. Never edit or delete. -->
 
+- 2026-08-22 [cluster6-production-index] [DONE] Cluster 6 Step 3 RAG production index COMPLETE: resumed at Step 2, built Tier-3 manifest (2,057 files: education 1,956 / misc-ref 96 / master-register 5), executed resumable batch indexing via proven /embed client (form-data+createReadStream, in-memory HS256 JWT, stdin streaming from host — no volume mount). 1,925 distinct production files indexed (27,803 household rows incl. 10 pilot); testcollection unchanged (1,374); embeddings LOCAL_CONFIRMED; no credential leak; POINTER_MOTHER not indexed. 132 unindexable (7 explicit `\u0000`-metadata PDF rejections + 125 zero-row/extract-empty). Steps 4-8 UNBLOCKED — evidence: GOOSE_RESULT_CLUSTER6_RAG_PRODUCTION_INDEX.md in agent-workdir/outputs/.
+- 2026-08-22 [cluster6-rag-production-index-exec] [DONE] Executed the 2,057-file production batch index to completion through a resumable orchestrator; uploader (node client in LibreChat api container) streams each file via docker exec -i stdin and uploads to /embed; circuit breaker correctly exercised on a .doc failure cluster then .doc removed from scope (74 + 2 appleDouble = 76 excluded at manifest); final 1,925 indexed / 132 unindexable — evidence: run_index.sh, PRODUCTION_MANIFEST.jsonl, PRODUCTION_CHECKPOINT.json (step=COMPLETE), UNINDEXED_FILES.txt in agent-workdir/cluster6-production-index/.
+- 2026-08-22 [cluster6-rag-embed-diag] [DONE] Embed-format diagnostic PASSED: deployed v1 /embed endpoint works and accepts LibreChat's Node form-data + fs.createReadStream format (HTTP 200, filename populated, vector rows written); prior canary failure was client-side encoding (Python requests in-memory tuple left file.filename=None), not a server defect. Evidence: GOOSE_RESULT_CLUSTER6_RAG_EMBED_DIAG.md in agent-workdir/outputs/.
+- 2026-08-22 [cluster6-rag-pilot-v2] [DONE] Cluster 6 RAG household pilot v2 PASSED: 10 pilot files (8 fixed + 2 replacements) all extracted+indexed (25 rows), 10/10 scoped /query checks correct, empty-docx files (p04/p05) permanently excluded. Evidence: GOOSE_RESULT_CLUSTER6_RAG_HOUSEHOLD_PILOT_V2.md in agent-workdir/outputs/.
 - 2026-08-22 [cluster6-rag-diagnostic] [DONE] Completed read-only Cluster 6 RAG diagnostic: services healthy, embeddings LOCAL_CONFIRMED, deployed API is internal-only v1 rather than the v2 contract assumed by the original task, and household collection remains at 0 embeddings — evidence: GOOSE_RESULT_CLUSTER6_RAG_DIAGNOSTIC.md in agent-workdir/outputs/.
 - 2026-08-22 [cluster6-rag-v1-canary] [DONE] Executed one synthetic v1 canary; JWT authentication succeeded, but POST /embed failed deterministically with HTTP 500 because file.filename was None before any vector write; no household data was accessed and no canary residue remained — evidence: GOOSE_RESULT_CLUSTER6_RAG_V1_CANARY.md in agent-workdir/outputs/.
 - 2026-08-22 [cluster6-rag-v1-canary] [PLANNED] Run a read-only embed-format diagnostic comparing the failed multipart request with LibreChat's own successful RAG client request format; do not index household files or change the RAG image/configuration — evidence: none yet. Verify: GOOSE_RESULT_CLUSTER6_RAG_EMBED_DIAG.md identifies an accepted request format or proves a server defect.
