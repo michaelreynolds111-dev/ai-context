@@ -1008,3 +1008,21 @@ remove stale Claude references.
 **Root cause:** `docker compose config` resolves variables from `.env` and emits the effective configuration. Printing, broadly reading, or returning that render exposes injected API keys, JWT secrets, passwords, tokens, and connection credentials even when the diagnostic only intended to inspect non-secret RAG settings.
 
 **Fix/workaround:** Never print or broadly read a complete interpolated Compose render in an AI/agent session. Extract only an explicit allow-list of non-secret fields (service image, ports, mounts, health checks, dependency names, and named non-secret RAG variables), redact any key whose name suggests secret/token/password/key/credential/URI, and delete temporary renders after use. If a complete render is essential, keep it in a permission-restricted temporary file, process it locally without returning its contents to the agent, output only the allow-listed summary, then delete it.
+
+## 13. Cluster 6 RAG ingestion
+
+### HTTP 200 from v1 `/embed` does not prove that a file was indexed
+
+**Symptom:** Valid uploads can return HTTP 200 with `status:true` while creating no `/ids` entry and zero embedding rows. This occurred with structurally empty DOCX files and with other files from which the loader extracted no usable text.
+
+**Root cause:** The v1 route reports successful request/file handling even when extraction produces zero text or the splitter produces zero chunks. HTTP success is therefore only a transport/application response, not proof of vector persistence.
+
+**Fix/workaround:** Run a content-neutral extractability preflight, then verify every uploaded `file_id` appears in `/ids` and has at least one vector row before marking it indexed. Treat zero-row HTTP-200 outcomes as unindexable, remove any partial record scoped to that ID, and continue or quarantine according to the batch policy.
+
+### Raw RAG database errors can copy document content and vectors into operational logs
+
+**Symptom:** The production `failed.log` captured raw psycopg2 error payloads containing document text, chunk/vector arrays, metadata, and numeric values even though the indexing report itself did not print content.
+
+**Root cause:** Logging the complete server/database exception serializes failed INSERT payloads, which can include the content and embedding values being written.
+
+**Fix/workaround:** Never persist raw RAG exception bodies. Log only generated `file_id`, extension, timestamp, status, a bounded reason code, and cleanup outcome. Apply owner-only permissions to operational logs and audit them for document text, vectors, metadata payloads, credentials, and identifiers before retaining them.

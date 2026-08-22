@@ -1,6 +1,6 @@
 # BUILD STATE
 
-**Last updated:** 22 August 2026 (Cluster 6 Step 3 RAG COMPLETE — production index executed: 1,925 production files indexed, local embeddings; 132 unindexable; Steps 4-8 now unblocked)
+**Last updated:** 22 August 2026 (Cluster 6 Step 3 fully verified and signed off — production index, retrieval quality, reconciliation, cleanup, and log sanitization all passed)
 **Current phase:** Phase 9 — Cutover (§13)
 **Current sub-step:** Cluster 6 Steps 1-2 COMPLETE. Step 3 (RAG) COMPLETE: embed-format diagnostic PASSED (accepted format identified), pilot v2 PASSED (10 files retained), and production index EXECUTED to completion — 1,925 distinct production documents indexed into the `household` collection (27,803 embedding rows incl. 10 pilot) using local embeddings. 132 files unindexable (7 explicit server rejections incl. `\u0000`-metadata PDFs; 125 zero-row/extract-empty files). testcollection unchanged (1,374). No credential leak. Steps 4-8 now UNBLOCKED (household agent config, renewals integration). ai-workspace root: C:\Users\micha\ai-workspace\ (activated).
 
@@ -14,7 +14,7 @@
 | 3 — Agents + MCP | **PASSED** | All items complete | 8 Aug 2026 |
 | 4 — Skills sync | **PASSED** | All 4 exit criteria met | 8 Aug 2026 |
 | 5 — Memory | **PASSED** | Native memory cross-conversation verified | 8 Aug 2026 |
-| 6 — Projects/RAG | **PASSED (Cluster 6 Step 3 complete 22 Aug 2026)** | Pattern proven; Cluster 6 household DB built — Steps 1-2 COMPLETE, Step 3 RAG COMPLETE (1,925 production files indexed, local embeddings); Steps 4-8 unblocked | 8 Aug 2026 |
+| 6 — Projects/RAG | **PASSED (Cluster 6 Step 3 complete 22 Aug 2026)** | Pattern proven; Cluster 6 Steps 1-3 COMPLETE — 1,935 household IDs / 27,803 rows, local embeddings, 35/35 retrieval sample passed, 132 unindexable reconciled with zero residue, operational log sanitized; Steps 4-8 unblocked | 8 Aug 2026 |
 | 7 — Goose | **PASSED** | All 4 exit criteria met | 8 Aug 2026 |
 | 8 — Validation | **PASSED** | All 6 clusters passed, security audit clean | 9 Aug 2026 |
 | 9 — Cutover | IN PROGRESS | System live; working through deferred items | ongoing |
@@ -263,21 +263,23 @@ See git history for full detail.
 - 2026-08-18 [cluster6-step4] [PLANNED] Cluster 6 Step 4 (Household Admin agent config) — Michael-manual instructions staged at outputs/MICHAEL_MANUAL_CLUSTER6_STEP4_AGENT_CONFIG.md. Gated on Step 3 (collection must exist before agent can be scoped to it). Verify: Michael completes admin panel configuration; agent tools: [file_search] only, scoped to household collection, DeepInfra claude-sonnet-5, memory disabled
 - 2026-08-18 [workspace-followups] [DISCUSSED] Workspace-consolidation 7 follow-up items confirmed done by Michael — evidence: Michael statement "This is already done" (explicit named deliverable). Verify: optional metadata-only check on Chrome RYM extension path, Bendigo export, Goose restart to confirm system state reflects completion
 - 2026-08-18 [cluster6] [PLANNED] Cluster 6 Steps 5-8: Step 5 (Goose MongoDB verification of agent config), Step 6 (behavior verification — 7-check list), Step 7 (Phase 2 pipeline decommission), Step 8 (Cluster 6 exit test). All gated on Step 3 RAG resolution + Step 4 agent config. evidence: none yet
+- 2026-08-22 [cluster6-step3-final-signoff] [DONE] Verified the production household index end-to-end: 1,925/1,925 production IDs present with rows, 10/10 pilot IDs retained, household totals 1,935 IDs / 27,803 rows, 35/35 retrieval samples returned the correct source across all 3 categories and 8 extensions, and testcollection remained 1,374 — evidence: GOOSE_RESULT_CLUSTER6_RAG_PRODUCTION_VERIFY.md in agent-workdir/outputs/.
+- 2026-08-22 [cluster6-step3-final-signoff] [DONE] Corrected the production failure reconciliation: 132 unindexable files comprise 5 null-metadata PDF server rejections, 2 PPT HTTP-400 parser failures, and 125 zero-row/no-extractable-text files (100 PDF, 25 DOCX), with zero residual IDs or rows — evidence: GOOSE_RESULT_CLUSTER6_RAG_PRODUCTION_VERIFY.md in agent-workdir/outputs/.
+- 2026-08-22 [cluster6-step3-final-signoff] [DONE] Removed the temporary /app/cl6-uploader.js runner after verifying it was untracked and unused, with no container restart or collection change — evidence: GOOSE_RESULT_CLUSTER6_RAG_PRODUCTION_VERIFY.md in agent-workdir/outputs/.
+- 2026-08-22 [cluster6-step3-final-signoff] [DONE] Sanitized failed.log atomically into 132 content-safe JSONL failure records; schema, count reconciliation, collection absence, permissions, and prohibited-content audit all passed, and temporary unsafe copies were removed from the active filesystem — evidence: GOOSE_RESULT_CLUSTER6_SANITIZE_FAILED_LOG.md in agent-workdir/outputs/.
+- 2026-08-22 [cluster6-step3-final-signoff] [DONE] Cluster 6 Step 3 received final sign-off after production indexing, retrieval verification, collection-integrity checks, failure reconciliation, uploader cleanup, and operational-log hygiene all passed — evidence: GOOSE_RESULT_CLUSTER6_RAG_PRODUCTION_VERIFY.md and GOOSE_RESULT_CLUSTER6_SANITIZE_FAILED_LOG.md in agent-workdir/outputs/.
 
 
 
 ## NEXT STEP
 
-**Cluster 6 Step 3 remains BLOCKED at the v1 embed call.**
+**Cluster 6 Step 4 — configure and structurally verify the Household Admin agent.**
 
-Run one tightly scoped, read-only diagnostic: `GOOSE_TASK_CLUSTER6_RAG_EMBED_DIAG.md`.
+Create and run `GOOSE_TASK_CLUSTER6_HOUSEHOLD_ADMIN_AGENT.md` with one objective: configure the agent against the completed `household` collection and verify its live structure and safety boundaries.
 
-**Single objective:** determine why `POST /embed` receives `file.filename=None` by comparing the failed synthetic multipart request with LibreChat's own successful RAG client request format.
+Required boundaries: `file_search` only; household collection only; sensitive/identity-safe direct routing; memory disabled; no browser, web search, shell, code execution, general filesystem, or unrelated MCP tools.
 
-**Do not:** index household files, start a batch, patch server code, change images/configuration, restart containers, or proceed to Cluster 6 Step 4.
-
-**Stop condition:** stop as soon as either (a) one accepted multipart format is identified using synthetic data, or (b) the deployed server endpoint is conclusively shown to be defective. Write `GOOSE_RESULT_CLUSTER6_RAG_EMBED_DIAG.md` for Build Coordinator verification.
-
+Stop after structural verification and the required result file. Do not begin legacy-pipeline decommission or unrelated work.
 
 ## Historical ops log (unchanged from prior state)
 The following incident/handling sections are preserved in full from the prior
