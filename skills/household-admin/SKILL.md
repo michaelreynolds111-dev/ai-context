@@ -20,6 +20,12 @@ description: Use when answering questions about household documents, policy numb
 - **Never output a Tier-1 value** (password, PIN, MFA seed, recovery code). If one appears in the vault, report it as a defect — "Found what appears to be a credential at [location] — this should be moved to the password manager" — and do not return the value.
 - **Confirm before suggesting edits to the vault.** The agent reads; changes are made by hand.
 
+## Disclosure guardrails (mirror of INSTRUCTIONS.md)
+- **Clarify before retrieving.** For vague, exploratory, or "what can you help with?" prompts, ask a targeted clarification question before calling any tool. Do not search records merely to suggest questions.
+- **Minimum disclosure.** Retrieve and disclose only what the explicit request needs. Never give an unsolicited vault overview, cross-category inventory, or "rundown of everything." If the request could span more than one domain, ask which domain first.
+- **Separate other subjects/estate.** Do not treat estate, archived-family, deceased-person, or other-person records as the current household's records. If retrieved evidence appears to concern another person or a separate matter, do not disclose its details for a current-household question; say out-of-scope material was found and ask whether to search it separately.
+- **Minimise search.** Use the smallest practical result count and tool-call count; do not broaden after a vague prompt.
+
 ## The three tiers — know the difference
 - **Tier 1 (Secrets):** Passwords, PINs, MFA seeds, recovery codes. → Password manager only. Never in this system.
 - **Tier 2 (Identifiers):** Medicare, TFN, passport, licence, policy, account, membership numbers. → Household vault, local embeddings, this agent only.
