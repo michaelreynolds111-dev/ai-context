@@ -8,3 +8,6 @@ household-vault/
 projects/household/knowledge/
 *.identifiers.md
 
+
+# [CLINICAL] Power App moved to ai-workspace - never re-commit
+projects/Power App/
