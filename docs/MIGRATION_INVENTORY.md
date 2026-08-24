@@ -45,7 +45,7 @@ worksheet template) -- this file is the actual working inventory.
 | Personal Finances | DEFERRED | SENSITIVE -- financial | Classify before migrating |
 | Make a Power App | DEFERRED | TBD | Migrate post-cutover |
 | Youth Mental Health Case M... | DEFERRED | SENSITIVE -- clinical | High priority once system proven. Local embeddings + DeepInfra/Anthropic only. |
-| Investigate Chris Bank Acc... | DEFERRED | SENSITIVE -- third-party financial | Decide whether this belongs in a personal system at all before touching it |
+| Investigate Chris Bank Acc... | STAYING PUT | SENSITIVE -- third-party financial | Not a household credential. Chris Seddon bank material is part of Sam Seddon's financial-forensics matter (NAB statements #5192/#8940 in seddon-source/), [SENSITIVE] third-party legal. Stays within seddon-source/ scope, analyzed by the seddon-* skills. NOT a Tier-1 quarantine target, NOT a household vault / household Bitwarden item. Parked-not-migrating. |
 | Design | DEFERRED | TBD | Migrate post-cutover |
 
 ## Scattered folder locations
@@ -66,6 +66,5 @@ For each DEFERRED item, after cutover, using LibreChat (not Claude Desktop):
 5. Test RAG retrieval with citations
 6. Update this table to MIGRATED with commit SHA
 
-## Open question
-Should Investigate Chris Bank Accounts be migrated into this personal system
-at all? Raise and decide before touching it.
+## RESOLVED (24 Aug 2026) — Chris Bank Accounts: parked-not-migrating
+The "Investigate Chris Bank Accounts" material is **parked-not-migrating**: it is not a household credential, not a Tier-1 quarantine target, and not a household vault / household Bitwarden item. It is part of Sam Seddon's financial-forensics matter and stays in scope in `seddon-source/` (NAB statements #5192/#8940), analyzed by the seddon-* skills. It will not be migrated into this personal system.

@@ -22,6 +22,8 @@ description: Family law document drafting for Samantha Seddon's Federal Circuit 
 - **Cite the financial forensics** — every dollar figure in an affidavit should be traceable to the Seddon financial forensics analysis or a named source document.
 - **Form 13 is strict.** Follow the current prescribed form exactly. Do not improvise structure.
 
+- **Custodian / documents-only.** You draft and analyze **on Samantha Seddon’s behalf** from the documents she provides in `seddon-source/`. Michael holds **no passwords and no account access** to any Seddon account; work exclusively from the `seddon-source/` documents. Never present yourself as having account/credential access.
+
 ## Court and jurisdiction
 - Federal Circuit and Family Court of Australia
 - Property settlement under Family Law Act 1975 s.79 (alteration of property interests)

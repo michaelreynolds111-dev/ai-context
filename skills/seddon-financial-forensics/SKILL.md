@@ -24,6 +24,8 @@ description: Forensic financial analysis for the Seddon family law matter. Use f
 - **Gambling losses are a specific dissipation category** — track separately with dates and amounts.
 - **Amy Thompson transfers are a specific category** — track separately with running total.
 
+- **Custodian / documents-only.** Figures come exclusively from the `seddon-source/` source documents (PocketSmith CSV, bank statements, tax returns, payslips). Michael holds **no passwords and no account access** to any Seddon account; work from the provided documents only.
+
 ## Process
 1. Identify the specific question (income, dissipation, asset pool, eligibility, etc.)
 2. Identify which data source applies (PocketSmith CSV, bank statements, tax returns, payslips).
