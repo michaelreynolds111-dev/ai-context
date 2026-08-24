@@ -1,6 +1,6 @@
 # BUILD STATE
 
-**Last updated:** 23 August 2026 (Household Administration Platform roadmap promoted; existing Cluster 6 RAG foundation preserved; collection-wide retrieval route is the next build action)
+**Last updated:** 24 August 2026 (Comprehensive cross-filesystem audit complete; accuracy + promote pass applied; Deep Research agent build complete pending Michael one UI save)
 **Current phase:** Phase 9 — Cutover (§13)
 **Current sub-step:** Cluster 6 Steps 1-3 COMPLETE and preserved as the document-intelligence foundation: 1,935 household file IDs / 27,803 embedding rows, 1,935 LibreChat file records, local embeddings, sanitized failure records, and all household RAG identity metadata aligned to Michael's LibreChat user scope. Native LibreChat v0.8.7 agent file_search was proven to require explicit per-file IDs and has no collection-wide binding; the 10-file UI limit must not be bypassed by storing 1,935 IDs in one agent. The approved target is now the additive Household Administration Platform defined at projects/household/HOUSEHOLD_ADMIN_PLATFORM_BUILD_PATH.md (commit b1a8a3f): whole-corpus document search first, then Household Admin, structured metadata/ledger, exact cost and renewal queries, controlled ingestion, and approval-gated form preparation. No platform implementation beyond the preserved RAG/file-registry/identity foundation is complete. Immediate next build: fixed-scope read-only /query_collection route only. ai-workspace root: C:\Users\micha\ai-workspace\ (activated).
 
