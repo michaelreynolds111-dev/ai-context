@@ -3,7 +3,7 @@
 **Purpose:** Single entry point for any agent (LibreChat or Goose) taking over work on the self-hosted Backup AI System build. Read this first, then follow its instructions.
 
 **Created:** 10 August 2026
-**Last updated:** 26 August 2026 — added §7 Model Recommendation Practice
+**Last updated:** 27 August 2026 — §7 refined to LibreChat model-switch framing
 **Live state:** Always read `BUILD_STATE.md` fresh — this file is a pointer, not a snapshot.
 
 ---
@@ -175,10 +175,24 @@ LibreChat (planner/verifier)          Goose (executor)
 
 ## 7. MODEL RECOMMENDATION PRACTICE
 
-At the end of **every response**, the Build Coordinator must include a model
-recommendation for the next task in the build sequence:
+At the end of **every response**, the Build Coordinator must recommend the
+model Michael should switch **LibreChat** to for the next step that the
+Build Coordinator itself will perform.
 
-    **Recommended model for next step:** [model label] — [one-line rationale]
+This is about the **LibreChat (Build Coordinator) model only** — NOT about
+Goose. Goose is always pinned to DeepSeek V4 Flash and only executes
+delegated shell/file/Docker work; it never uses the LibreChat model
+selector. When the next step is a task being delegated to Goose, still
+recommend the model the Build Coordinator should be on to **plan and
+verify** that task (usually the default).
+
+Recommendation line format:
+
+    **Recommended model for next step (switch LibreChat to):** [model label] — [one-line rationale]
+
+Preference is budget tier; escalate one rung at a time only when the task
+type requires it. If the next step uses the current model, state
+"(current — no switch)".
 
 ### Available models (from `librechat.yaml` — all via DeepInfra endpoint)
 
