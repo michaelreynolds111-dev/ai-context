@@ -3,6 +3,7 @@
 **Purpose:** Single entry point for any agent (LibreChat or Goose) taking over work on the self-hosted Backup AI System build. Read this first, then follow its instructions.
 
 **Created:** 10 August 2026
+**Last updated:** 26 August 2026 — added §7 Model Recommendation Practice
 **Live state:** Always read `BUILD_STATE.md` fresh — this file is a pointer, not a snapshot.
 
 ---
@@ -39,6 +40,7 @@ All in the `ai-context` repo root unless noted:
 | `docs/GOTCHAS.md` | Permanent environment-specific facts (this machine only) | Before touching Docker, WSL, shell, MCP |
 | `docs/MIGRATION_INVENTORY.md` | Remaining Claude Projects to migrate | During Phase 9 parallel-run |
 | `README.md` | Repo layout and the household-vault rule | First-time orientation |
+| `docs/MODEL_SELECTION_MATRIX.md` | Model-to-task mapping for build sequence steps | When recommending a model for the next step |
 
 ### Handoff docs (in `~/agent-workdir/`, not in git)
 
@@ -171,4 +173,82 @@ LibreChat (planner/verifier)          Goose (executor)
 
 ---
 
-*This file should be committed to the `ai-context` repo root. Once committed, any agent — LibreChat, Goose, or a future tool — gets told one thing: **"Read `AGENT_BOOTSTRAP.md` first, then follow its instructions."**
+## 7. MODEL RECOMMENDATION PRACTICE
+
+At the end of **every response**, the Build Coordinator must include a model
+recommendation for the next task in the build sequence:
+
+    **Recommended model for next step:** [model label] — [one-line rationale]
+
+### Available models (from `librechat.yaml` — all via DeepInfra endpoint)
+
+**Budget tier (default — use unless a reason below escalates):**
+
+| Model | ID (`librechat.yaml`) | Cost/1M in/out | Best for |
+|---|---|---|---|
+| GPT-OSS 120B | `openai/gpt-oss-120b` | $0.037/$0.17 | Cheapest; bulk classification, extraction |
+| Ling 3.0 Flash | `inclusionAI/Ling-3.0-flash` | $0.06/$0.18 | High-volume agentic loops |
+| Nemotron 3.5 Lightning | `nvidia/NVIDIA-Nemotron-3.5-Lightning` | $0.08/$0.20 | Low-latency always-on agent |
+| **DeepSeek V4 Flash 0731** | `deepseek-ai/DeepSeek-V4-Flash-0731` | $0.08/$0.18 | **Build Coordinator default** |
+| DeepSeek V4 Flash | `deepseek-ai/DeepSeek-V4-Flash` | $0.09/$0.18 | Bulk ETL pipelines |
+| Gemma 4 31B Turbo | `google/gemma-4-31B-it-turbo` | $0.09/$0.34 | Cheap multimodal vision |
+| Qwen3.5 35B | `Qwen/Qwen3.5-35B-A3B` | $0.14/$1.00 | Everyday drafting, summaries |
+
+**Value tier (escalate here when budget isn't enough):**
+
+| Model | ID (`librechat.yaml`) | Cost/1M in/out | Best for |
+|---|---|---|---|
+| DeepSeek V3.2 | `deepseek-ai/DeepSeek-V3.2` | $0.26/$0.38 | General-purpose all-rounder |
+| Gemini 3.1 Flash Lite | `google/gemini-3.1-flash-lite` | $0.25/$1.50 | 1M context, bulk doc ingestion |
+| Qwen3.5 122B | `Qwen/Qwen3.5-122B-A10B` | $0.29/$2.40 | Complex analysis, long technical writing |
+| **Qwen3 Coder 480B** | `Qwen/Qwen3-Coder-480B-A35B-Instruct-Turbo` | $0.30/$1.00 | **Best value coder** — code gen, review |
+| MiniMax M3 | `MiniMaxAI/MiniMax-M3` | $0.28/$1.10 | Multimodal (text/image/video), 1M ctx |
+| Kimi K2.5 | `moonshotai/Kimi-K2.5` | $0.45/$2.25 | General reasoning, vision |
+| GLM 5.2 | `zai-org/GLM-5.2` | $0.75/$2.40 | Long-context reasoning, structured output |
+
+**Flagship tier (reserve for strictly necessary cases only):**
+
+| Model | ID (`librechat.yaml`) | Cost/1M in/out | Best for |
+|---|---|---|---|
+| DeepSeek V4 Pro 0813 | `deepseek-ai/DeepSeek-V4-Pro-0813` | $1.30/$2.60 | Near-frontier reasoning, deep analysis |
+| Claude Sonnet 5 | `anthropic/claude-sonnet-5` | $2.00/$10.00 | **[SENSITIVE]** clinical/legal — required routing |
+| Kimi K3 | `moonshotai/Kimi-K3` | $2.85/$14.25 | Long-horizon reasoning, big-context |
+| Claude Opus 5 | `anthropic/claude-opus-5` | $5.00/$25.00 | **Highest cost** — final review only |
+
+### Task-type → Model mapping
+
+| Task type | Recommended model | Why |
+|---|---|---|
+| Routine build coordination | DeepSeek V4 Flash 0731 | $0.08/$0.18 — default; planning, session opening, state updates |
+| Code generation / review | Qwen3 Coder 480B | $0.30/$1.00 — best value coder |
+| Architecture / deep analysis | DeepSeek V4 Pro 0813 | $1.30/$2.60 — near-frontier reasoning, fraction of Claude cost |
+| Safety / acceptance review | DeepSeek V4 Pro 0813 | $1.30/$2.60 — deep reasoning for leakage/gating checks |
+| Bulk / pipeline / ETL | GPT-OSS 120B | $0.037/$0.17 — cheapest capable model |
+| Long-context analysis | GLM 5.2 | $0.75/$2.40 — 1M context, multi-step reasoning |
+| Clinical / household [SENSITIVE] | Claude Sonnet 5 | $2.00/$10.00 — **required routing** per §4 |
+| Final critical review (rare) | Claude Opus 5 | $5.00/$25.00 — highest stakes only |
+
+### Escalation ladder (cost-aware)
+
+```
+Default:   DeepSeek V4 Flash 0731       ($0.08/$0.18)
+  ↓ reasoning needed
+Reasoning: DeepSeek V4 Pro 0813          ($1.30/$2.60)
+  ↓ code focus needed
+Code:      Qwen3 Coder 480B              ($0.30/$1.00)
+  ↓ SENSITIVE routing required
+Clinical:  Claude Sonnet 5               ($2.00/$10.00)
+  ↓ absolute highest stakes only
+Critical:  Claude Opus 5                 ($5.00/$25.00)
+```
+
+### Rules
+- Always recommend the cheapest model that can do the job well.
+- Escalate one rung at a time — never skip to Claude Opus 5 unless every cheaper option has been considered and rejected with a stated reason.
+- Clinical/household [SENSITIVE] content must always recommend Claude Sonnet 5 (required routing per §4).
+- If the next step requires the same model as the current one, state "(current)" to confirm no switch is needed.
+- Full matrix with all 20 models: see `docs/MODEL_SELECTION_MATRIX.md`.
+
+---
+
+*This file should be committed to the `ai-context` repo root. Once committed, any agent — LibreChat, Goose, or a future tool — gets told one thing: **"Read `AGENT_BOOTSTRAP.md` first, then follow its instructions."***
