@@ -1037,3 +1037,13 @@ remove stale Claude references.
 **Current behavior:** `C:\Users\micha\AppData\Roaming\Block\goose\sync_skills.ps1` v2.0 auto-discovers skill directories from the canonical skills source and copies complete skill trees, including references and templates. New skills no longer require their names to be added to a hardcoded array.
 
 **Fix/workaround:** After changing a canonical skill, run the current v2.0 sync script and verify the destination contains the complete skill directory, including any `references/`, `templates/`, scripts, and exit-test files. If observed behavior differs, inspect the live script version before changing either the skill list or this documentation.
+
+## 14. Windows 11 Home scheduled-task credential storage (readonly-observer micha-ro boundary)
+
+### Register-ScheduledTask cannot persist a -User/-Password credential on Windows 11 Home — boot-task logon isolation is unachievable
+
+**Symptom:** All attempts to register the ReadonlyObserverMCP scheduled task with a separate micha-ro user credential fail. Every parameter set of Register-ScheduledTask 5.1 that combines a scheduled task with -User/-Password returns Logon Mode: Interactive/Background (v6 definitive output) plus a FATAL guard; the task cannot run as an isolated micha-ro OS identity.
+
+**Root cause:** Windows 11 **Home** edition lacks the LSP (Logon as a batch job / batch-logon) right and cannot store the task credential via Register-ScheduledTask 5.1. This is a machine/edition-level limitation, not a scripting defect — all documented parameter sets were iterated (v1–v6 diagnostics) without success.
+
+**Fix/workaround:** Accept the verified CODE-layer read-only guarantee as the operative control: the readonly-observer endpoint is loopback-only, deny-lists EVERYTHING_EXCEPT_SENSITIVE, redacts credential patterns, exposes zero write verbs, and passed the adversarial battery 22/22 (0 mutations/leaks). Optional deferred hardening only if OS-token isolation is ever required: run the endpoint through the existing docker-boot-orchestrator.ps1 (boot-persistent but runs as micha, not micha-ro) — otherwise the code-level guarantee stands.
