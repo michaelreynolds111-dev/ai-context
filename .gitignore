@@ -11,3 +11,6 @@ projects/household/knowledge/
 
 # [CLINICAL] Power App moved to ai-workspace - never re-commit
 projects/Power App/
+
+# Claude data export - NEVER commit (contains full conversation history, SENSITIVE)
+claude-export/

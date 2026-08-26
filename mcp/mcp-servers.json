@@ -14,8 +14,16 @@
     "spotify": {
       "type": "stdio",
       "command": "npx",
-      "args": ["-y", "@tbrgeek/spotify-mcp-server"],
+      "args": [
+        "-y",
+        "@tbrgeek/spotify-mcp-server"
+      ],
       "notes": "Managed via LibreChat .env. Goose would need separate token wiring."
+    },
+    "github-buildstate": {
+      "type": "streamable-http",
+      "url": "https://api.githubcopilot.com/mcp/readonly",
+      "notes": "Official hosted GitHub MCP. Explicit read-only mode. Repository-only toolset (X-MCP-Toolsets: repos). Static PAT auth (requiresOAuth: false) via GITHUB_MCP_PAT pointer in ~/LibreChat/.env (value never stored here). Local Git through WSL2 remains the only approved write/push route."
     }
   },
   "pendingOAuth": [

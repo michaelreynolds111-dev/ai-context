@@ -1,5 +1,5 @@
 ---
-name: claude-usage-analyzer
+name: usage-analyzer
 description: Use when analyzing Claude.ai export data to understand usage patterns, identify which features were used most, surface features that could have been useful, and generate build-improvement recommendations for the LibreChat/Goose build. Triggers on requests to "analyze my Claude data", "what did I use Claude for", "scrape the Claude export", "compare Claude vs LibreChat", "find gaps in my build", "optimize my build from Claude usage", or any mention of the Claude data export / conversations.json.
 ---
 
