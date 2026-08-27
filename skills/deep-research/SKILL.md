@@ -1,9 +1,9 @@
 ---
 name: deep-research-v2
-version: 2.1
-status: proposed
-accepted_intake: brainstorm-v2-brief
+description: Use when performing in-depth research that consumes a structured brainstorm brief and turns it into a bounded, adaptively-planned search — objective, key questions, and a stop-when-done return from a # BRIEF, targeted searches per question with justified follow-ups, and a sourced RESEARCH LAYER report that maps findings back to the brief without re-scoping it. Replaces the old "clarify if vague then search broadly" flow to keep token usage low. Triggers on the same research phrases as before, and on receiving a # BRIEF block from the brainstorm agent. General/legal/workplace/technical scope only — never clinical, household-identity, or family-law (routed to their dedicated agents).
 ---
+
+<!-- metadata: version 2.1 | status proposed | accepted_intake brainstorm-v2-brief -->
 
 # Deep Research v2
 

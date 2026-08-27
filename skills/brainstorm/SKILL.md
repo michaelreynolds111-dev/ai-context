@@ -1,9 +1,9 @@
 ---
 name: brainstorm
-version: 2.0
-status: proposed
-handoff_target: deep-research-v2
+description: Use when turning a rough, vague idea into a focused, well-defined task through a collaborative back-and-forth conversation, ready to send to the Deep Research agent (or another executor) as a # BRIEF with minimal wasted tokens. A thinking partner — works only from the user's input, uses no tools and does no external research, and never emits a handoff until the user explicitly asks. Triggers on phrases like "i have a rough idea", "help me shape this idea", "turn this into a task", "brainstorm this", "what should i research/build/solve", "make this researchable", "prepare this for the deep research agent".
 ---
+
+<!-- metadata: version 2.0 | status proposed | handoff_target deep-research-v2 -->
 
 # Brainstorm
 
