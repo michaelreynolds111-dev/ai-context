@@ -563,6 +563,59 @@ took effect without a restart.
 
 ---
 
+## LibreChat skill frontmatter is schema-validated at boot — extra keys crash the API
+
+**Symptom (28 Aug 2026, Phase 9 cutover):** After promoting `brainstorm/SKILL.md`
+to v2.0 and `deep-research/SKILL.md` to v2.1 with enriched frontmatter
+(`version`, `status`, `handoff_target`, `accepted_intake`), the LibreChat API
+entered a deterministic **crash-loop on startup** and never bound port 3080
+(`curl` -> HTTP 000). All infra (mongodb, meilisearch, vectordb, rag_api,
+admin-panel) stayed healthy — only the `api` service failed.
+
+**Root cause (from the container's repeated boot error):**
+```
+error: Failed to start server: skill/brainstorm/SKILL.md:
+  description: Description is required;
+  frontmatter.version: "version" must be string;
+  frontmatter.status: "status" is not a recognized frontmatter key;
+  frontmatter.handoff_target: "handoff_target" is not a recognized frontmatter key
+```
+LibreChat validates every skill file's YAML frontmatter at boot. The only two
+recognized, required keys are **`name`** (string) and **`description`** (string).
+Any extra key (`version`, `status`, `handoff_target`, `accepted_intake`, ...) is
+rejected, and a missing `description` is also an error. A numeric `version`
+(`version: 2.0`) additionally fails the "must be string" rule.
+
+`~/ai-context/skills/` is mounted read-only at `/app/skill` in the override, and
+this is the same source the Goose sync copies from — so a non-compliant edit here
+breaks BOTH the LibreChat container boot AND is propagated to the Goose skills dir.
+
+**Fix (applied):** rewrite the frontmatter to the two-key form and keep any other
+metadata as an HTML comment in the body (outside the YAML), then restart:
+
+```yaml
+---
+name: <slug>
+description: <long string>
+---
+```
+
+```bash
+cd ~/LibreChat && docker compose up -d --no-deps api   # or --force-recreate
+```
+Verify recovery: `docker compose ls` -> `librechat` shows `running(N)` (not
+`restarting(...)`), and `curl -sS -o /dev/null -w '%{http_code}' http://localhost:3080/`
+returns `200`.
+
+**Rule for all future skill edits in `~/ai-context/skills/<name>/SKILL.md`:**
+- Keep frontmatter to exactly `name:` + `description:` (both strings, `description`
+  required).
+- Put version/status/ownership metadata in an HTML comment
+  (`<!-- metadata: ... -->`) immediately after the closing `---`, never in YAML.
+- After any edit, restart the api once and confirm port 3080 returns 200.
+
+---
+
 # 9. Deferred OAuth flows (ready to execute, not yet done)
 
 ## Google Drive MCP — what to do when you're ready
