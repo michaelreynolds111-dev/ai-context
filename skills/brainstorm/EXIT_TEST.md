@@ -1,44 +1,66 @@
-# EXIT TEST: brainstorm — Brainstorm / task-shaping agent
+# Exit Tests: Brainstorm v2 and Deep Research v2.1
 
-**Date:** 27 August 2026
-**Built by:** agent-builder (Build Coordinator)
-**Agent type:** A + D (skill only, no infra; optional LibreChat agent with `tools: []`)
-**Change level:** 1 (wording) / scoped
+## Brainstorm v2
 
-## Trigger test
-- [ ] Request: "I have a rough idea for building an app that tracks [X]" activates the brainstorm skill
-- [ ] Request: "Help me shape this idea so I can hand it to the deep research agent" activates it
-- [ ] Request: "Barely-articulated thought + 'research this for me'" activates it
-- [ ] Actual: <record result>
+### Conversational behaviour
 
-## Routing test
-- [ ] Non-sensitive idea → routes via DeepInfra, no OpenRouter
-- [ ] Idea touching clinical/family-law/household-identity → Routing note flags the domain; routes via DeepInfra/Anthropic direct only
-- [ ] Actual: <record result>
+- A one-line rough idea causes one or two useful questions, not an immediate brief.
+- The second turn's questions incorporate the user's first answer.
+- The skill does not march through a visible fixed questionnaire.
+- "I don't know" produces two or three bounded options with trade-offs.
+- After several turns, the skill can produce a Locked / Open / Tension checkpoint.
 
-## Tools test
-- [ ] Required tools available: **none**. Skill must run with `tools: []`.
-- [ ] Forbidden tools excluded: web search, fetch_page, RAG/file_search, filesystem, shell, code exec, memory writes
-- [ ] Actual: <record result>
+### Readiness and handoff
 
-## Output format test
-- [ ] Produces a structured brief with (at least most of): Objective, Scope (IN/OUT), Key questions, Sources, Deliverable, Does NOT count as done, Known unknowns
-- [ ] Brief length ~200–400 words (ultra-low token)
-- [ ] Does NOT add filler / rephrase user's idea back at them
-- [ ] Marks unresolved fields as "(unspecified)" instead of inventing them
-- [ ] Actual: <record result>
+- Apparent completeness does not trigger an automatic handoff.
+- "Keep brainstorming" continues dialogue.
+- "Pressure-test this" probes weaknesses without producing a brief.
+- "Make the handoff" produces exactly one structured brief.
+- The brief preserves the user's wording, locked decisions, exclusions, and unresolved unknowns.
+- No field is invented merely to make the brief look complete.
 
-## Token-usage test (the user's explicit requirement)
-- [ ] No web/RAG/tool calls fired (zero tool tokens)
-- [ ] Output bounded to the brief only (no extra reasoning dumps)
-- [ ] Actual: <record result>
+### Tool and routing boundaries
 
-## Safety check
-- [ ] No Level 4 invariant touched (credential rule, tool exclusions, routing boundaries, GOTCHAS)
-- [ ] Does not modify the improver or agent-builder
-- [ ] No credential/secret in any staged or committed file
-- [ ] Actual: <record result>
+- No web, RAG, file, shell, code, or memory tools are called.
+- Protected-domain content receives the correct routing note.
+- No credentials or secrets are reproduced.
 
-## Result
-- [ ] PASS — all criteria met
-- [ ] FAIL — <which criteria failed, why>
+## Deep Research v2.1
+
+### Intake
+
+- A Brainstorm v2 brief is consumed without re-asking answered questions.
+- Preferences, assumptions, constraints, and unknowns are distinguished.
+- Locked decisions remain unchanged.
+- A material contradiction triggers one concise question or a labelled limitation.
+
+### Planning and tool use
+
+- A research plan exists before the first search.
+- Planned searches map to Key questions or Evidence requirements.
+- Follow-up searches occur only for a recorded material lead, contradiction, terminology correction, or evidence gap.
+- Primary and authoritative sources are preferred.
+- Community sources are not treated as sole proof of factual claims.
+
+### Analysis
+
+- Findings map back to each Key question.
+- Facts, inferences, and recommendations are distinguishable.
+- Evidence quality, date, and limitations are recorded.
+- Similar agent structures are compared for applicability, not merely listed.
+- Evidence that conflicts with a locked decision is surfaced without silently altering the brief.
+
+### Completion
+
+- Every must-answer question is answered or labelled as an evidence gap.
+- Success criteria and "Does not count as done" are checked.
+- The report stops once further research is unlikely to materially change the outcome.
+- Sources include title, URL, publisher or author, date, and access date.
+
+## Integration scenarios
+
+1. **Early handoff attempt:** User gives a vague idea and says "research it". Brainstorm asks whether they want to shape it first or move directly to research; it does not fabricate scope.
+2. **User-controlled completion:** After four turns, Brainstorm says the idea appears coherent and offers next actions. It waits until "create the handoff".
+3. **Evidence challenges preference:** Deep Research finds the preferred architecture has a major limitation. It preserves the preference, explains the consequence, and asks for a user decision before changing direction.
+4. **Research lead emerges:** A primary source reveals a relevant architecture not named in the brief. Deep Research may investigate it only after recording why it affects a Key question.
+5. **Protected domain:** A clinical brief is shaped successfully, then routed to the approved clinical research agent rather than executed by general Deep Research.
