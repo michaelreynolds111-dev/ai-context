@@ -40,7 +40,7 @@ All in the `ai-context` repo root unless noted:
 | `docs/GOTCHAS.md` | Permanent environment-specific facts (this machine only) | Before touching Docker, WSL, shell, MCP |
 | `docs/MIGRATION_INVENTORY.md` | Remaining Claude Projects to migrate | During Phase 9 parallel-run |
 | `README.md` | Repo layout and the household-vault rule | First-time orientation |
-| `docs/MODEL_SELECTION_MATRIX.md` | Model-to-task mapping for build sequence steps | When recommending a model for the next step |
+| `docs/MODEL_SELECTION_GUIDE.md` | Model-to-task mapping for build sequence steps (30 models) | When recommending a model for the next step |
 
 ### Handoff docs (in `~/agent-workdir/`, not in git)
 
@@ -196,6 +196,8 @@ type requires it. If the next step uses the current model, state
 
 ### Available models (from `librechat.yaml` — all via DeepInfra endpoint)
 
+> **Full model selection guide:** `docs/MODEL_SELECTION_GUIDE.md` (30 models, 9 sections, updated 27 Aug 2026). The quick-reference tables below are a summary; consult the guide for complete cost tiers, escalation ladders, and task-type deep dives.
+
 **Budget tier (default — use unless a reason below escalates):**
 
 | Model | ID (`librechat.yaml`) | Cost/1M in/out | Best for |
@@ -207,6 +209,8 @@ type requires it. If the next step uses the current model, state
 | DeepSeek V4 Flash | `deepseek-ai/DeepSeek-V4-Flash` | $0.09/$0.18 | Bulk ETL pipelines |
 | Gemma 4 31B Turbo | `google/gemma-4-31B-it-turbo` | $0.09/$0.34 | Cheap multimodal vision |
 | Qwen3.5 35B | `Qwen/Qwen3.5-35B-A3B` | $0.14/$1.00 | Everyday drafting, summaries |
+| Qwen3 235B Instruct | `Qwen/Qwen3-235B-A22B-Instruct-2507` | $0.09/$0.55 | Frontier MoE; coding+math at budget price |
+| Tencent Hy3 | `tencent/Hy3` | $0.14/$0.58 | Cost-effective reasoning agent; 4× cache discount |
 
 **Value tier (escalate here when budget isn't enough):**
 
@@ -219,6 +223,12 @@ type requires it. If the next step uses the current model, state
 | MiniMax M3 | `MiniMaxAI/MiniMax-M3` | $0.28/$1.10 | Multimodal (text/image/video), 1M ctx |
 | Kimi K2.5 | `moonshotai/Kimi-K2.5` | $0.45/$2.25 | General reasoning, vision |
 | GLM 5.2 | `zai-org/GLM-5.2` | $0.75/$2.40 | Long-context reasoning, structured output |
+| Gemini 2.5 Flash 👁️ | `google/gemini-2.5-flash` | $0.30/$2.50 | Native multimodal thinking, 1M ctx, up to 3h video |
+| DeepSeek R1 0528 | `deepseek-ai/DeepSeek-R1-0528` | $0.50/$2.15 | Canonical reasoning/thinking model; math, logic, research |
+| Nemotron 3 Ultra 550B | `nvidia/NVIDIA-Nemotron-3-Ultra-550B-A55B` | $0.50/$2.20 | 550B MoE for long-running agents & deep research |
+| Llama 4 Maverick 👁️ | `meta-llama/Llama-4-Maverick-17B-128E-Instruct-FP8` | $0.20/$0.80 | Open multimodal MoE, 1M ctx; cheapest serious vision |
+| Seed 1.8 👁️ | `ByteDance/Seed-1.8` | $0.25/$2.00 | Agent+LLM+VLM blend, 1M ctx; vision-capable |
+| Inkling Small | `thinkingmachines/Inkling-Small` | $0.45/$1.20 | 524K ctx, tool calling + structured outputs for long-doc agents |
 
 **Flagship tier (reserve for strictly necessary cases only):**
 
@@ -239,21 +249,30 @@ type requires it. If the next step uses the current model, state
 | Safety / acceptance review | DeepSeek V4 Pro 0813 | $1.30/$2.60 — deep reasoning for leakage/gating checks |
 | Bulk / pipeline / ETL | GPT-OSS 120B | $0.037/$0.17 — cheapest capable model |
 | Long-context analysis | GLM 5.2 | $0.75/$2.40 — 1M context, multi-step reasoning |
+| Reasoning / math / logic | DeepSeek R1 0528 | $0.50/$2.15 — canonical thinking model; cached $0.35 |
+| Long-running agents / deep research | Nemotron 3 Ultra 550B | $0.50/$2.20 — 550B MoE, 262K ctx; designed for agent loops |
+| Long-doc structured output | Inkling Small | $0.45/$1.20 — 524K ctx, tool calling + structured outputs |
+| Multimodal / video (up to 3h) | Gemini 2.5 Flash | $0.30/$2.50 — native video understanding; 1M ctx |
+| Cost-effective reasoning agent | Tencent Hy3 | $0.14/$0.58 — 295B MoE (21B active); reasoning+agent |
 | Clinical / household [SENSITIVE] | Claude Sonnet 5 | $2.00/$10.00 — **required routing** per §4 |
 | Final critical review (rare) | Claude Opus 5 | $5.00/$25.00 — highest stakes only |
 
 ### Escalation ladder (cost-aware)
 
 ```
-Default:   DeepSeek V4 Flash 0731       ($0.08/$0.18)
+Default:     DeepSeek V4 Flash 0731     ($0.08/$0.18)
   ↓ reasoning needed
-Reasoning: DeepSeek V4 Pro 0813          ($1.30/$2.60)
+Reasoning:   DeepSeek R1 0528            ($0.50/$2.15)
   ↓ code focus needed
-Code:      Qwen3 Coder 480B              ($0.30/$1.00)
+Code:        Qwen3 Coder 480B            ($0.30/$1.00)
+  ↓ deep analysis / long agents
+Analysis:    Nemotron 3 Ultra 550B       ($0.50/$2.20)
+  ↓ near-frontier reasoning
+Frontier:    DeepSeek V4 Pro 0813        ($1.30/$2.60)
   ↓ SENSITIVE routing required
-Clinical:  Claude Sonnet 5               ($2.00/$10.00)
+Clinical:    Claude Sonnet 5             ($2.00/$10.00)
   ↓ absolute highest stakes only
-Critical:  Claude Opus 5                 ($5.00/$25.00)
+Critical:    Claude Opus 5               ($5.00/$25.00)
 ```
 
 ### Rules
@@ -261,7 +280,7 @@ Critical:  Claude Opus 5                 ($5.00/$25.00)
 - Escalate one rung at a time — never skip to Claude Opus 5 unless every cheaper option has been considered and rejected with a stated reason.
 - Clinical/household [SENSITIVE] content must always recommend Claude Sonnet 5 (required routing per §4).
 - If the next step requires the same model as the current one, state "(current)" to confirm no switch is needed.
-- Full matrix with all 20 models: see `docs/MODEL_SELECTION_MATRIX.md`.
+- Full guide with all 30 models: see `docs/MODEL_SELECTION_GUIDE.md`.
 
 ---
 
