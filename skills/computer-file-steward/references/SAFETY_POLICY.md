@@ -19,6 +19,13 @@ and applies read-only guarantees on top.
 - The skill ships no executable that can move, copy, rename, delete, quarantine,
   archive, restore, or purge user assets.
 - All proposed actions are `blocked=true` in v1.
+- **Mode 2 PLAN_EXECUTION (Build 2) is planning-only.** Plan packages carry
+  `execution_capability=NONE` and every action `execution_implemented=false`. The
+  planning scripts (`build_action_plan.py`, `validate_action_plan.py`,
+  `record_approval.py`, `check_plan_drift.py`) contain **no** mutating
+  file-operation call sites and only ever write plan output files in the plan
+  directory. Approving an action records a decision; it never executes and cannot
+  override the Credential Rule or a failed drift check.
 - Git inspection is strictly read-only: `GIT_OPTIONAL_LOCKS=0` (optional locks
   disabled) for every subprocess; only read-only/plumbing commands; no
   fetch/pull/push/network; the full `.git` tree is left byte-identical before and

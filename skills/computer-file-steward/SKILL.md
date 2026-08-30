@@ -1,9 +1,9 @@
 ---
 name: computer-file-steward
-description: Use when importing existing machine knowledge and producing a privacy-preserving, READ-ONLY inventory and review report for ONE explicitly supplied directory on Michael-PC, using four machine-readable registries (location, placement-policy, protection, project). Triggers on requests to "review a folder read-only", "inventory a directory safely", "steward a directory without touching it", "produce a placement/classification report", "what's in this folder and where should it go", "review a directory without moving anything". Defaults to READ-ONLY mode; never moves, copies, renames, deletes, archives, restores, or modifies files.
+description: Use when importing existing machine knowledge and producing a privacy-preserving, READ-ONLY inventory and review report for ONE explicitly supplied directory on Michael-PC, using four machine-readable registries (location, placement-policy, protection, project). Triggers on requests to "review a folder read-only", "inventory a directory safely", "steward a directory without touching it", "produce a placement/classification report", "what's in this folder and where should it go", "review a directory without moving anything". Also Build 2 Mode 2 supports approval-ready planning, with NO execution "build an approval-ready plan from a validated review run", "show me which actions in a plan are approval-ready or blocked", "record approval for ACT-123 or rejection for ACT-456 in a plan", "check whether a plan is still current". Defaults to READ-ONLY review; Build 2 plans are approval-ready decision records only — never moves, copies, renames, deletes, archives, restores, or modifies files.
 ---
 
-# Computer File Steward [READ-ONLY v1.0.2]
+# Computer File Steward [READ-ONLY v1.0.2 / Mode 2 PLAN_EXECUTION (Build 2)]
 
 ## When to use
 - "Review this directory read-only and tell me what's in it"
@@ -122,6 +122,57 @@ Only a PASS is reported as a completed review.
 ### Step 7 — REPORT
 Present: target, run id, mode `READ_ONLY_REVIEW`, counts, repository findings, reparse points (blocked), sensitive-category counts (no content), placement recommendations with policy/confidence, unknowns/conflicts, proposed future actions (all blocked), and the strong statement `NO ACTIONS PERFORMED`.
 
+## Process — Mode 2: PLAN_EXECUTION (Build 2)
+
+Once a validated v1.0.2 `READ_ONLY_REVIEW` run exists, Build 2 converts its advisory
+recommendations into an approval-ready, immutable plan. The plan is a **decision record
+only** — it cannot execute.
+
+### Step P1 — BUILD
+```bash
+python3 scripts/build_action_plan.py \
+  --review <validated-review-run-dir> \
+  --plan-root <planning-runs-base> \
+  --plan-id PLAN-<YYYYMMDD>-<AREA>-<NNN>
+```
+Produces `planning-runs/<plan-id>/` with: `ACTION_PLAN.md`, `ACTION_MANIFEST.json`,
+`ACTION_MANIFEST.csv`, `APPROVAL_RECORD.json`, `SOURCE_SNAPSHOT.json`,
+`POLICY_SNAPSHOT.json`, `DRIFT_CHECK.json`, `PLAN_VALIDATION.md`.
+- Stable action IDs `ACT-<12-hex-sha256>` from canonical immutable identity fields.
+- Deterministic manifest SHA-256 (unchanged review ⇒ identical action IDs + hash).
+- Conservative blocking; zero-action plans are valid for correctly-placed reviews.
+- `execution_capability=NONE`; every action `execution_implemented=false`.
+
+### Step P2 — VALIDATE
+```bash
+python3 scripts/validate_action_plan.py --plan-dir planning-runs/<plan-id>
+```
+Confirms determinism, JSON/CSV reconciliation, hash integrity, no forbidden
+approval-ready (G/delete/purge/blocked), approval binding, plan-only warning, and
+zero manufactured actions.
+
+### Step P3 — DECIDE (approve/reject/defer)
+```bash
+python3 scripts/record_approval.py \
+  --plan-dir planning-runs/<plan-id> \
+  --approve ACT-123 --reject ACT-456 --defer ACT-789 \
+  --note "..."
+```
+- Requires explicit action IDs (vague "go ahead" is never accepted).
+- Binds to the exact manifest hash; rejects blocked/unknown/overlapping IDs.
+- Detects manifest tampering (refuses) and **never executes file operations**.
+
+### Step P4 — DRIFT CHECK
+```bash
+python3 scripts/check_plan_drift.py --plan-dir planning-runs/<plan-id> [--inventory-csv <current>]
+```
+Returns `CURRENT` / `SOURCE_DRIFT` / `POLICY_DRIFT` / `MANIFEST_MISMATCH` /
+`TARGET_UNAVAILABLE` / `BLOCKED_BOUNDARY_CHANGED`; marks approval STALE on material
+drift. Read-only; never repairs drift.
+
+Every plan package states and every approval acknowledges:
+`I understand this approval records a decision only and does not execute file operations.`
+
 ## Output format
 - **DIRECTORY_REVIEW.md**: as per `templates/DIRECTORY_REVIEW.md` — target/resolved, run id/timestamps, mode, scope, sources/registries, counts, protected assets, repo findings, reparse points, sensitive counts, placement recs, policy status, confidence/evidence, unknowns/conflicts, proposed actions, `NO ACTIONS PERFORMED`.
 - **INVENTORY.csv**: one record per item (or documented aggregates for very large dirs) with all metadata columns.
@@ -140,12 +191,12 @@ Present: target, run id, mode `READ_ONLY_REVIEW`, counts, repository findings, r
 - Cannot implement execution, approval consumption, quarantine, purge, or automatic watchers (future modes only, not active).
 - Cannot modify `.git` during inspection (strictly read-only Git).
 
-## Read-only vs future modes (design only)
+## Read-only vs future modes
 - **Mode 1 (current): `READ_ONLY_REVIEW`** — active. Reviews, classifies, recommends, all blocked.
-- **Mode 2 (design): `PLAN_EXECUTION`** — contemplated, NOT implemented. Would present approved actions.
+- **Mode 2 (Build 2): `PLAN_EXECUTION`** — **implemented as planning-only.** Converts a completed, validated review into an approval-ready plan package (`planning-runs/<plan-id>/`). It computes stable action IDs, an immutable manifest hash, approval-ready vs blocked status, and lets Michael approve/reject/defer individual action IDs bound to the exact manifest hash. It **cannot execute**: `execution_capability=NONE`, every action `execution_implemented=false`, no executor ships. See `references/PLAN_EXECUTION_MODE.md`.
 - **Mode 3 (design): `EXECUTE`** — contemplated, NOT implemented. Would apply human-approved actions only. The ai-context root decision is resolved via overlay CFL-001; the Credential Rule can never be waived.
 - **Mode 4 (design): `QUARANTINE / PURGE`** — contemplated, NOT implemented. Tier-1 handling is pointer/password-manager only.
-These future modes are described only as unimplemented design. Nothing in v1.0.2 executes actions.
+Only Mode 1 and the planning half of Mode 2 are implemented. Nothing in the skill executes actions.
 
 ## Example review (novice walkthrough)
 The user says: "review the folder `D:\SomeProject` read-only".

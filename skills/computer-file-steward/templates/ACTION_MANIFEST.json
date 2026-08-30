@@ -1,0 +1,17 @@
+{
+  "_template": "ACTION_MANIFEST.json — canonical machine-readable plan manifest (Build 2)",
+  "plan_only": "THIS PACKAGE IS A PLAN ONLY. IT CANNOT EXECUTE FILE OPERATIONS.",
+  "schema_version": "1.0",
+  "plan_id": "PLAN-YYYYMMDD-AREA-NNN",
+  "mode": "PLAN_EXECUTION",
+  "source_review": "<review-run-id>",
+  "source_review_hash": "<sha256>",
+  "registry_versions": {},
+  "policy_snapshot_hash": "<sha256>",
+  "created_at": "2026-08-30T20:00:00+10:00",
+  "canonicalization_method": "sorted_keys utf-8 no-timestamp-in-action-payload",
+  "action_count": 0,
+  "actions": [],
+  "manifest_sha256": "<sha256>",
+  "execution_capability": "NONE"
+}

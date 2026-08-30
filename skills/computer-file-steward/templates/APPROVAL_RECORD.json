@@ -1,0 +1,18 @@
+{
+  "_template": "APPROVAL_RECORD.json — human decision record only; never executes file operations.",
+  "schema_version": "1.0",
+  "plan_id": "PLAN-YYYYMMDD-AREA-NNN",
+  "manifest_sha256": "<sha256>",
+  "approval_status": "PENDING",
+  "approved_action_ids": [],
+  "rejected_action_ids": [],
+  "deferred_action_ids": [],
+  "decision_notes": [],
+  "decided_by": null,
+  "decided_at": null,
+  "approval_scope": "plan-only; never executes file operations",
+  "acknowledgements": [
+    "I understand this approval records a decision only and does not execute file operations."
+  ],
+  "approval_record_sha256": ""
+}

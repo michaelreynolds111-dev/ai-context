@@ -3,9 +3,14 @@
 Read-only directory inventory, classification, placement, and protection reports
 for Michael-PC, backed by four machine-readable registries.
 
-**Current mode:** `READ_ONLY_REVIEW` (v1.0.2). This skill **never moves, copies,
-renames, deletes, archives, restores, or modifies** files. Every proposed action
-is `blocked=true`.
+**Current modes:**
+- **Mode 1 `READ_ONLY_REVIEW` (v1.0.2):** reviews a directory and produces a
+  privacy-preserving report. This skill **never moves, copies, renames, deletes,
+  archives, restores, or modifies** files. Every proposed action is `blocked=true`.
+- **Mode 2 `PLAN_EXECUTION` (Build 2):** converts a validated read-only review into
+  an approval-ready, immutable **plan package** (stable action IDs, manifest SHA-256,
+  approval record bound to the exact manifest hash, drift check). Still **cannot
+  execute** — `execution_capability=NONE`, every action `execution_implemented=false`.
 
 **Runtime (v1.0.2):** Requires **PowerShell 7+ (`pwsh`)** for the `.ps1` scripts.
 Scripts fail before scanning under any unsupported runtime (e.g. Windows PowerShell
@@ -40,7 +45,9 @@ the full `.git` tree is left byte-identical and path names cannot inject command
 - `SKILL.md` — how to use (triggers, hard rules, process).
 - `EXIT_TEST.md` — the checkable exit criteria.
 - `references/` — operating modes, safety policy, classification model, approval
-  protocol, registry schema, source priority, report format.
+  protocol, registry schema, source priority, report format, **plan-execution mode**.
+- `templates/` — DIRECTORY_REVIEW.md, INVENTORY.csv, PROPOSED_ACTIONS.csv, UNKNOWNS.md,
+  ACTION_PLAN.md, ACTION_MANIFEST.json, APPROVAL_RECORD.json (Build 2 planning).
 - `templates/` — DIRECTORY_REVIEW.md, INVENTORY.csv, PROPOSED_ACTIONS.csv, UNKNOWNS.md.
 - `scripts/` — the read-only engine:
   - `bootstrap_registries.py` — builds the four registries (idempotent, secret-free).
@@ -51,6 +58,11 @@ the full `.git` tree is left byte-identical and path names cannot inject command
   - `inventory_directory.ps1` — metadata-only inventory with ISO 8601 timestamps + metadata_status; prunes sensitive dirs.
   - `inspect_git_state.ps1` — strictly read-only git repo state (`GIT_OPTIONAL_LOCKS=0`, argument-vector transport, sanitized remotes).
   - `validate_review_output.py` — validates path-safety, target-root reparse rejection, sensitive pruning, secret-safety, all-blocked, metadata, and outputs.
+  - **Build 2 planning (Mode 2, non-executing):**
+    - `build_action_plan.py` — builds an approval-ready plan package from a validated review (deterministic manifest, stable action IDs, blocking/eligibility, zero-action support).
+    - `validate_action_plan.py` — validates the plan (determinism, JSON/CSV reconcile, hash integrity, no forbidden approval-ready, plan-only warning).
+    - `record_approval.py` — records approve/reject/defer decisions bound to the exact manifest hash; rejects blocked/unknown/overlapping IDs; detects tampering; never executes.
+    - `check_plan_drift.py` — read-only source/policy/manifest drift check (CURRENT/SOURCE_DRIFT/POLICY_DRIFT/MANIFEST_MISMATCH/TARGET_UNAVAILABLE/BLOCKED_BOUNDARY_CHANGED).
 
 ## Quick example
 See **Example review (novice walkthrough)** in `SKILL.md`.

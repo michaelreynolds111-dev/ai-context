@@ -27,16 +27,28 @@ Guarantees of READ_ONLY_REVIEW (v1.0.2):
   eligibility, and approval requirement **separately**.
 - Every proposed action is `blocked=true`.
 
+## Mode 2: PLAN_EXECUTION (Build 2) — planning implemented, execution NOT)
+
+Mode 2 is implemented as a **planning-only** capability. It takes a completed,
+validated v1.0.2 review and assembles an approval-ready, immutable plan package in
+`planning-runs/<plan-id>/`, with:
+- stable action IDs derived from canonical immutable identity fields (SHA-256);
+- an immutable manifest SHA-256 (`execution_capability=NONE`, every action
+  `execution_implemented=false`);
+- explicit approval-ready vs blocked status and exact block reasons/prerequisites;
+- item-level approve/reject/defer decisions bound to the exact manifest hash;
+- source/policy/manifest drift detection;
+- a readable `ACTION_PLAN.md`.
+
+Mode 2 **cannot execute**: no executor ships; approving an action only records a
+decision. Requires a placement-policy registry with `APPROVED`/`HARD` destinations
+and explicit human approval for any eligible action. See
+`references/PLAN_EXECUTION_MODE.md`.
+
 ## Future modes: design only (NOT implemented)
 
 These are described as unimplemented design so the reader is not misled into
 thinking they are active capacity.
-
-### Mode 2 — PLAN_EXECUTION (design)
-Contemplated. Would take the advisory `PROPOSED_ACTIONS.csv` and assemble a plan
-of human-reviewed, irreversible-aware actions. Still would not apply them without
-explicit approval. Requires a placement-policy registry with `APPROVED`/`HARD`
-destinations, and a human approval gate for every `movement_approval_required`.
 
 ### Mode 3 — EXECUTE (design)
 Contemplated. Would apply human-approved actions only (move/copy/archive into

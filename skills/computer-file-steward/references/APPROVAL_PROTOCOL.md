@@ -43,6 +43,23 @@ Every `PROPOSED_ACTIONS.csv` row must record:
 - `required_approval`
 - `source_evidence`
 
+## Build 2: approval record (Mode 2, decision-only)
+
+Mode 2 produces `APPROVAL_RECORD.json`, a human decision record that **binds to the
+exact manifest hash** and **never executes**. Rules:
+- `approval_status` ∈ {PENDING, PARTIAL, APPROVED, REJECTED, STALE, INVALID}; default PENDING.
+- Approve/reject/defer IDs are mutually exclusive; every referenced ID must exist in
+  the manifest; blocked actions cannot be approved; unknown IDs rejected.
+- Approval cannot change an action's fields; if the manifest changes, approval becomes
+  INVALID/STALE.
+- Approval never overrides the Credential Rule, protected boundaries, a failed drift
+  check, or an unresolved policy requirement.
+- Required acknowledgement:
+  `I understand this approval records a decision only and does not execute file operations.`
+- Approval requires explicit action IDs; vague phrases ("looks good", "go ahead") are
+  never accepted as structured approval.
+- Approval creates no filesystem action.
+
 ## Gate conditions for future execution (design only)
 Before ANY execution mode could run, ALL of the following must hold:
 1. Authoritative placement architecture confirmed. (The ai-context root decision is
