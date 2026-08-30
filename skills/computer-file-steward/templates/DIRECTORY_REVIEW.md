@@ -9,8 +9,8 @@
 
 ## 2. Scope boundaries
 - Review limited to the explicit target only.
-- No reparse point traversed; no path outside the target inventoried as content.
-- No sensitive file content read; hashing of sensitive content disabled.
+- No reparse point traversed; target root is not a reparse point; no path outside the target inventoried as content.
+- No sensitive file content read; sensitive/protected directory children pruned; hashing of sensitive content disabled.
 
 ## 3. Sources and registry versions loaded
 - `<source 1>`
@@ -25,6 +25,7 @@
 
 ## 5. Known protected assets
 - `<items matching protection registry / sensitive markers, by category>`
+- Sensitive/protected directory children are pruned (never enumerated); only blocked parent records and counts are reported.
 
 ## 6. Repository findings
 - Repo root: `<path>`
@@ -38,6 +39,7 @@
 
 ## 8. Sensitive-category counts (no content excerpts)
 - Items flagged sensitive-looking (metadata only): <N>
+- Sensitive boundary directories blocked (children pruned): <N>
 
 ## 9. Placement recommendations
 - Classification <X> (conf <Y>): <N> item(s)
@@ -45,7 +47,7 @@
 
 ## 10. Policy status, confidence and evidence
 - Per-item classification/confidence in INVENTORY.csv.
-- Conflicts surfaced in UNKNOWNS.md.
+- Conflicts surfaced in UNKNOWNS.md; original records and effective overlay distinguished.
 
 ## 11. Unknowns and conflicts
 - See UNKNOWNS.md.

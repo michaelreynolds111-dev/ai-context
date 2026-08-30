@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-validate_review_output.py — Validate a Computer File Steward v1.0.1 review run.
+validate_review_output.py — Validate a Computer File Steward v1.0.2 review run.
 
 Checks:
   1. All six required review outputs exist under the run directory.
@@ -16,6 +16,11 @@ Checks:
      as target content (uses the shared canonical path model).
   6. Metadata: ordinary accessible items with metadata_status='ok' have
      nonblank created/modified timestamps (Correction B).
+  7. (v1.0.2 Fix B) Sensitive/protected-boundary directories appear only as
+     blocked parent records; no child of any blocked boundary appears in the
+     inventory, and pointer/git-boundary discovery did not descend into them.
+  8. (v1.0.2 Fix A) .path pointer files that are children of a blocked boundary
+     are never discovered; the run is internally consistent with the guarded walk.
 
 USAGE:
     python3 validate_review_output.py --run <run-directory> --target <explicit-target>
@@ -68,6 +73,16 @@ REQUIRED_ACTIONS_COLS = [
 ]
 
 
+def is_child(parent, candidate):
+    """Return True if candidate is a strict descendant of parent, on whole
+    path components using the shared canonical containment model."""
+    res = target_contains(parent, candidate)
+    # contains returns True for identity too; require a real child
+    if res is not True:
+        return False
+    return candidate.rstrip("/\\").lower() != parent.rstrip("/\\").lower()
+
+
 def scan_file_for_secrets(path):
     """Return dict of category -> count for the file. Never prints matches."""
     found = {}
@@ -101,7 +116,9 @@ def main():
             results.append(("FAIL", f"required output MISSING: {out}", p))
             ok = False
 
-    # 2. Inventory structure + path safety + metadata
+    all_row_paths = []
+
+    # 2. Inventory structure + path safety + metadata + sensitive-boundary pruning
     inv_path = os.path.join(args.run, "INVENTORY.csv")
     if os.path.isfile(inv_path):
         try:
@@ -109,6 +126,7 @@ def main():
                 reader = csv.DictReader(f)
                 rows = list(reader)
                 cols = reader.fieldnames or []
+            all_row_paths = [r.get("path", "") for r in rows]
             missing_cols = [c for c in REQUIRED_INVENTORY_COLS if c not in cols]
             if missing_cols:
                 results.append(("FAIL", f"INVENTORY missing columns: {missing_cols}", inv_path))
@@ -135,6 +153,21 @@ def main():
                 ok = False
             else:
                 results.append(("PASS", "Path-safety: all inventoried paths within explicit target", inv_path))
+            # v1.0.2 Fix B: no child of a blocked sensitive/protected/reparse boundary appears
+            boundary_paths = [r.get("path", "") for r in rows
+                              if str(r.get("blocked", "")).lower() == "true" and r.get("item_type") == "directory"]
+            boundary_violations = []
+            for r in rows:
+                p = r.get("path", "")
+                for bp in boundary_paths:
+                    if is_child(bp, p):
+                        boundary_violations.append(p)
+                        break
+            if boundary_violations:
+                results.append(("FAIL", f"Fix B: {len(boundary_violations)} child path(s) under a blocked boundary present in inventory", inv_path))
+                ok = False
+            else:
+                results.append(("PASS", f"Fix B: no child path under any blocked boundary present in inventory ({len(boundary_paths)} blocked dirs checked)", inv_path))
             # reparse not followed: any reparse item must be blocked
             reparse_items = [r for r in rows if str(r.get("is_reparse", "")).lower() == "true"]
             unblocked_reparse = [r for r in reparse_items if str(r.get("blocked", "")).lower() != "true"]
@@ -147,7 +180,6 @@ def main():
             bad_ts = []
             for r in rows:
                 ms = str(r.get("metadata_status", "")).strip()
-                # A UNREADABLE/noaccess reparse is fine to have blanks; only require ok-status items
                 if ms == "ok" and not str(r.get("is_reparse", "")).lower() == "true":
                     if not r.get("created") or not r.get("modified"):
                         bad_ts.append(r.get("path"))
@@ -183,6 +215,32 @@ def main():
         except Exception as e:
             results.append(("FAIL", f"Could not read PROPOSED_ACTIONS.csv: {e}", act_path))
             ok = False
+
+    # 3b. v1.0.2 Fix A: pointer files must not be children of a blocked boundary
+    rp_path = os.path.join(args.run, "_reparse.json")
+    if os.path.isfile(rp_path):
+        try:
+            import json
+            with open(rp_path, encoding="utf-8") as f:
+                rp = json.load(f)
+            ptrs = rp.get("pointer_files") or []
+            gits = rp.get("git_boundaries") or []
+            blocked = rp.get("blocked_boundaries") or []
+            ptr_violations = []
+            for bp in blocked:
+                for p in ptrs:
+                    if is_child(bp, p):
+                        ptr_violations.append(p)
+                for g in gits:
+                    if is_child(bp, g):
+                        ptr_violations.append(g)
+            if ptr_violations:
+                results.append(("FAIL", f"Fix A: {len(ptr_violations)} pointer/git path(s) discovered under a blocked boundary", rp_path))
+                ok = False
+            else:
+                results.append(("PASS", f"Fix A: pointer/git discovery did not descend into any blocked boundary ({len(blocked)} boundaries)", rp_path))
+        except Exception as e:
+            results.append(("INFO", f"Could not cross-check _reparse.json (non-fatal): {e}", rp_path))
 
     # 4. Secret-safety audit across the whole run dir
     secret_issues = {}

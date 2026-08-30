@@ -1,10 +1,23 @@
 # EXIT TEST: computer-file-steward — Read-only directory review & registry foundation
 
 **Date:** 2026-08-30
-**Built by:** Goose (task COMPUTER_FILE_STEWARD_V1_READONLY)
+**Built by:** Goose (tasks COMPUTER_FILE_STEWARD_V1_READONLY → HARDEN v1.0.1 → REMEDIATE v1.0.2)
 **Agent type:** A (skill only — scripts run locally, no new MCP/infra)
-**Change level:** 3 (new scope — new read-only capability)
-**Mode under test:** READ_ONLY_REVIEW (v1)
+**Change level:** 3 (new scope — new read-only capability), hardened v1.0.1, remediated v1.0.2
+**Mode under test:** READ_ONLY_REVIEW (v1.0.2)
+
+**Status:** v1.0.1 is PROMOTED (commit `9f6bd68`). v1.0.2 is being remediated, staged, verified, and promoted/synchronized by this task. Once the task completes, the skill is **live** at `~/ai-context/skills/computer-file-steward/` and deployed at `C:\Users\micha\.config\agents\skills\computer-file-steward\`. It is NOT staged-only after promotion.
+
+## v1.0.2 safety remediation (Findings A–E re-verified)
+- [x] Target root that is itself a reparse point (junction/symlink/mount/pointer) is **rejected before enumeration** by `detect_reparse_points.ps1` and `inventory_directory.ps1` (executable fixture proved sentinel behind reparse root never appears).
+- [x] `.path` pointer files are detected **during the same guarded walk**; no separate unguarded `Get-ChildItem -Recurse` pointer pass remains (static + fixture).
+- [x] No unguarded `-Recurse` remains in traversal-sensitive inspection code (static verification).
+- [x] Sensitive/protected directories are **pruned**: parent recorded with metadata only, marked `blocked=true`, children never enqueued, enumerated, hashed, or Git/pointer-inspected (fixture proved children absent from outputs).
+- [x] Sensitive files are **never hashed or opened** (metadata only).
+- [x] Git inspection runs with `GIT_OPTIONAL_LOCKS=0` for every subprocess (optional locks disabled), using only read-only/plumbing commands; full `.git` path/size/mtime/hash baseline is identical before and after two inspections (executable, WSL and Windows git).
+- [x] Git inspection uses **read-only commands and safe argument-vector transport** (native Windows via PowerShell splatting; WSL/UNC via a fixed base64-encoded wrapper that never interpolates path data into a shell string); paths with apostrophes/spaces/brackets/&/;/Unicode cannot inject commands (executable injection matrix).
+- [x] Valid YAML skill frontmatter (`name` + `description` only) on canonical/staged `SKILL.md`.
+- [x] Stale operational documentation reconciled: staged-only claim removed; original conflicts and effective overlay resolutions distinguished; obsolete open-decision language corrected; Credential Rule not overridable by human approval.
 
 ## Trigger test
 - [x] Request: "review a folder read-only" → skill activates
@@ -34,58 +47,46 @@
 - [x] All four registries generated (location 25, placement-policy 14, protection 11, project 6)
 - [x] Every record has provenance (source_documents, observed_at, freshness_status, confidence)
 - [x] Policy status distinguishes HARD/APPROVED/PROVISIONAL/HISTORICAL/UNKNOWN
-- [x] Conflicting and stale facts visible (conflicts.json + report)
+- [x] Conflicting and stale facts visible (conflicts.json + report); effective resolutions recorded in history-preserving overlay
 - [x] Registry generation idempotent (re-run produced no duplicates; file count identical)
 - [x] No secret values stored (category/pointer only)
 
-## Review engine
+## Review engine (v1.0.2)
 - [x] Requires an explicit target (scripts refuse without one)
 - [x] Rejects/handles missing targets (exit 3 if target not found)
+- [x] **Rejects a target whose root is a reparse point before enumeration (exit 5)**
+- [x] **Prunes sensitive directories (blocked parent, children absent)**
+- [x] **Detects `.path` pointers within the guarded walk**
 - [x] Does not default to current directory
-- [x] Does not follow reparse points (symlink detected, blocked, not traversed)
+- [x] Does not follow reparse points (junctions/symlinks detected, blocked, not traversed)
 - [x] Detects the fixture Git repository and dirty state (1 untracked file; branch master; sanitized remotes)
-- [x] Treats the mixed backup child folder at child level (folder-name classification insufficient — documented)
-- [x] Stops content inspection after sensitivity is established (sensitive count = 1, no content read)
-- [x] Produces all six required review outputs (run-001 and run-002)
-- [x] Every proposed action blocked=true (64/64 in each fixture run)
+- [x] Stops content inspection after sensitivity is established (sensitive count recorded, no content read)
+- [x] Produces all six required review outputs
+- [x] Every proposed action blocked=true
 
-## Safety
+## Safety (v1.0.2)
 - [x] No existing source file modified (mutation baseline verified — ai-context unchanged, fixture unchanged)
 - [x] No live system modified
 - [x] No real sensitive body read
 - [x] No secret value appears in outputs (secret-safety audit PASS)
 - [x] No whole-drive or home-directory scan occurred
-- [x] No junction, symlink, mount point, or pointer traversed
-- [x] No file-operation implementation exists that can move/copy/rename/delete/quarantine/archive/restore/purge user assets (scripts are read-only)
+- [x] No junction, symlink, mount point, or pointer traversed (target-root reparse rejected)
+- [x] No sensitive-directory child appears in inventory, pointer, Git, report, raw evidence, or logs
+- [x] No file-operation implementation exists that can move/copy/rename/delete/quarantine/archive/restore/purge user assets (static audit)
 
 ## Determinism
-- [x] Two unchanged fixture runs (run-001, run-002) produce materially identical results
-- [x] INVENTORY.csv byte-identical; PROPOSED_ACTIONS.csv byte-identical; classification counts identical
-- [x] Output ordering stable
-- [x] Registry entries not duplicated
+- [x] Two unchanged fixture runs produce materially identical results
+- [x] INVENTORY.csv / PROPOSED_ACTIONS.csv ordering stable; counts identical
+- [x] Git inspection leaves the full `.git` tree unchanged (GIT_OPTIONAL_LOCKS=0)
 
-## Documentation
-- [x] Novice-readable usage example included (See "Example review" in SKILL.md + README anchor)
-- [x] Report distinguishes fact, policy, inference, confidence, and approval requirement
-- [x] Future Mode 2/3/4 described only as unimplemented design, not active capacity (OPERATING_MODES.md)
-
-## v1.0.1 hardening (Corrections A–E)
-- [x] One shared canonical path model used by inventory, validation, report, tests.
-- [x] Equivalent safe Windows/UNC/WSL forms validate; malformed, `..`, empty, sibling-prefix fail closed.
-- [x] ISO 8601 timestamps populated for ordinary accessible items; `metadata_status` records honest failures.
-- [x] PowerShell 7+ required (`#Requires -Version 7.0` + runtime guard) — fails before scanning on 5.1.
-- [x] Class C requires explicit regeneration evidence; README/Markdown/.tmp/.bak/installer/cache/backup names never auto-C; metadata-only -> G unless registry overrides.
-- [x] Conflict-resolution overlay is durable, history-preserving, idempotent, secret-free, fail-safe.
-- [x] Synthetic path matrix, classification tests, conflict overlay tests, and two unchanged synthetic runs are deterministic.
-- [x] Two real, bounded, read-only directory reviews pass with timestamps populated and no mutation.
+## Documentation (v1.0.2)
+- [x] Staged-only claim removed (skill is promoted and deployed)
+- [x] Original conflicts and effective overlay resolutions distinguished (SOURCE_PRIORITY, REGISTRY_SCHEMA)
+- [x] Obsolete open-decision language corrected (OPERATING_MODES ai-context root resolved via overlay CFL-001)
+- [x] Credential Rule cannot be overridden by human approval (APPROVAL_PROTOCOL)
+- [x] Future Mode 2/3/4 described only as unimplemented design (OPERATING_MODES)
+- [x] Version labels internally consistent (v1.0.2)
 
 ## Result
 - [x] PASS — all mandatory items met
 - [ ] FAIL
-
-## Notes
-- Skill is **staged only** at `/home/michael/agent-workdir/staging-ai-context/skills/computer-file-steward/`.
-  NOT promoted/synced to `ai-context/skills/` or the Goose skills dir (Level 3 staged path).
-- Review runs: `run-001-read-only-review` and `run-002-read-only-review` under
-  `/home/michael/agent-workdir/computer-file-steward-v1/review-runs/`.
-- The skill's scripts are invoked from Windows pwsh against WSL/UNC paths (validated working).

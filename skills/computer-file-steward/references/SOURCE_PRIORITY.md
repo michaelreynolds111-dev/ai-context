@@ -30,11 +30,30 @@ uncertainty defaults to G.
 ## Conflict handling
 Do not silently resolve contradictory facts. Examples carried in the built
 registries (conflicts.json):
+
 - **ai-context authoritative checkout**: WSL copy clean (LOC-016) vs Desktop copy
-  dirty/uncommitted (LOC-017). UNRESOLVED — requires Michael; do not overwrite either.
+  dirty/uncommitted (LOC-017). The **original conflict record is UNRESOLVED**
+  (historical fact requiring care). The **effective overlay (CFL-001) resolves it**:
+  WSL `/home/michael/ai-context` is authoritative (clean); the Desktop copy is
+  dirty, preserved, non-authoritative, and never overwritten without Michael.
 - **Mongo data location**: Docker volume `librechat_librechat_mongo_data` vs
-  `/home/michael/LibreChat/data-node/`. UNRESOLVED — confirm which chat-mongodb reads live.
-- **Goose primary install**: Windows app v1.47.0 vs WSL CLI v1.47.0. UNRESOLVED — design decision.
+  `/home/michael/LibreChat/data-node/`. The **original conflict record is
+  UNRESOLVED** historically. The **effective overlay (CFL-002) resolves it**: the
+  live store is the named Docker volume; `data-node/` is a historical/recovery
+  artefact. This task does not touch Mongo, volumes, data-node, or backups.
+- **Goose primary install**: Windows app v1.47.0 vs WSL CLI v1.47.0. The **original
+  conflict record is UNRESOLVED**. The **effective overlay (CFL-003) resolves it**:
+  coexistence — Windows Goose is the primary interactive skill consumer; WSL Goose
+  CLI is the secondary WSL-native environment; canonical skill source is WSL
+  `~/ai-context/skills/`.
+
+**Important (v1.0.2):** Original conflict evidence is preserved intact in
+`conflicts.json` and is distinct from the effective resolved overlay
+(`registries/conflict_resolutions.json`, loaded by `conflict_overlay.py`). History
+records the unresolved facts; the overlay records what is in effect now and when
+to revisit. A conflict whose original is `UNRESOLVED` is NOT reported as an open
+decision if its overlay marks it `RESOLVED` — the effective state wins for
+operational use.
 
 ## Machine-specific precedence clarifications
 - **D:\Data is the LIVE pipeline; C:\HouseholdDataRaw\Data is a stale one-time

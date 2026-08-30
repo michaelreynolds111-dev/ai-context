@@ -84,18 +84,23 @@ The report must always separate:
 - Confidence reflects source freshness, direct observation, and agreement across
   sources — not optimism.
 
-## Protected/live-system and repo override
+## Protected/live-system and repo override (v1.0.2)
 - Any item **in or belonging to a Git repository** → blocked from move/archive/delete
   in v1 (report only).
 - Any item at a **reparse point** → blocked.
+- Any **sensitive/protected directory** → its parent is recorded as a blocked
+  boundary; its children are never enumerated, so no classification is produced
+  for content inside a sensitive boundary. Sensitive files are metadata-only (never
+  hashed/read) and default to blocked.
 - Any **live-system / protected-path** match from the location/protection registries
   → blocked.
 - These overrides out-rank any A–G label for *action* purposes.
 
-## Classification is heuristic in v1 (v1.0.1 rules)
-v1.0.1 assigns preliminary classifications from metadata + evidence rules +
+## Classification is heuristic in v1 (v1.0.1/v1.0.2 rules)
+v1.0.1/v1.0.2 assigns preliminary classifications from metadata + evidence rules +
 registry matches, always `blocked=true`, with documented confidence. Class C is
 assigned only with an explicit regeneration basis (see above); filename/extension
 appearance alone never reaches C; metadata-only uncertainty defaults to G unless
 an authoritative registry overrides. It does not assign final disposition or any
-action.
+action. Sensitive-directory children are pruned before classification and never
+appear.

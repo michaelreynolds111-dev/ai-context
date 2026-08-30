@@ -99,8 +99,16 @@ Every imported fact answers:
 - What confidence applies? (`confidence`)
 
 Do not silently resolve contradictory facts — store conflicts and surface them in
-reports. The built registries include a `conflicts.json` declaring the open
-conflicts (ai-context authority, Mongo location, Goose primary install).
+reports. The built registries include a `conflicts.json` declaring the **original
+conflict records** (ai-context authority CFL-001, Mongo location CFL-002, Goose
+primary install CFL-003). Each of these also has an **effective resolution** in
+the history-preserving overlay (`registries/conflict_resolutions.json`, loaded by
+`scripts/conflict_overlay.py`): CFL-001 RESOLVED (WSL ai-context authoritative;
+Desktop dirty copy preserved non-authoritative), CFL-002 RESOLVED (live Mongo data
+= named Docker volume `librechat_librechat_mongo_data` → `/data/db`; `data-node/`
+is a historical artefact), CFL-003 RESOLVED (Goose coexistence: Windows primary
+skill consumer, WSL CLI secondary). The original UNRESOLVED facts are preserved as
+history; the overlay carries the effective resolved state and its review trigger.
 
 ## No-secret rule
 Registries store pointers and categories, never secret values.

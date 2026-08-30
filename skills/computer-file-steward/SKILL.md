@@ -3,7 +3,7 @@ name: computer-file-steward
 description: Use when importing existing machine knowledge and producing a privacy-preserving, READ-ONLY inventory and review report for ONE explicitly supplied directory on Michael-PC, using four machine-readable registries (location, placement-policy, protection, project). Triggers on requests to "review a folder read-only", "inventory a directory safely", "steward a directory without touching it", "produce a placement/classification report", "what's in this folder and where should it go", "review a directory without moving anything". Defaults to READ-ONLY mode; never moves, copies, renames, deletes, archives, restores, or modifies files.
 ---
 
-# Computer File Steward [READ-ONLY v1]
+# Computer File Steward [READ-ONLY v1.0.2]
 
 ## When to use
 - "Review this directory read-only and tell me what's in it"
@@ -18,27 +18,41 @@ description: Use when importing existing machine knowledge and producing a priva
 - **Always require an explicit target path.** Never default to a drive root, home directory, workspace root, or current working directory. If no explicit target is supplied, STOP and ask.
 - **Default mode is READ-ONLY.** This skill never moves, copies, renames, deletes, quarantines, archives, restores, or modifies any file. It performs no file operations on the reviewed content. Proposed actions are advisory and always `blocked=true` in v1.
 - **Never proceed on memory.** Read the authoritative build/policy documents fresh: `BUILD_STATE.md`, `docs/GOTCHAS.md`, and the four registries. This is the same ritual as AGENT_BOOTSTRAP.md.
-- **Never read, output, or store any secret value.** Passwords, PINs, MFA seeds, recovery codes, security answers, and private keys never enter this system. Store pointers only. Never read `.env`, `.env.save`, `secrets.yaml`, OAuth stores, private keys, Bitwarden data, `conversations.json`, or credential files.
-- **Never traverse a reparse point.** Junctions, symlinks, mount points, `.path` pointers, and WSL/Docker boundaries are recorded and blocked — never followed.
+- **Never read, output, or store any secret value.** Passwords, PINs, MFA seeds, recovery codes, security answers, and private keys never enter this system. Store pointers only. Never read `.env`, `.env.save`, `secrets.yaml`, OAuth stores, private keys, Bitwarden data, `conversations.json`, or credential files. **Human approval can never override this absolute Credential Rule.**
+- **Never traverse a reparse point.** Junctions, symlinks, mount points, `.path` pointers, and WSL/Docker boundaries are recorded and blocked — never followed. **If the explicit target root is itself a reparse point, reject it before enumeration.**
 - **Never scan a whole drive, home directory, or live system.** Review is limited to the one explicit target.
 - **Stop deeper inspection once sensitivity is established.** Use metadata and known registries; use category detection, not content excerpts. Do not output matching content.
-- **Do not hash by default.** Hash only for a stated verification purpose, and never hash protected or sensitive content to seek duplicates.
+- **Prune sensitive/protected directories.** A sensitive directory is recorded with metadata only and marked blocked; its children are never enumerated, hashed, or Git/pointer-inspected.
+- **Do not hash by default.** Hash only for a stated verification purpose, and never hash protected or sensitive content.
 - **Separate classification from action.** Classification (A–G) does not authorize any action. Report classification, recommendation, confidence, policy status, action eligibility, and approval requirement separately.
-- **Report conflicts, do not silently resolve them.** Store conflicting/stale facts and surface them in reports.
-- **Cite source documents** rather than duplicating their content where the policy is already recorded.
+- **Report conflicts, do not silently resolve them.** Store conflicting/stale facts and surface them; distinguish original conflict records from the effective resolved overlay.
 
 ## Standards
 - Language: Plain, direct, factual. Distinguish fact vs policy vs inference vs confidence.
 - Length: Concise with clear structure; counts and tables for classifications.
 - Format: Structured Markdown report + CSV inventories + JSON metadata, per templates.
 - Provenance: Every imported registry fact carries source, observed-at, policy/fact/history/inference status, supersession, and confidence.
-- Runtime (v1.0.1): All `.ps1` scripts require **PowerShell 7+ (`pwsh`)**. Invoke with
+- Runtime (v1.0.2): All `.ps1` scripts require **PowerShell 7+ (`pwsh`)**. Invoke with
   `pwsh`, never `powershell.exe`. Scripts fail before scanning under an unsupported
   runtime.
+- Traversal safety (v1.0.2): No unguarded `Get-ChildItem -Recurse` is used in
+  inspection code. Pointer detection, reparse handling, and Git-boundary detection
+  all happen inside the same guarded queue/stack walk. A target root that is a
+  reparse point fails closed before enumeration.
+- Sensitive pruning (v1.0.2): Sensitive/protected directories are recorded as
+  blocked parent records only; their children never appear in any output.
+- Git read-only (v1.0.2): Every Git subprocess runs with `GIT_OPTIONAL_LOCKS=0`
+  (optional locks disabled); only read-only/plumbing commands are used (no fetch,
+  pull, ls-remote, push, or network). Commands use safe argument-vector transport
+  (native Windows: PowerShell splatting; WSL/UNC: a fixed base64-encoded wrapper
+  that never interpolates path data into a shell string). The full `.git` tree is
+  left path/size/mtime/hash-identical over repeated inspections, and path names
+  containing apostrophes, spaces, brackets, ampersands, semicolons, or Unicode
+  cannot inject commands.
 - Timestamps (v1.0.1): Use unambiguous **ISO 8601 with offset** (e.g.
   `2026-08-30T11:48:21+10:00`). A missing field is left blank only with
   `metadata_status`.
-- Paths (v1.0.1): One shared canonical path model (`scripts/path_canonicalize.py`)
+- Paths (v1.0.1/1.0.2): One shared canonical path model (`scripts/path_canonicalize.py`)
   is used for inventory, validation, report generation, and tests. Record both
   `input_path` and `canonical_path` in run metadata.
 - Classification (v1.0.1): Class **C requires an explicit regeneration basis**.
@@ -60,9 +74,9 @@ Record which sources loaded and any gaps.
 
 ### Step 3 — RUN READ-ONLY INSPECTION
 Run the skill scripts (all read-only) against the explicit target:
-1. `detect_reparse_points.ps1 -Target <target>` — find junctions/symlinks/mounts/`.path` pointers and Git boundaries, WITHOUT traversing.
-2. `inventory_directory.ps1 -Target <target> -OutputCsv INVENTORY.csv` — metadata-only inventory (path, type, size, extension, attributes, reparse status, git-boundary status, sensitive flag). No content, no default hashing.
-3. `inspect_git_state.ps1` on each detected Git boundary — branch, HEAD, sanitized remotes, clean/dirty, counts, stashes, worktrees, submodules, local-only branches.
+1. `detect_reparse_points.ps1 -Target <target>` — find junctions/symlinks/mounts/`.path` pointers and Git boundaries, WITHOUT traversing. Rejects a reparse-point target root before enumeration.
+2. `inventory_directory.ps1 -Target <target> -OutputCsv INVENTORY.csv` — metadata-only inventory (path, type, size, extension, attributes, reparse status, git-boundary status, sensitive flag). No content, no default hashing. Prunes sensitive directories.
+3. `inspect_git_state.ps1` on each detected Git boundary — branch, HEAD, sanitized remotes, clean/dirty, counts, stashes, worktrees, submodules, local-only branches. Strictly read-only (`GIT_OPTIONAL_LOCKS=0`).
 
 ### Step 4 — CLASSIFY + RECOMMEND
 Using the classification model (A–G) and the registries, assign each item a classification, recommendation, confidence, policy status, action eligibility, and approval requirement. Classification evidence rules (v1.0.1):
@@ -77,7 +91,8 @@ Using the classification model (A–G) and the registries, assign each item a cl
 Blocks:
 - Any item in or belonging to a Git repository → blocked from move/archive/delete in v1.
 - Any reparse point → blocked, not traversed.
-- Any sensitive-looking item → block further inspection, do not read.
+- Any sensitive-looking item → block further inspection, do not read, do not hash.
+- Any sensitive directory → record parent as blocked, do not enumerate children.
 - Any item matching a live-system / protected-path registry entry → blocked.
 Never output a recommendation that an action be executed — all proposed actions are `blocked=true`.
 
@@ -97,9 +112,11 @@ Use the templates in `templates/`. Every row of PROPOSED_ACTIONS.csv has `blocke
 ### Step 6 — VALIDATE
 Run `validate_review_output.py --run <run-dir> --target <explicit-target>`:
 - Path-safety (no path outside the explicit target; no reparse traversed)
+- Target-root not a reparse point
+- Sensitive-directory pruning (no sensitive children appear; sensitive files not hashed)
 - Secret-safety (no secret patterns in outputs)
 - All proposed actions blocked
-- All six outputs present
+- All required outputs present
 Only a PASS is reported as a completed review.
 
 ### Step 7 — REPORT
@@ -116,16 +133,19 @@ Present: target, run id, mode `READ_ONLY_REVIEW`, counts, repository findings, r
 ## What this skill cannot do
 - Cannot move, copy, rename, delete, quarantine, archive, or restore any file.
 - Cannot read secret-bearing files, `.env`, `conversations.json`, household/clinical/legal/financial bodies, database bodies, mailboxes, or recovery-package bodies.
-- Cannot follow junctions, symlinks, mount points, or `.path` pointers.
+- Cannot follow junctions, symlinks, mount points, or `.path` pointers (and rejects a target root that is one).
+- Cannot enumerate through sensitive/protected directory boundaries.
 - Cannot scan whole drives, home directories, or live systems.
 - Cannot alter Docker, WSL, services, scheduled tasks, apps, repositories, cloud remotes, or configuration.
 - Cannot implement execution, approval consumption, quarantine, purge, or automatic watchers (future modes only, not active).
+- Cannot modify `.git` during inspection (strictly read-only Git).
 
 ## Read-only vs future modes (design only)
 - **Mode 1 (current): `READ_ONLY_REVIEW`** — active. Reviews, classifies, recommends, all blocked.
 - **Mode 2 (design): `PLAN_EXECUTION`** — contemplated, NOT implemented. Would present approved actions.
-- **Mode 3 (design): `EXECUTE`** — contemplated, NOT implemented. Would apply human-approved actions only.
-These future modes are described only as unimplemented design. Nothing in v1 executes actions.
+- **Mode 3 (design): `EXECUTE`** — contemplated, NOT implemented. Would apply human-approved actions only. The ai-context root decision is resolved via overlay CFL-001; the Credential Rule can never be waived.
+- **Mode 4 (design): `QUARANTINE / PURGE`** — contemplated, NOT implemented. Tier-1 handling is pointer/password-manager only.
+These future modes are described only as unimplemented design. Nothing in v1.0.2 executes actions.
 
 ## Example review (novice walkthrough)
 The user says: "review the folder `D:\SomeProject` read-only".
@@ -133,21 +153,22 @@ The user says: "review the folder `D:\SomeProject` read-only".
 1. **Ask for/confirm the explicit target** — `D:\SomeProject`. (If the user just says
    "review everything", stop and ask for ONE directory; never default to a drive root.)
 2. Load the build docs and the four registries.
-3. Run, from Windows PowerShell against the target:
+3. Confirm the target is not itself a reparse point (the scripts reject a reparse root).
+4. Run, from Windows PowerShell against the target:
    ```powershell
    pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/detect_reparse_points.ps1 -Target "D:\SomeProject" -ResultFile out\_reparse.json
    pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/inventory_directory.ps1 -Target "D:\SomeProject" -OutputCsv out\INVENTORY.csv
    # then, for each git boundary reported by detect_reparse_points:
    pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/inspect_git_state.ps1 -RepoPath "<boundary>" -ResultFile out\_git_0.json
    ```
-4. Build the six outputs (DIRECTORY_REVIEW.md, INVENTORY.csv, PROPOSED_ACTIONS.csv,
+5. Build the six outputs (DIRECTORY_REVIEW.md, INVENTORY.csv, PROPOSED_ACTIONS.csv,
    UNKNOWNS.md, RUN_METADATA.json, VALIDATION_RESULTS.md) using the templates and the
    registry/classification rules.
-5. Run the validator:
+6. Run the validator:
    ```bash
    python3 scripts/validate_review_output.py --run out --target "D:\SomeProject"
    ```
-6. Present the DIRECTORY_REVIEW.md to the user. It will end with
+7. Present the DIRECTORY_REVIEW.md to the user. It will end with
    `**NO ACTIONS PERFORMED.**` — nothing was moved or changed.
 
 Result: a safe, privacy-preserving, read-only picture of the folder plus advisory,

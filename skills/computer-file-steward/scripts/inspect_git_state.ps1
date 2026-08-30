@@ -1,7 +1,7 @@
 <#
 .SYNOPSIS
   inspect_git_state.ps1 — Read-only inspection of Git repository state for the
-  Computer File Steward v1.0.1 skill.
+  Computer File Steward v1.0.2 skill.
 
 .DESCRIPTION
   Collects read-only repository metadata: root, branch, HEAD, remotes (with
@@ -9,12 +9,21 @@
   deleted / untracked / conflicted / staged entries, stashes, worktrees,
   submodules, and local-only branch indicators.
 
-  Never prints credential-bearing remote URLs. Any userinfo (user:pass@) is
-  removed.
-
-  Handles both Windows paths and WSL/UNC paths. For paths under
-  \\wsl.localhost\... the git commands are routed through the WSL distro's
-  native git so they operate on the real WSL filesystem.
+  v1.0.2 (Fix C — genuinely read-only Git inspection):
+    - Sets GIT_OPTIONAL_LOCKS=0 for every Git subprocess so read-only commands
+      cannot lazily refresh/rewrite repository metadata (index/refs).
+    - Uses read-only/plumbing commands only. No fetch/pull/ls-remote or any
+      network Git operation is ever issued.
+    - Safe command transport: NO shell string is built by concatenating
+      user-controlled paths or arguments. For the WSL route, the full git
+      argument vector (including the repo path) is base64-encoded and passed as
+      a single opaque positional argument to a FIXED, constant bash wrapper that
+      decodes it into an argv array and execs git directly. No user data is ever
+      interpolated into a shell command string, so apostrophes, spaces, brackets,
+      ampersands, semicolons, and non-ASCII path characters cannot inject.
+    - Remote URLs are sanitized (any userinfo user:pass@ is removed).
+    - Submodules are treated as metadata only and are never initialized or
+      recursed into.
 
   v1.0.1 (Correction C): explicitly requires PowerShell 7+ (pwsh).
 
@@ -54,17 +63,43 @@ if ($useWsl -and $RepoPath -match '^\\\\wsl\.localhost\\([^\\]+)\\(.*)$') {
     $grepPath = "/$rest"
 }
 
+# ---------------------------------------------------------------------------
+# v1.0.2 Fix C: safe command transport + read-only Git.
+#
+# Windows route : invoke git directly with an argument vector (PowerShell
+#                 splatting) — no string shell. Set GIT_OPTIONAL_LOCKS=0.
+# WSL route     : encode the full git argument vector (incl. -C <path>) into a
+#                 single base64 string and pass it to a CONSTANT bash wrapper as
+#                 a positional arg. The wrapper decodes into an argv array (no
+#                 eval, no word-splitting) and `exec`s git. No user-controlled
+#                 text ever appears in a shell command string.
+# ---------------------------------------------------------------------------
+$OldGitOptionalLocks = $env:GIT_OPTIONAL_LOCKS
+
+# Constant, never-interpolated bash wrapper used only for the WSL route.
+$WSL_GIT_WRAPPER = 'export GIT_OPTIONAL_LOCKS=0; payload="$1"; a=(); while IFS= read -r -d "" x; do a+=("$x"); done < <(printf "%s" "$payload" | base64 -d); exec git "${a[@]}"'
+
 function Invoke-Git {
     param([string[]]$GitArgs)
-    $quoted = ($GitArgs | ForEach-Object { "'" + [string]$_ + "'" }) -join ' '
     if ($useWsl) {
-        # Run through WSL bash -lc with single-quoted args (safe WSL bridge per GOTCHAS)
-        $cmd = "git -C '$grepPath' $quoted"
-        $out = & wsl.exe -d Ubuntu-24.04 -e bash -lc $cmd 2>$null
+        # Full argv including -C <repo-path> then the git args.
+        $argv = @('-C', $grepPath) + $GitArgs
+        # Encode as NUL-separated then base64 (single opaque token; safe charset).
+        $joined = ($argv -join [string][char]0) + [string][char]0
+        $b64 = [Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes($joined))
+        # Run the CONSTANT wrapper; $b64 is passed as a positional argument, never
+        # interpolated into any command string.
+        $out = & wsl.exe -d Ubuntu-24.04 -e bash -c $WSL_GIT_WRAPPER _ $b64 2>$null
         return ($out -join "`n")
     } else {
-        $out = & git -C $grepPath @GitArgs 2>$null
-        return ($out -join "`n")
+        $env:GIT_OPTIONAL_LOCKS = '0'
+        try {
+            $out = & git -C $grepPath @GitArgs 2>$null
+            return ($out -join "`n")
+        } finally {
+            if ($null -eq $OldGitOptionalLocks) { Remove-Item Env:GIT_OPTIONAL_LOCKS -ErrorAction SilentlyContinue }
+            else { $env:GIT_OPTIONAL_LOCKS = $OldGitOptionalLocks }
+        }
     }
 }
 
@@ -152,6 +187,8 @@ $report = @{
     submodule_count = $submoduleCount
     local_only_branches = $localOnly
     mode = 'READ_ONLY'
+    read_only_git = $true
+    optional_locks_disabled = $true
     credentials_redacted = $true
     routed_through_wsl = $useWsl
 }
