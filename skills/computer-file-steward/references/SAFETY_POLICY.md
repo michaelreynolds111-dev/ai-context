@@ -42,6 +42,23 @@ and applies read-only guarantees on top.
 - Does not contradict a GOTCHAS entry.
 - Does not modify the improver or agent-builder.
 
+## 6b. PowerShell 7 runtime contract (v1.0.1, Correction C)
+- The skill's `.ps1` scripts require **PowerShell 7 or later** (`pwsh`), enforced by
+  `#Requires -Version 7.0` and a runtime guard that fails **before scanning** under
+  any unsupported runtime.
+- Invoke scripts with `pwsh` (PowerShell 7), never `powershell.exe` (5.1).
+- No system file associations, PowerShell profiles, PATH, or execution policy are
+  modified. (A per-invocation `-ExecutionPolicy Bypass` in examples is a command-line
+  scoping override, not a system change.)
+
+## 6c. Metadata honesty (v1.0.1, Correction B)
+- A metadata field that cannot be read is left blank **only** with a machine-readable
+  `metadata_status` (e.g. `timestamp_unavailable:created`, `access_error:attributes`).
+- No timestamp is ever invented, and an access failure is never silently converted
+  into a stale classification.
+- Aggregate metadata failures are reported by category + count, never as sensitive
+  exception bodies.
+
 ## 7. Stop conditions (from the governing task)
 Stop safely and write a partial result if:
 1. A required operation would read/expose a secret value.

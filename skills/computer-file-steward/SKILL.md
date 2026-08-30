@@ -32,6 +32,19 @@ description: Use when importing existing machine knowledge and producing a priva
 - Length: Concise with clear structure; counts and tables for classifications.
 - Format: Structured Markdown report + CSV inventories + JSON metadata, per templates.
 - Provenance: Every imported registry fact carries source, observed-at, policy/fact/history/inference status, supersession, and confidence.
+- Runtime (v1.0.1): All `.ps1` scripts require **PowerShell 7+ (`pwsh`)**. Invoke with
+  `pwsh`, never `powershell.exe`. Scripts fail before scanning under an unsupported
+  runtime.
+- Timestamps (v1.0.1): Use unambiguous **ISO 8601 with offset** (e.g.
+  `2026-08-30T11:48:21+10:00`). A missing field is left blank only with
+  `metadata_status`.
+- Paths (v1.0.1): One shared canonical path model (`scripts/path_canonicalize.py`)
+  is used for inventory, validation, report generation, and tests. Record both
+  `input_path` and `canonical_path` in run metadata.
+- Classification (v1.0.1): Class **C requires an explicit regeneration basis**.
+  README/Markdown, `.tmp`, `.bak`, installer, cache, and backup names never
+  determine classification alone. Metadata-only uncertainty defaults to G unless an
+  authoritative registry overrides.
 
 ## Process
 
@@ -52,7 +65,16 @@ Run the skill scripts (all read-only) against the explicit target:
 3. `inspect_git_state.ps1` on each detected Git boundary — branch, HEAD, sanitized remotes, clean/dirty, counts, stashes, worktrees, submodules, local-only branches.
 
 ### Step 4 — CLASSIFY + RECOMMEND
-Using the classification model (A–G) and the registries, assign each item a classification, recommendation, confidence, policy status, action eligibility, and approval requirement. Blocks:
+Using the classification model (A–G) and the registries, assign each item a classification, recommendation, confidence, policy status, action eligibility, and approval requirement. Classification evidence rules (v1.0.1):
+- Class **C** only with an explicit regeneration basis (package manifest, known
+  generating application/process, identified regeneration process, authoritative
+  duplicate/upstream, or an explicit policy record).
+- README/Markdown, `.tmp`, `.bak`, installer, cache, and backup names never
+  determine classification alone.
+- Metadata-only uncertainty defaults to **G** unless an authoritative registry
+  match overrides; state the missing evidence needed to reach C.
+- Classification remains separate from action eligibility; all actions stay blocked.
+Blocks:
 - Any item in or belonging to a Git repository → blocked from move/archive/delete in v1.
 - Any reparse point → blocked, not traversed.
 - Any sensitive-looking item → block further inspection, do not read.

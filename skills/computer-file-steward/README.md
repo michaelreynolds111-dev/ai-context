@@ -3,9 +3,13 @@
 Read-only directory inventory, classification, placement, and protection reports
 for Michael-PC, backed by four machine-readable registries.
 
-**Current mode:** `READ_ONLY_REVIEW` (v1). This skill **never moves, copies,
+**Current mode:** `READ_ONLY_REVIEW` (v1.0.1). This skill **never moves, copies,
 renames, deletes, archives, restores, or modifies** files. Every proposed action
 is `blocked=true`.
+
+**Runtime (v1.0.1):** Requires **PowerShell 7+ (`pwsh`)** for the `.ps1` scripts.
+Scripts fail before scanning under any unsupported runtime (e.g. Windows PowerShell
+5.1). Invoke with `pwsh`, never `powershell.exe`.
 
 ## What it does
 - Loads authoritative facts from the existing investigation, policy, classification,
@@ -29,10 +33,13 @@ is `blocked=true`.
 - `templates/` — DIRECTORY_REVIEW.md, INVENTORY.csv, PROPOSED_ACTIONS.csv, UNKNOWNS.md.
 - `scripts/` — the read-only engine:
   - `bootstrap_registries.py` — builds the four registries (idempotent, secret-free).
+  - `path_canonicalize.py` — shared canonical path model (Windows/UNC/WSL forms; fail-closed).
+  - `classification_rules.py` — class-C evidence rules (filename inference never decisive).
+  - `conflict_overlay.py` — history-preserving conflict-resolution overlay loader (idempotent, fail-safe).
   - `detect_reparse_points.ps1` — finds junctions/symlinks/mounts/`.path` pointers + git boundaries, without traversing.
-  - `inventory_directory.ps1` — metadata-only inventory of an explicit target.
+  - `inventory_directory.ps1` — metadata-only inventory with ISO 8601 timestamps + metadata_status.
   - `inspect_git_state.ps1` — read-only git repo state (sanitized remotes).
-  - `validate_review_output.py` — validates path-safety, secret-safety, all-blocked, and outputs.
+  - `validate_review_output.py` — validates path-safety, secret-safety, all-blocked, metadata, and outputs.
 
 ## Quick example
 See **Example review (novice walkthrough)** in `SKILL.md`.

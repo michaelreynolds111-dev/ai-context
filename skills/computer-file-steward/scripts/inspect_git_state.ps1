@@ -1,7 +1,7 @@
 <#
 .SYNOPSIS
   inspect_git_state.ps1 — Read-only inspection of Git repository state for the
-  Computer File Steward v1 skill.
+  Computer File Steward v1.0.1 skill.
 
 .DESCRIPTION
   Collects read-only repository metadata: root, branch, HEAD, remotes (with
@@ -16,6 +16,8 @@
   \\wsl.localhost\... the git commands are routed through the WSL distro's
   native git so they operate on the real WSL filesystem.
 
+  v1.0.1 (Correction C): explicitly requires PowerShell 7+ (pwsh).
+
 .PARAMETER RepoPath
   REQUIRED. The repository working tree to inspect (Windows or WSL/UNC path).
 
@@ -26,12 +28,18 @@
   pwsh -NoProfile -ExecutionPolicy Bypass -File inspect_git_state.ps1 `
        -RepoPath "\\wsl.localhost\...\fixture-root\fake-repository" -ResultFile gitstate.json
 #>
+#Requires -Version 7.0
 param(
     [Parameter(Mandatory = $true)][string]$RepoPath,
     [string]$ResultFile
 )
 
 $ErrorActionPreference = 'Continue'
+
+if ($PSVersionTable.PSVersion.Major -lt 7) {
+    Write-Error "UNSUPPORTED RUNTIME: Computer File Steward requires PowerShell 7+ (pwsh). Detected $($PSVersionTable.PSVersion). Refusing to scan."
+    exit 100
+}
 
 if (-not (Test-Path -LiteralPath $RepoPath)) {
     Write-Error "Repository path not found: $RepoPath"

@@ -69,6 +69,16 @@
 - [x] Report distinguishes fact, policy, inference, confidence, and approval requirement
 - [x] Future Mode 2/3/4 described only as unimplemented design, not active capacity (OPERATING_MODES.md)
 
+## v1.0.1 hardening (Corrections A–E)
+- [x] One shared canonical path model used by inventory, validation, report, tests.
+- [x] Equivalent safe Windows/UNC/WSL forms validate; malformed, `..`, empty, sibling-prefix fail closed.
+- [x] ISO 8601 timestamps populated for ordinary accessible items; `metadata_status` records honest failures.
+- [x] PowerShell 7+ required (`#Requires -Version 7.0` + runtime guard) — fails before scanning on 5.1.
+- [x] Class C requires explicit regeneration evidence; README/Markdown/.tmp/.bak/installer/cache/backup names never auto-C; metadata-only -> G unless registry overrides.
+- [x] Conflict-resolution overlay is durable, history-preserving, idempotent, secret-free, fail-safe.
+- [x] Synthetic path matrix, classification tests, conflict overlay tests, and two unchanged synthetic runs are deterministic.
+- [x] Two real, bounded, read-only directory reviews pass with timestamps populated and no mutation.
+
 ## Result
 - [x] PASS — all mandatory items met
 - [ ] FAIL

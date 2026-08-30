@@ -9,6 +9,9 @@
   point. Records each reparse point and its resolved target via safe metadata
   only. Also flags the presence of a Git repository boundary.
 
+  v1.0.1 (Correction C): explicitly requires PowerShell 7+ (pwsh). Fails before
+  scanning under an unsupported runtime.
+
 .PARAMETER Target
   REQUIRED. The explicit directory to inspect. Must be provided; never defaults.
 
@@ -19,12 +22,18 @@
   pwsh -NoProfile -ExecutionPolicy Bypass -File detect_reparse_points.ps1 `
        -Target "\\wsl.localhost\...\fixture-root" -ResultFile reparse.json
 #>
+#Requires -Version 7.0
 param(
     [Parameter(Mandatory = $true)][string]$Target,
     [string]$ResultFile
 )
 
 $ErrorActionPreference = 'Continue'   # never abort the whole walk on one item
+
+if ($PSVersionTable.PSVersion.Major -lt 7) {
+    Write-Error "UNSUPPORTED RUNTIME: Computer File Steward requires PowerShell 7+ (pwsh). Detected $($PSVersionTable.PSVersion). Refusing to scan."
+    exit 100
+}
 
 if (-not $Target) {
     Write-Error "EXPLICIT TARGET REQUIRED — detect_reparse_points.ps1 refuses to run without an explicit directory."

@@ -13,6 +13,14 @@ review, apply this precedence:
 8. **Old architecture or master-plan intent** — BACKUP_AI_MASTER_BUILD_PLAN (advisory for placement).
 9. **Filename-derived inference** — weakest; never decisive.
 
+### v1.0.1 (Correction D): filename inference never establishes reproducibility
+`README`/Markdown, `.tmp`, `.bak`, installer, cache, and backup names are
+**never** decisive for classification. They cannot alone produce class C. Only an
+explicit regeneration basis (package manifest, generating application/process,
+identified regeneration process, authoritative duplicate/upstream, or an explicit
+policy record) or an authoritative registry classification can. Metadata-only
+uncertainty defaults to G.
+
 ## Freshness markers
 - `HARD_POLICY` — governing rule (workspace root, live-system, credential rule, junctions).
 - `OBSERVED` — direct read-only observation at a timestamp.

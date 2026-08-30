@@ -24,6 +24,38 @@ labels, not classifications per se.
 - **F** means candidate only.
 - **G** blocks action and requires investigation.
 
+## v1.0.1: Class C minimum evidence (Correction D)
+
+Class **C** (reproducible) may be assigned **only** when at least one explicit
+regeneration basis is recorded. A filename, extension, directory name, or generic
+"documentation" appearance is **insufficient by itself**.
+
+A valid regeneration basis is any one of:
+- a recognized package/dependency environment with a **source manifest**;
+- a generated cache with a **known generating application or process**;
+- a derived output with an **identified source** plus a deterministic or
+  documented regeneration process;
+- an **authoritative duplicate or upstream source** that can regenerate the item;
+- an **existing policy record** that explicitly classifies that asset type as
+  reproducible.
+
+### Names/extensions that never determine classification alone
+`README` / Markdown (`.md`), `.tmp`, `.bak`, `.txt`, installer (`.exe`/`.msi`/etc.),
+cache, and backup names must **not** directly determine classification. They may be
+part of the evidence only when combined with a real regeneration basis or an
+authoritative registry classification.
+
+### Metadata-only behavior
+When only metadata is available with no regeneration evidence and no authoritative
+registry match:
+- default to **G** (unknown) with an honest "missing evidence to reach C" note;
+- or retain another evidence-backed classification from a registry match;
+- lower confidence appropriately;
+- keep all actions blocked.
+
+An **authoritative registry match overrides** weak filename inference (e.g. a
+protection-registry `B` classification wins over a bare `README.md` name).
+
 The report must always separate:
 - classification;
 - recommendation;
@@ -60,7 +92,10 @@ The report must always separate:
   → blocked.
 - These overrides out-rank any A–G label for *action* purposes.
 
-## Classification is heuristic in v1
-v1 assigns preliminary classifications from metadata + extension heuristics +
-registry matches, always `blocked=true`, with documented confidence. It does not
-assign final disposition or any action.
+## Classification is heuristic in v1 (v1.0.1 rules)
+v1.0.1 assigns preliminary classifications from metadata + evidence rules +
+registry matches, always `blocked=true`, with documented confidence. Class C is
+assigned only with an explicit regeneration basis (see above); filename/extension
+appearance alone never reaches C; metadata-only uncertainty defaults to G unless
+an authoritative registry overrides. It does not assign final disposition or any
+action.

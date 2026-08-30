@@ -30,11 +30,32 @@ review-runs/<run-id>/
 16. Strong statement: `NO ACTIONS PERFORMED`.
 
 ## INVENTORY.csv
-One record per reviewed item where practical. Minimal columns:
+One record per reviewed item where practical. Columns (v1.0.1):
 `path, item_type, size_bytes, extension, created, modified, attributes, is_reparse,
-reparse_tag, blocked, block_reason, is_git_boundary, depth, hash_sha256, sensitive`.
+reparse_tag, reparse_status, blocked, block_reason, is_git_boundary, depth,
+hash_sha256, sensitive, metadata_status`.
 For very large directories support aggregate records and bounded sampling, but
 document the threshold and do not silently omit content.
+
+### Timestamps (v1.0.1, Correction B)
+- Format: unambiguous **ISO 8601 with local offset** (e.g. `2026-08-30T11:48:21+10:00`).
+- `created` = `CreationTime`, `modified` = `LastWriteTime`, read via filesystem metadata only.
+- If a timestamp cannot be read, the field is left blank **and** `metadata_status`
+  records `timestamp_unavailable:created` / `timestamp_unavailable:modified` — a
+  value is never silently invented or left blank without a status.
+- `attribute`/`reparse` access failures record `access_error:...` in `metadata_status`.
+
+### Path model (v1.0.1, Correction A)
+- Each inventory `path` is the provider's display path.
+- Run metadata records both `input_path` and `canonical_path` (the latter from the
+  shared canonical path model), plus `path_style` (windows / wsl_native / wsl_unc / unknown)
+  and runtime context.
+- Shared model: `scripts/path_canonicalize.py`. It accepts Windows backslash /
+  forward-slash, `\\wsl.localhost\...`, `\\wsl$\...`, and WSL-native `/...` forms,
+  normalises separators, resolves `.`/`..` lexically, treats drive letters
+  case-insensitively, prevents sibling-prefix confusion, rejects malformed
+  drive-relative, empty, and relative paths, and fails closed when equivalence
+  cannot be proven. It never traverses reparse points.
 
 ## PROPOSED_ACTIONS.csv (advisory only in v1)
 `action_id, proposed_action, source_path, proposed_destination,
@@ -43,9 +64,10 @@ blocked, block_reason, required_approval, source_evidence`.
 **Every row must have `blocked=true` in v1** because execution is not implemented.
 
 ## RUN_METADATA.json
-`run_id, mode, target, generated_at, registries, counts (by_type, by_classification,
-by_extension), reparse_point_count, git_boundary_count, sensitive_count,
-items_inventoried, proposed_actions_all_blocked, fixture, no_actions_performed`.
+`run_id, mode, target, input_path, canonical_path, path_style, runtime_context,
+generated_at, registries, counts (by_type, by_classification, by_extension),
+reparse_point_count, git_boundary_count, sensitive_count, items_inventoried,
+proposed_actions_all_blocked, fixture, no_actions_performed`.
 
 ## UNKNOWNS.md
 Separate:

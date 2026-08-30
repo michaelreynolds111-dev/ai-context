@@ -1,18 +1,26 @@
 <#
 .SYNOPSIS
   inventory_directory.ps1 — Read-only inventory of an explicitly supplied
-  target directory for the Computer File Steward v1 skill.
+  target directory for the Computer File Steward v1.0.1 skill.
 
 .DESCRIPTION
-  This is the v1 review engine inventory step. It:
-    - REQUIRES an explicit target directory (never defaults to cwd/root/home).
-    - Walks the tree but does NOT follow reparse points (records them as
-      blocked).
-    - Collects metadata: path, type, size, timestamps, extension, attributes,
-      reparse status, Git-boundary status, likely classification.
-    - Does NOT hash by default. Hashing only when -HashWithReason is supplied
-      for a stated verification purpose.
+  v1.0.1 hardening (Corrections B and C):
+    - EXPLICITLY requires PowerShell 7 or later. Fails before scanning anything
+      when run under an unsupported runtime.
+    - Populates creation and last-write timestamps for ordinary accessible
+      items using unambiguous ISO 8601 with local offset.
+    - Records an explicit, machine-readable metadata_status whenever a metadata
+      field cannot be read (never silently blanks a field without a status).
+    - Keeps the read-only guarantee: no move/copy/rename/delete/quarantine.
+    - Does not follow reparse points (records them as blocked).
     - Never reads file content / never outputs content.
+
+  Timestamp format: ISO 8601 with local offset, e.g. 2026-08-30T11:32:00+10:00.
+  For filesystems that expose only UTC without an offset convention, the offset
+  is derived from the local time zone and appended; the 'Z'/offset suffix is
+  always present so the value is unambiguous. If a timestamp cannot be read the
+  field is left blank and metadata_status records 'timestamp_unavailable:<field>'
+  so no value is silently invented.
 
 .PARAMETER Target
   REQUIRED. Explicit directory to inventory.
@@ -21,16 +29,16 @@
   Path to write INVENTORY.csv. If omitted prints records to the pipeline.
 
 .PARAMETER MaxDepth
-  Optional recursion depth limit (default 9999). Set to bound traversal.
+  Optional recursion depth limit (default 9999).
 
 .PARAMETER HashWithReason
   Optional. A stated verification reason. When provided, computes SHA256 of
   files that are NOT inside a sensitive-looking path and adds hash_* columns.
-  Still never reads content into output.
 
 .EXAMPLE
-  pwsh -NoProfile -File inventory_directory.ps1 -Target "\\wsl.localhost\...\fixture-root" -OutputCsv INVENTORY.csv
+  pwsh -NoProfile -File inventory_directory.ps1 -Target "C:\Users\micha\docs" -OutputCsv INVENTORY.csv
 #>
+#Requires -Version 7.0
 param(
     [Parameter(Mandatory = $true)][string]$Target,
     [string]$OutputCsv,
@@ -39,6 +47,12 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
+
+# --- Correction C: unsupported runtime fails BEFORE scanning anything ---
+if ($PSVersionTable.PSVersion.Major -lt 7) {
+    Write-Error "UNSUPPORTED RUNTIME: Computer File Steward requires PowerShell 7+ (pwsh). Detected $($PSVersionTable.PSVersion). Refusing to scan."
+    exit 100
+}
 
 if (-not $Target) {
     Write-Error "EXPLICIT TARGET REQUIRED — inventory_directory.ps1 refuses to run without an explicit directory. Never default to cwd, drive root, or home."
@@ -64,13 +78,42 @@ function Test-SensitivePath {
     return $false
 }
 
+# --- Correction B: ISO 8601 timestamp helper with offset ---
+function Format-IsoTimestamp {
+    param([datetime]$Dt)
+    try {
+        # Local offset, e.g. +10:00 or -05:00
+        $off = $Dt.ToString('zzz')
+        return $Dt.ToString('yyyy-MM-ddTHH:mm:ss') + $off
+    } catch {
+        return $null
+    }
+}
+
+$metadataErrors = @{}   # category -> count (aggregate; never sensitive bodies)
+
+function Get-SafeTimestamps {
+    param($Item)
+    $created = ''
+    $modified = ''
+    $status = @()
+    try {
+        $c = Format-IsoTimestamp -Dt $Item.CreationTime
+        if ($c) { $created = $c } else { $status += 'timestamp_unavailable:created' }
+    } catch { $status += 'timestamp_unavailable:created' }
+    try {
+        $m = Format-IsoTimestamp -Dt $Item.LastWriteTime
+        if ($m) { $modified = $m } else { $status += 'timestamp_unavailable:modified' }
+    } catch { $status += 'timestamp_unavailable:modified' }
+    return [pscustomobject]@{ created = $created; modified = $modified; status = $status }
+}
+
 $records = New-Object System.Collections.Generic.List[object]
 
 $stack = New-Object System.Collections.Generic.List[object]   # @{ Path = string; Depth = int }
 $stack.Add([pscustomobject]@{ Path = $Target; Depth = 0 })
 
 while ($stack.Count -gt 0) {
-    # Use pop from end for deterministic DFS order
     $idx = $stack.Count - 1
     $entry = $stack[$idx]
     $stack.RemoveAt($idx)
@@ -85,14 +128,14 @@ while ($stack.Count -gt 0) {
         $records.Add([pscustomobject]@{
             path = $dir; item_type = 'directory'; size_bytes = 0; extension = ''
             created = ''; modified = ''; attributes = 'UNREADABLE'
-            is_reparse = $true; reparse_tag = 'NOACCESS'; blocked = $true
-            block_reason = 'unreadable directory'; is_git_boundary = $false
+            is_reparse = $true; reparse_tag = 'NOACCESS'; reparse_status = 'noaccess'
+            blocked = $true; block_reason = 'unreadable directory'; is_git_boundary = $false
             depth = $depth; hash_sha256 = ''; sensitive = $false
+            metadata_status = 'access_error:unreadable_directory'
         })
         continue
     }
 
-    # Use Sort to make ordering deterministic (stable by name)
     $sorted = @($children | Sort-Object -Property @{Expression={$_.Name}})
     foreach ($child in $sorted) {
         $isReparse = $false
@@ -116,15 +159,19 @@ while ($stack.Count -gt 0) {
         $sensitive = Test-SensitivePath -Path $child.FullName
 
         if ($child.PSIsContainer) {
+            $ts = Get-SafeTimestamps -Item $item
+            $statusParts = @($ts.status)
+            if ($attrsStr -eq 'UNREADABLE') { $statusParts += 'access_error:attributes' }
             $records.Add([pscustomobject]@{
                 path = $child.FullName; item_type = 'directory'; size_bytes = 0
-                extension = ''; created = ''; modified = ''
+                extension = ''; created = $ts.created; modified = $ts.modified
                 attributes = $attrsStr; is_reparse = $isReparse; reparse_tag = $tag
+                reparse_status = if ($isReparse) { 'blocked_reparse' } else { 'not_reparse' }
                 blocked = $isReparse; block_reason = if ($isReparse) { 'reparse point - not traversed' } else { '' }
                 is_git_boundary = $isGitBoundary; depth = $depth + 1; hash_sha256 = ''
                 sensitive = $sensitive
+                metadata_status = if ($statusParts.Count -gt 0) { ($statusParts -join ';') } else { 'ok' }
             })
-            # Only descend into non-reparse directories
             if (-not $isReparse) {
                 $stack.Add([pscustomobject]@{ Path = $child.FullName; Depth = $depth + 1 })
             }
@@ -137,23 +184,43 @@ while ($stack.Count -gt 0) {
                     $hash = (Get-FileHash -LiteralPath $child.FullName -Algorithm SHA256 -ErrorAction SilentlyContinue).Hash
                 } catch { $hash = '' }
             }
+            $ts = Get-SafeTimestamps -Item $item
+            $statusParts = @($ts.status)
             $records.Add([pscustomobject]@{
                 path = $child.FullName; item_type = 'file'
                 size_bytes = $size; extension = $child.Extension
-                created = ''; modified = ''
+                created = $ts.created; modified = $ts.modified
                 attributes = $attrsStr; is_reparse = $isReparse; reparse_tag = $tag
+                reparse_status = if ($isReparse) { 'blocked_reparse' } else { 'not_reparse' }
                 blocked = $isReparse; block_reason = if ($isReparse) { 'reparse point - not traversed' } else { '' }
                 is_git_boundary = $isGitBoundary; depth = $depth + 1
                 hash_sha256 = $hash; sensitive = $sensitive
+                metadata_status = if ($statusParts.Count -gt 0) { ($statusParts -join ';') } else { 'ok' }
             })
         }
     }
 }
 
-# Emit
+# Aggregate metadata error report (category + count only — no sensitive bodies).
+foreach ($rec in $records) {
+    $ms = [string]$rec.metadata_status
+    if ($ms -and $ms -ne 'ok') {
+        foreach ($part in ($ms -split ';')) {
+            $part = $part.Trim()
+            if ($part) { if ($metadataErrors.ContainsKey($part)) { $metadataErrors[$part]++ } else { $metadataErrors[$part] = 1 } }
+        }
+    }
+}
+
 if ($OutputCsv) {
     $records | Export-Csv -LiteralPath $OutputCsv -NoTypeInformation -Encoding UTF8
     Write-Output "Inventory written to $OutputCsv ($($records.Count) items)"
+    if ($metadataErrors.Count -gt 0) {
+        Write-Output "Metadata error summary (category=count):"
+        foreach ($k in $metadataErrors.Keys) { Write-Output "  $k=$($metadataErrors[$k])" }
+    } else {
+        Write-Output "Metadata error summary: none (all metadata read OK)"
+    }
 } else {
     $records | ConvertTo-Json -Depth 4
 }

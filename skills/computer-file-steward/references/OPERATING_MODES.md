@@ -8,6 +8,9 @@ reviewed files.
 
 Guarantees of READ_ONLY_REVIEW:
 - Requires an explicit target path. Never defaults to a drive root, home, workspace root, or cwd.
+- Requires PowerShell 7+ (`pwsh`); fails before scanning under an unsupported runtime (v1.0.1).
+- Populates ISO 8601 timestamps with an explicit `metadata_status` when a field cannot be read (v1.0.1).
+- Uses one shared canonical path model; Windows/UNC/WSL forms compare by whole components and fail closed (v1.0.1).
 - Never follows reparse points (junctions, symlinks, mount points, `.path` pointers).
 - Never reads sensitive file content; never outputs content excerpts.
 - Never hashes by default.
